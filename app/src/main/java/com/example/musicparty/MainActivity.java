@@ -1,6 +1,8 @@
 package com.example.musicparty;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.musicparty.databinding.ActivityMainBinding;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
@@ -19,6 +21,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
     private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
     private SpotifyAppRemote mSpotifyAppRemote;
+    private ActivityMainBinding binding;
 
 
     @Override
