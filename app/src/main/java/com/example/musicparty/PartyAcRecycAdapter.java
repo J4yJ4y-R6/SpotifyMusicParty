@@ -10,6 +10,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.musicparty.music.Track;
+
 import org.w3c.dom.Text;
 
 import java.util.List;
@@ -27,9 +29,13 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
         }
     }
 
-    private List<String> mDataset;
-    public PartyAcRecycAdapter(List<String> test) {
+    private List<Track> mDataset;
+    public PartyAcRecycAdapter(List<Track> test) {
         mDataset = test;
+    }
+
+    public void setmDataset(List<Track> mDataset) {
+        this.mDataset = mDataset;
     }
 
     @NonNull
@@ -46,7 +52,7 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        String name = mDataset.get(position);
+        String name = mDataset.get(position).getName();
         TextView textView = holder.nameTextView;
         textView.setText(name);
     }

@@ -22,6 +22,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Arrays;
@@ -45,7 +46,8 @@ public class PartyActivity extends AppCompatActivity {
     private String type = "track";
     private Thread clientThread;
     private Socket clientSocket;
-    private Map<String, Track> tracks = new ArrayMap<>();
+    private List<Track> tracks = new ArrayList<>();
+    private PartyAcRecycAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,8 +58,8 @@ public class PartyActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         RecyclerView recyclerView = (RecyclerView) binding.testrecycler;
-        List<String> myDataset = Arrays.asList("Silas", "Jannik");
-        PartyAcRecycAdapter mAdapter = new PartyAcRecycAdapter(myDataset);
+        //List<String> myDataset = Arrays.asList("Silas", "Jannik");
+        mAdapter = new PartyAcRecycAdapter(new ArrayList<Track>());
         recyclerView.setAdapter(mAdapter);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
@@ -116,6 +118,7 @@ public class PartyActivity extends AppCompatActivity {
 
     public void extractSongs(String data) {
         try {
+            tracks.clear();
             JSONObject jsonObject = new JSONObject(data);
             jsonObject = jsonObject.getJSONObject("tracks");
             JSONArray jsonArray = jsonObject.getJSONArray("items");
@@ -132,16 +135,17 @@ public class PartyActivity extends AppCompatActivity {
                         .getJSONArray("images")
                         .getJSONObject(2)
                         .getString("url");
-                tracks.put(track.getString("id"),
+                tracks.add(
                         new Track(
                                 track.getString("id"),
                                 track.getString("name"), array,
                                 image,
                                 track.getInt("duration_ms")
                         ));
-                Log.d(NAME, tracks.get(track.getString("id")).toString());
+                Log.d(NAME, tracks.get(i).toString());
             }
-
+            mAdapter.setmDataset(tracks);
+            binding.testrecycler.getAdapter().notifyDataSetChanged();
         } catch (JSONException e) {
             e.printStackTrace();
         }
