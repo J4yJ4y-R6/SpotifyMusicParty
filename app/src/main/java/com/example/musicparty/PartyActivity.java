@@ -1,6 +1,8 @@
 package com.example.musicparty;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Bundle;
 import android.util.Log;
@@ -13,6 +15,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -40,6 +44,13 @@ public class PartyActivity extends AppCompatActivity {
         binding = ActivityPartyBinding.inflate(getLayoutInflater());
         connect();
         setContentView(binding.getRoot());
+
+        RecyclerView recyclerView = (RecyclerView) binding.testrecycler;
+        List<String> myDataset = Arrays.asList("Silas", "Jannik");
+        PartyAcRecycAdapter mAdapter = new PartyAcRecycAdapter(myDataset);
+        recyclerView.setAdapter(mAdapter);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
     }
 
     public void search(View view){
