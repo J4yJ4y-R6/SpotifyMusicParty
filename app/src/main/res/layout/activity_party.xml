@@ -15,10 +15,134 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <ScrollView
+                android:id="@+id/scrollView2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="64dp"
+                android:layout_marginTop="100dp"
+                android:layout_marginEnd="64dp"
+                android:layout_marginBottom="50dp"
+                android:visibility="visible"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.51"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.52"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TableLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <ImageView
+                                android:id="@+id/omabild"
+                                android:layout_width="match_parent"
+                                android:layout_height="100dp"
+                                android:layout_weight="50"
+                                android:contentDescription="bliblablub"
+                                android:src="@color/teal_700" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/textView3"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:paddingLeft="20dp"
+                                    android:paddingTop="20dp"
+                                    android:text="Songtitel" />
+
+                                <TextView
+                                    android:id="@+id/textView4"
+                                    android:layout_width="182dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1"
+                                    android:paddingLeft="20dp"
+                                    android:text="Album, Interpret" />
+                            </LinearLayout>
+
+                        </TableRow>
+
+                        <TableRow
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginTop="10dp">
+
+                            <ImageView
+                                android:id="@+id/imageView"
+                                android:layout_width="match_parent"
+                                android:layout_height="100dp"
+                                android:layout_weight="50"
+                                android:contentDescription="bliblablub"
+                                android:src="@color/purple_200" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:layout_weight="1"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:id="@+id/textView2"
+                                    android:layout_width="182dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:paddingLeft="20dp"
+                                    android:paddingTop="20dp"
+                                    android:text="Songtitel" />
+
+                                <TextView
+                                    android:id="@+id/textView"
+                                    android:layout_width="182dp"
+                                    android:layout_height="30dp"
+                                    android:layout_weight="1"
+                                    android:paddingLeft="20dp"
+                                    android:text="Album, Interpret" />
+                            </LinearLayout>
+
+                        </TableRow>
+                    </TableLayout>
+
+                    <TextView
+                        android:id="@+id/tv_result"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content" />
+
+                </LinearLayout>
+            </ScrollView>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/testrecycler"
+                android:layout_width="340dp"
+                android:layout_height="350dp"
+                android:layout_marginTop="250dp"
+                android:background="#2B2B2B"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/et_search" />
+
             <EditText
                 android:id="@+id/et_search"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="30dp"
                 android:layout_marginTop="32dp"
                 android:ems="10"
                 android:hint="Song name"
@@ -31,35 +155,14 @@
                 android:id="@+id/bt_search"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="38dp"
                 android:layout_marginTop="32dp"
                 android:layout_marginEnd="32dp"
                 android:onClick="search"
                 android:text="Search"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/et_search"
                 app:layout_constraintTop_toTopOf="parent" />
-
-            <ScrollView
-                android:layout_width="378dp"
-                android:layout_height="517dp"
-                android:layout_marginStart="64dp"
-                android:layout_marginEnd="64dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.52">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/tv_result"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content" />
-                </LinearLayout>
-            </ScrollView>
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
