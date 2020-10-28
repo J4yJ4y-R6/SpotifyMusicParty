@@ -3,16 +3,25 @@ package com.example.musicparty;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
 
 import com.example.musicparty.databinding.ActivityPartyBinding;
+import com.example.musicparty.music.Artist;
+import com.example.musicparty.music.Track;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.util.List;
+import java.util.Map;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -32,6 +41,7 @@ public class PartyActivity extends AppCompatActivity {
     private String type = "track";
     private Thread clientThread;
     private Socket clientSocket;
+    private Map<String, Track> tracks = new ArrayMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,10 +96,44 @@ public class PartyActivity extends AppCompatActivity {
                     public void run() {
                         // Display requested url data as string into text view
                         binding.tvResult.setText(data);
+                        extractSongs(data);
                     }
                 });
             }
         });
+    }
+
+    public void extractSongs(String data) {
+        try {
+            JSONObject jsonObject = new JSONObject(data);
+            jsonObject = jsonObject.getJSONObject("tracks");
+            JSONArray jsonArray = jsonObject.getJSONArray("items");
+            for(int i = 0; i < jsonArray.length(); i++) {
+                JSONObject track = jsonArray.getJSONObject(i);
+                JSONArray artists = track.getJSONArray("artists");
+                Artist [] array = new Artist[artists.length()];
+                for(int j = 0; j < array.length; j++) {
+                    JSONObject artist = artists.getJSONObject(j);
+                    array[j] = new Artist(artist.getString("id"), artist.getString("name"));
+                }
+                String image = track
+                        .getJSONObject("album")
+                        .getJSONArray("images")
+                        .getJSONObject(2)
+                        .getString("url");
+                tracks.put(track.getString("id"),
+                        new Track(
+                                track.getString("id"),
+                                track.getString("name"), array,
+                                image,
+                                track.getInt("duration_ms")
+                        ));
+                Log.d(NAME, tracks.get(track.getString("id")).toString());
+            }
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     public void activateBinding() {

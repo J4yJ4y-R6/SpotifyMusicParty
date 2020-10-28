@@ -64,8 +64,8 @@ public class MainActivity extends AppCompatActivity {
                 // Response was successful and contains auth token
                 case TOKEN:
                     // Handle successful response
-                    Log.d(NAME, "Token gained successful: " + token);
                     token = response.getAccessToken();
+                    Log.d(NAME, "Token gained successful: " + token);
                     break;
                 // Auth flow returned an error
                 case ERROR:
