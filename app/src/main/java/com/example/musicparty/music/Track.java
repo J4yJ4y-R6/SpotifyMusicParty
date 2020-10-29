@@ -16,6 +16,14 @@ public class Track {
         this.duration = duration;
     }
 
+    public Track(String id) {
+        this.id = id;
+        this.name = "Test";
+        this.cover = "Test";
+        this.duration = 10;
+        this.artist = new Artist[0];
+    }
+
     public String getId() {
         return id;
     }
@@ -44,5 +52,9 @@ public class Track {
                 ", duration=" + duration +
                 ", cover='" + cover + '\'' +
                 '}';
+    }
+
+    public String getURI() {
+        return "spotify:track:" + id;
     }
 }
