@@ -56,7 +56,7 @@ public class PartyActivity extends AppCompatActivity {
         binding = ActivityPartyBinding.inflate(getLayoutInflater());
         connect();
         setContentView(binding.getRoot());
-
+        
         RecyclerView recyclerView = (RecyclerView) binding.testrecycler;
         //List<String> myDataset = Arrays.asList("Silas", "Jannik");
         mAdapter = new PartyAcRecycAdapter(new ArrayList<Track>());
@@ -108,7 +108,7 @@ public class PartyActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         // Display requested url data as string into text view
-                        binding.tvResult.setText(data);
+                        //binding.tvResult.setText(data);
                         extractSongs(data);
                     }
                 });
