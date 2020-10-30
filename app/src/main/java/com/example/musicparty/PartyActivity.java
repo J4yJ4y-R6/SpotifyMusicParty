@@ -4,10 +4,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
 
 import com.example.musicparty.databinding.ActivityPartyBinding;
 import com.example.musicparty.music.Artist;
@@ -35,7 +38,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class PartyActivity extends AppCompatActivity {
+public class PartyActivity extends AppCompatActivity implements ShowSongFragment.ExitButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs {
 
     ActivityPartyBinding binding;
     private static final String NAME = PartyActivity.class.getName();
@@ -48,24 +51,52 @@ public class PartyActivity extends AppCompatActivity {
     private Socket clientSocket;
     private List<Track> tracks = new ArrayList<>();
     private PartyAcRecycAdapter mAdapter;
+    private RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         token = getIntent().getStringExtra("token");
         binding = ActivityPartyBinding.inflate(getLayoutInflater());
-        connect();
+        //connect();
         setContentView(binding.getRoot());
-        
-        RecyclerView recyclerView = (RecyclerView) binding.testrecycler;
+
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.searchBarFragmentFrame, new SearchBarFragment(this), "SearchBarFragment").commitAllowingStateLoss();
+
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongFragmentFrame, new ShowSongFragment(this), "ShowSongFragment").commitAllowingStateLoss();
+
+         /*recyclerView = (RecyclerView) binding.searchOutputRecyclerView;
         //List<String> myDataset = Arrays.asList("Silas", "Jannik");
         mAdapter = new PartyAcRecycAdapter(new ArrayList<Track>());
         recyclerView.setAdapter(mAdapter);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
+*/
     }
 
+    @Override
+    public void exitConnection() {
+        getSupportFragmentManager().beginTransaction().
+               replace(R.id.showSongFragmentFrame, new ExitConnectionFragment(this), "ExitConnectionFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void denyExit() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongFragmentFrame, new ShowSongFragment(this), "ShowSongFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void searchForSongs() {
+        Log.d("ShowSongFragment", "back to show");
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongFragmentFrame, new SearchSongsOutputFragment(), "ShowSongFragment").commitAllowingStateLoss();
+    }
+ /*
     public void search(View view){
+        recyclerView.setVisibility(View.VISIBLE);
         String query = binding.etSearch.getText().toString();
         OkHttpClient client = new OkHttpClient();
         PartyActivity partyActivity = this;
@@ -145,7 +176,7 @@ public class PartyActivity extends AppCompatActivity {
                 Log.d(NAME, tracks.get(i).toString());
             }
             mAdapter.setmDataset(tracks);
-            binding.testrecycler.getAdapter().notifyDataSetChanged();
+            binding.searchOutputRecyclerView.getAdapter().notifyDataSetChanged();
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -208,5 +239,5 @@ public class PartyActivity extends AppCompatActivity {
 
             }
         }
-    }
+    }*/
 }
