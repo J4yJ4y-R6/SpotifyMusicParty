@@ -11,62 +11,36 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
 
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.Toast;
 
 
 import com.example.musicparty.databinding.ActivityPartyBinding;
-import com.example.musicparty.music.Artist;
 import com.example.musicparty.music.Track;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Arrays;
 
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
-public class PartyActivity extends AppCompatActivity implements ShowSongFragment.ExitButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, PartyAcRecycAdapter.SongCallback, ClientService.ClientCallback {
+public class PartyActivity extends AppCompatActivity implements ShowSongFragment.ExitButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, SearchSongsOutputFragment.AddSongCallback {
 
 
     ActivityPartyBinding binding;
     private static final String NAME = PartyActivity.class.getName();
-    private static final String HOST = "api.spotify.com";
-    private static final int PORT = 1403;
     private static String token;
-    private int limit = 10;
-    private String type = "track";
-    private Thread clientThread;
-    private Socket clientSocket;
-    private PartyAcRecycAdapter mAdapter;
-    private RecyclerView recyclerView;
     private boolean mShouldUnbind;
     private ClientService mBoundService;
+    private SearchSongsOutputFragment searchSongsOutputFragment;
+    private ShowSongFragment showSongFragment;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mBoundService = ((ClientService.LocalBinder)service).getService();
-            mBoundService.setCallback(PartyActivity.this);
 
             // Tell the user about this for our demo.
             Toast.makeText(PartyActivity.this, "Service connected", Toast.LENGTH_SHORT).show();
@@ -92,7 +66,6 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     void doUnbindService() {
         if (mShouldUnbind) {
             // Release information about the service's state.
-            mBoundService.setCallback(null);
             unbindService(mConnection);
             mShouldUnbind = false;
         }
@@ -110,12 +83,14 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         token = getIntent().getStringExtra(Constants.TOKEN);
         binding = ActivityPartyBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        searchSongsOutputFragment = new SearchSongsOutputFragment(this);
+        showSongFragment = new ShowSongFragment(this);
 
         getSupportFragmentManager().beginTransaction().
-                replace(R.id.searchBarFragmentFrame, new SearchBarFragment(this), "SearchBarFragment").commitAllowingStateLoss();
+                replace(R.id.searchBarFragmentFrame, new SearchBarFragment(this, token), "SearchBarFragment").commitAllowingStateLoss();
 
         getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongFragmentFrame, new ShowSongFragment(this), "ShowSongFragment").commitAllowingStateLoss();
+                replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
 
       
          Intent serviceIntent = new Intent(this, ClientService.class);
@@ -124,13 +99,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         serviceIntent.putExtra(Constants.PASSWORD, getIntent().getStringExtra(Constants.PASSWORD));
         startService(serviceIntent);
         doBindService();
-      
-         /*recyclerView = (RecyclerView) binding.searchOutputRecyclerView;
-        //List<String> myDataset = Arrays.asList("Silas", "Jannik");
-        mAdapter = new PartyAcRecycAdapter(new ArrayList<Track>(), this);
-        recyclerView.setAdapter(mAdapter);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);*/
+
     }
 
     @Override
@@ -146,30 +115,34 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     }
 
     @Override
-    public void searchForSongs() {
+    public void searchForSongs(List<Track> tracks) {
         Log.d("ShowSongFragment", "back to show");
         getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongFragmentFrame, new SearchSongsOutputFragment(), "ShowSongFragment").commitAllowingStateLoss();
+                replace(R.id.showSongFragmentFrame, searchSongsOutputFragment, "ShowSongFragment").commitAllowingStateLoss();
+        this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));
     }
  
 
     public void search(View view) {
-        mBoundService.search(binding.etSearch.getText().toString());
+        //binding.etSearch.getText().toString());
     }
 
     @Override
-    public void returnSong(int i) {
-        Log.d(NAME, "Item pressed: " + i);
-        Log.d(NAME, mBoundService.getTracks().get(i).toString());
-        Toast.makeText(this,  mBoundService.getTracks().get(i).getName() + " has been added to queue!", Toast.LENGTH_SHORT).show();
+    public void onBackPressed() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
     }
 
-
     @Override
-    public void updateView(List<Track> tracks) {
-        this.runOnUiThread(() -> {
-            mAdapter.setmDataset(tracks);
-            binding.testrecycler.getAdapter().notifyDataSetChanged();
-        });
+    public void addSong(Track track) {
+            new Thread(() -> {
+                try {
+                    Log.d(NAME, "Trying to send message to server");
+                    mBoundService.getClientThread().sendMessage(Commands.QUEUE, track.serialize());
+                } catch (IOException | JSONException e) {
+                    Log.e(NAME, e.getMessage(), e);
+                }
+            }).start();
+
     }
 }

@@ -4,10 +4,13 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+
+import com.example.musicparty.music.Track;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,6 +42,7 @@ public class ServerService extends Service {
     private static final String HOST = "api.spotify.com";
     public static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
+    private final IBinder mBinder = new LocalBinder();
     private String password;
     Thread serverThread = null;
     private ServerSocket serverSocket;
@@ -49,12 +53,20 @@ public class ServerService extends Service {
     private String playlistID;
     private int size = 0;
     private boolean first = true;
+    private String partyName = "Coole Party";
+    private List<Track> tracks = new ArrayList<>();
+    private ServerService mBoundService;
+
+    public class LocalBinder extends Binder {
+        ServerService getService() {
+            return ServerService.this;
+        }
+    }
 
     @Override
     public void onCreate() {
         super.onCreate();
         startServer();
-
     }
 
     @Override
@@ -100,7 +112,7 @@ public class ServerService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return null;
+        return mBinder;
     }
 
     private void getUserID() {
@@ -272,7 +284,7 @@ public class ServerService extends Service {
                     Log.d(NAME, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(NAME,"Request Successful. Track " + name + " hast been added.");
+                    Log.d(NAME,"Request Successful. Track " + name + " has been added.");
                     size++;
                     if (size == 1) HostActivity.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:" + playlistID);
                 }
@@ -288,7 +300,7 @@ public class ServerService extends Service {
         }
     }
 
-    private void sendToAll(Commands command, String message) throws IOException {
+    public void sendToAll(Commands command, String message) throws IOException {
         for(CommunicationThread client : clientThreads) {
             client.sendMessage(command, message);
         }
@@ -329,6 +341,7 @@ public class ServerService extends Service {
         private BufferedReader input;
         private DataOutputStream out;
         private boolean login = false;
+        private String username;
 
         public CommunicationThread(Socket socket) {
             Log.d(NAME, "New client request");
@@ -365,20 +378,26 @@ public class ServerService extends Service {
                                     close();
                                     return;
                                 case LOGIN:
-                                    Log.d(NAME, "New login attempt with password: " + attribute);
-                                    if (login(attribute))
-                                        sendMessage(Commands.LOGIN, "Successful");
-                                    else {
-                                        sendMessage(Commands.QUIT, "Login Failed");
-                                        close();
-                                        return;
+                                    if (parts.length > 3) {
+                                        String pass = parts[3];
+                                        Log.d(NAME, "New login attempt from user " + attribute +" with password: " + pass);
+                                        if (login(pass)) {
+                                            username = attribute;
+                                            sendMessage(Commands.LOGIN, partyName);
+                                        } else {
+                                            sendMessage(Commands.QUIT, "Login Failed");
+                                            close();
+                                            return;
+                                        }
                                     }
                                     break;
-                                case QUE:
+                                case QUEUE:
                                     Log.d(NAME, "Added " + attribute + " to the queue");
                                     if(this.login) {
-                                        addItem("spotify:track:" + attribute, "Test");
-                                        sendToAll(Commands.QUE, "New song has been added");
+                                        Track track = new Track(attribute);
+                                        tracks.add(track);
+                                        addItem(track.getURI(), track.getName());
+                                        sendToAll(Commands.QUEUE, track.serialize());
                                     }
                                     break;
                                 default:

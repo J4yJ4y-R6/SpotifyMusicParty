@@ -3,15 +3,19 @@ package com.example.musicparty;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.media.MediaParser;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.example.musicparty.databinding.ActivityHostBinding;
 import com.example.musicparty.music.Artist;
@@ -58,6 +62,41 @@ public class HostActivity extends AppCompatActivity {
     private IntentFilter intentFilter;
     private boolean pause;
     private String token;
+    private boolean mShouldUnbind;
+    private ServerService mBoundService;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            mBoundService = ((ServerService.LocalBinder)service).getService();
+
+            // Tell the user about this for our demo.
+            Toast.makeText(HostActivity.this, "Service connected", Toast.LENGTH_SHORT).show();
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            mBoundService = null;
+            Toast.makeText(HostActivity.this, "Service disconnected",
+                    Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    void doBindService() {
+        if (bindService(new Intent(this, ServerService.class),
+                mConnection, Context.BIND_AUTO_CREATE)) {
+            mShouldUnbind = true;
+        } else {
+            Log.e(NAME, "Error: The requested service doesn't " +
+                    "exist, or this client isn't allowed access to it.");
+        }
+    }
+
+    void doUnbindService() {
+        if (mShouldUnbind) {
+            // Release information about the service's state.
+            unbindService(mConnection);
+            mShouldUnbind = false;
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,6 +132,7 @@ public class HostActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         binding.tvIpAddress.setText(getIPAddress(true));
         binding.tvPassword.setText(PASSWORD);
+        doBindService();
     }
 
     @Override
@@ -110,6 +150,7 @@ public class HostActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        doUnbindService();
         Log.d(NAME, "I got destroyed");
     }
 
@@ -140,6 +181,22 @@ public class HostActivity extends AppCompatActivity {
                                 .subscribeToPlayerState()
                                 .setEventCallback(playerState -> {
                                     final Track track = playerState.track;
+                                    if(playerState.playbackPosition == 0) {
+                                        Log.d(NAME, "New song has been started");
+                                        new Thread(()->{
+                                            try {
+                                                mBoundService.sendToAll(Commands.PLAYING, new com.example.musicparty.music.Track(
+                                                        track.uri.split(":")[2],
+                                                        track.name,
+                                                        track.artists,
+                                                        track.imageUri.raw,
+                                                        track.duration
+                                                        ).serialize());
+                                            } catch (IOException | JSONException e) {
+                                                Log.e(NAME, e.getMessage(), e);
+                                            }
+                                        }).start();
+                                    }
                                     pause = playerState.isPaused;
                                     if (track != null) {
                                         Log.d(NAME, track.name + " by " + track.artist.name);

@@ -37,22 +37,14 @@ import static com.example.musicparty.App.CHANNEL_ID;
 
 public class ClientService extends Service {
 
-    public interface ClientCallback {
-        void updateView(List<Track> tracks);
-    }
 
     private static final String NAME = ClientService.class.getName();
-    private static final String HOST = "api.spotify.com";
     private static final int PORT = 1403;
-    private static String token;
     private final IBinder mBinder = new LocalBinder();
-    private int limit = 10;
-    private String type = "track";
-    private Thread clientThread;
+    private ClientThread clientThread;
     private Socket clientSocket;
-    private List<Track> tracks = new ArrayList<>();
     private boolean first = true;
-    private ClientCallback clientCallback;
+    private List<Track> queue = new ArrayList<>();
 
     public class LocalBinder extends Binder {
         ClientService getService() {
@@ -87,19 +79,18 @@ public class ClientService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         if(first) connect(intent.getStringExtra(Constants.ADDRESS), intent.getStringExtra(Constants.PASSWORD));
-        token = intent.getStringExtra("token");
         //password = intent.getStringExtra("password");
 
         return START_NOT_STICKY;
     }
 
     public void connect(String ipAddress, String password){
-        clientThread = new Thread(new ClientThread(ipAddress, password));
+        clientThread = new ClientThread(ipAddress, password);
         clientThread.start();
     }
 
-    public List<Track> getTracks() {
-        return tracks;
+    public ClientThread getClientThread() {
+        return clientThread;
     }
 
     @Override
@@ -107,95 +98,27 @@ public class ClientService extends Service {
         return mBinder;
     }
 
-    public void setCallback(ClientCallback clientCallback) {
-        this.clientCallback = clientCallback;
-    }
 
-    public void search(String query){
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(HOST)
-                .addPathSegment("v1")
-                .addPathSegment("search")
-                .addQueryParameter("q", query)
-                .addQueryParameter("type", type)
-                .addQueryParameter("limit", String.valueOf(limit))
-                .build();
-        Log.d(NAME, "Making request to " + completeURL.toString());
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .addHeader("Authorization", "Bearer " + token)
-                .build();
-        Log.d(NAME, request.headers().toString());
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
-            }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if(!response.isSuccessful()){
-                    throw new IOException("Error : " + response);
-                }else {
-                    Log.d(NAME,"Request Successful.");
-                }
-                final String data = response.body().string();
-
-                // Read data in the worker thread
-                extractSongs(data);
-            }
-        });
-    }
-
-    public void extractSongs(String data) {
-        try {
-            tracks.clear();
-            JSONObject jsonObject = new JSONObject(data);
-            jsonObject = jsonObject.getJSONObject("tracks");
-            JSONArray jsonArray = jsonObject.getJSONArray("items");
-            for(int i = 0; i < jsonArray.length(); i++) {
-                JSONObject track = jsonArray.getJSONObject(i);
-                JSONArray artists = track.getJSONArray("artists");
-                Artist[] array = new Artist[artists.length()];
-                for(int j = 0; j < array.length; j++) {
-                    JSONObject artist = artists.getJSONObject(j);
-                    array[j] = new Artist(artist.getString("id"), artist.getString("name"));
-                }
-                String image = track
-                        .getJSONObject("album")
-                        .getJSONArray("images")
-                        .getJSONObject(2)
-                        .getString("url");
-                tracks.add(
-                        new Track(
-                                track.getString("id"),
-                                track.getString("name"), array,
-                                image,
-                                track.getInt("duration_ms")
-                        ));
-                Log.d(NAME, tracks.get(i).toString());
-            }
-            clientCallback.updateView(tracks);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    class ClientThread implements Runnable {
+    class ClientThread extends Thread {
 
         private String address;
         private BufferedReader input;
         private DataOutputStream out;
         private String password;
         private String line;
+        private String username = "Test";
+        private String partyName;
 
         public ClientThread(String address, String password) {
             this.address = address;
             this.password = password;
+        }
+
+        public void sendMessage(Commands commands, String message) throws IOException {
+            Log.d(NAME, String.format("~%s~%s\n\r" , commands.toString(), message));
+            out.writeBytes(String.format("~%s~%s\n\r" , commands.toString(), message));
+            out.flush();
         }
 
         @Override
@@ -205,8 +128,7 @@ public class ClientService extends Service {
                 clientSocket = new Socket(this.address, PORT);
                 input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
                 out = new DataOutputStream(clientSocket.getOutputStream());
-                out.writeBytes("~LOGIN~" + this.password + "\n\r");
-                out.flush();
+                sendMessage(Commands.LOGIN, this.username + "~" + this.password);
                 Log.d(NAME, "Connect successful");
                 while (true)  {
                     line = input.readLine();
@@ -219,16 +141,24 @@ public class ClientService extends Service {
                             Commands command = Commands.valueOf(parts[1]);
                             switch (command) {
                                 case LOGIN:
-                                    Log.d(NAME, attribute);
+                                    partyName = attribute;
+                                    Log.d(NAME, partyName);
                                     break;
                                 case QUIT:
                                     clientSocket.close();
                                     return;
+                                case QUEUE:
+                                    queue.add(new Track(attribute));
+                                    Log.d(NAME, attribute);
+                                    break;
+                                case PLAYING:
+                                     Log.d(NAME, "Playing: " + attribute);
+                                     break;
                             }
                         }
                     }
                 }
-            } catch (IOException e) {
+            } catch (IOException | JSONException e) {
                 Log.e(NAME, e.getMessage(), e);
 
             }

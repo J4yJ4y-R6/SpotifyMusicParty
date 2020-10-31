@@ -8,18 +8,33 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Track {
 
     private final String id;
     private final String name;
     private final Artist [] artist;
-    private final int duration;
+    private final long duration;
     private final String cover;
 
-    public Track(String id, String name, Artist [] artist, String cover, int duration) {
+    public Track(String id, String name, Artist [] artist, String cover, long duration) {
         this.id = id;
         this.name = name;
         this.artist = artist;
+        this.cover = cover;
+        this.duration = duration;
+    }
+
+    public Track(String id, String name, List<com.spotify.protocol.types.Artist> artist, String cover, long duration) {
+        Artist [] artists = new Artist[artist.size()];
+        for (int i = 0; i < artist.size(); i++) {
+            artists[i] = new Artist(artist.get(i).uri, artist.get(i).name);
+        }
+        this.id = id;
+        this.name = name;
+        this.artist = artists;
         this.cover = cover;
         this.duration = duration;
     }
@@ -28,7 +43,7 @@ public class Track {
         JSONObject tempObject = new JSONObject(json);
         this.id = tempObject.getString(Constants.ID);
         this.name = tempObject.getString(Constants.NAME);
-        this.duration = tempObject.getInt(Constants.NAME);
+        this.duration = tempObject.getLong(Constants.DURATION);
         this.cover = tempObject.getString(Constants.COVER);
         JSONArray array = tempObject.getJSONArray(Constants.ARTIST);
         Artist[] tempArtist = new Artist[array.length()];
@@ -58,7 +73,7 @@ public class Track {
         return artist[index];
     }
 
-    public int getDuration() {
+    public long getDuration() {
         return duration;
     }
 
