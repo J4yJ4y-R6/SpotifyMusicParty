@@ -4,13 +4,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
+
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.Toast;
+
 
 import com.example.musicparty.databinding.ActivityPartyBinding;
 import com.example.musicparty.music.Artist;
@@ -38,7 +46,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class PartyActivity extends AppCompatActivity implements ShowSongFragment.ExitButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs {
+public class PartyActivity extends AppCompatActivity implements ShowSongFragment.ExitButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, PartyAcRecycAdapter.SongCallback, ClientService.ClientCallback {
+
 
     ActivityPartyBinding binding;
     private static final String NAME = PartyActivity.class.getName();
@@ -49,16 +58,57 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     private String type = "track";
     private Thread clientThread;
     private Socket clientSocket;
-    private List<Track> tracks = new ArrayList<>();
     private PartyAcRecycAdapter mAdapter;
     private RecyclerView recyclerView;
+    private boolean mShouldUnbind;
+    private ClientService mBoundService;
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            mBoundService = ((ClientService.LocalBinder)service).getService();
+            mBoundService.setCallback(PartyActivity.this);
+
+            // Tell the user about this for our demo.
+            Toast.makeText(PartyActivity.this, "Service connected", Toast.LENGTH_SHORT).show();
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            mBoundService = null;
+            Toast.makeText(PartyActivity.this, "Service disconnected",
+                    Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    void doBindService() {
+        if (bindService(new Intent(this, ClientService.class),
+                mConnection, Context.BIND_AUTO_CREATE)) {
+            mShouldUnbind = true;
+        } else {
+            Log.e(NAME, "Error: The requested service doesn't " +
+                    "exist, or this client isn't allowed access to it.");
+        }
+    }
+
+    void doUnbindService() {
+        if (mShouldUnbind) {
+            // Release information about the service's state.
+            mBoundService.setCallback(null);
+            unbindService(mConnection);
+            mShouldUnbind = false;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        doUnbindService();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        token = getIntent().getStringExtra("token");
+        token = getIntent().getStringExtra(Constants.TOKEN);
         binding = ActivityPartyBinding.inflate(getLayoutInflater());
-        //connect();
         setContentView(binding.getRoot());
 
         getSupportFragmentManager().beginTransaction().
@@ -67,13 +117,20 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongFragmentFrame, new ShowSongFragment(this), "ShowSongFragment").commitAllowingStateLoss();
 
+      
+         Intent serviceIntent = new Intent(this, ClientService.class);
+        serviceIntent.putExtra(Constants.TOKEN, token);
+        serviceIntent.putExtra(Constants.ADDRESS, getIntent().getStringExtra(Constants.ADDRESS));
+        serviceIntent.putExtra(Constants.PASSWORD, getIntent().getStringExtra(Constants.PASSWORD));
+        startService(serviceIntent);
+        doBindService();
+      
          /*recyclerView = (RecyclerView) binding.searchOutputRecyclerView;
         //List<String> myDataset = Arrays.asList("Silas", "Jannik");
-        mAdapter = new PartyAcRecycAdapter(new ArrayList<Track>());
+        mAdapter = new PartyAcRecycAdapter(new ArrayList<Track>(), this);
         recyclerView.setAdapter(mAdapter);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
-*/
+        recyclerView.setLayoutManager(layoutManager);*/
     }
 
     @Override
@@ -94,150 +151,25 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongFragmentFrame, new SearchSongsOutputFragment(), "ShowSongFragment").commitAllowingStateLoss();
     }
- /*
-    public void search(View view){
-        recyclerView.setVisibility(View.VISIBLE);
-        String query = binding.etSearch.getText().toString();
-        OkHttpClient client = new OkHttpClient();
-        PartyActivity partyActivity = this;
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(HOST)
-                .addPathSegment("v1")
-                .addPathSegment("search")
-                .addQueryParameter("q", query)
-                .addQueryParameter("type", type)
-                .addQueryParameter("limit", String.valueOf(limit))
-                .build();
-        Log.d(NAME, "Making request to " + completeURL.toString());
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .addHeader("Authorization", "Bearer " + token)
-                .build();
-        Log.d(NAME, request.headers().toString());
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
-            }
+ 
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if(!response.isSuccessful()){
-                    throw new IOException("Error : " + response);
-                }else {
-                    Log.d(NAME,"Request Successful.");
-                }
+    public void search(View view) {
+        mBoundService.search(binding.etSearch.getText().toString());
+    }
 
-                // Read data in the worker thread
-                final String data = response.body().string();
+    @Override
+    public void returnSong(int i) {
+        Log.d(NAME, "Item pressed: " + i);
+        Log.d(NAME, mBoundService.getTracks().get(i).toString());
+        Toast.makeText(this,  mBoundService.getTracks().get(i).getName() + " has been added to queue!", Toast.LENGTH_SHORT).show();
+    }
 
-                // Display the requested data on UI in main thread
-                partyActivity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Display requested url data as string into text view
-                        //binding.tvResult.setText(data);
-                        extractSongs(data);
-                    }
-                });
-            }
+
+    @Override
+    public void updateView(List<Track> tracks) {
+        this.runOnUiThread(() -> {
+            mAdapter.setmDataset(tracks);
+            binding.testrecycler.getAdapter().notifyDataSetChanged();
         });
     }
-
-    public void extractSongs(String data) {
-        try {
-            tracks.clear();
-            JSONObject jsonObject = new JSONObject(data);
-            jsonObject = jsonObject.getJSONObject("tracks");
-            JSONArray jsonArray = jsonObject.getJSONArray("items");
-            for(int i = 0; i < jsonArray.length(); i++) {
-                JSONObject track = jsonArray.getJSONObject(i);
-                JSONArray artists = track.getJSONArray("artists");
-                Artist [] array = new Artist[artists.length()];
-                for(int j = 0; j < array.length; j++) {
-                    JSONObject artist = artists.getJSONObject(j);
-                    array[j] = new Artist(artist.getString("id"), artist.getString("name"));
-                }
-                String image = track
-                        .getJSONObject("album")
-                        .getJSONArray("images")
-                        .getJSONObject(2)
-                        .getString("url");
-                tracks.add(
-                        new Track(
-                                track.getString("id"),
-                                track.getString("name"), array,
-                                image,
-                                track.getInt("duration_ms")
-                        ));
-                Log.d(NAME, tracks.get(i).toString());
-            }
-            mAdapter.setmDataset(tracks);
-            binding.searchOutputRecyclerView.getAdapter().notifyDataSetChanged();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void activateBinding() {
-        setContentView(binding.getRoot());
-    }
-
-    public void connect(){
-        clientThread = new Thread(new ClientThread(getIntent().getStringExtra("address"), getIntent().getStringExtra("password")));
-        clientThread.start();
-    }
-
-    class ClientThread implements Runnable {
-
-        private String address;
-        private BufferedReader input;
-        private DataOutputStream out;
-        private String password;
-        private String line;
-
-        public ClientThread(String address, String password) {
-            this.address = address;
-            this.password = password;
-        }
-
-        @Override
-        public void run() {
-            try {
-                Log.d(NAME, "Try to login to " + address + ":" + PORT + " with password " + this.password);
-                clientSocket = new Socket(this.address, PORT);
-                input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-                out = new DataOutputStream(clientSocket.getOutputStream());
-                out.writeBytes("~LOGIN~" + this.password + "\n\r");
-                out.flush();
-                Log.d(NAME, "Connect successful");
-                while (true)  {
-                    line = input.readLine();
-                    if (line != null) {
-                        String [] parts = line.split("~");
-                        String attribute = "";
-                        if (parts.length > 2)
-                            attribute = parts[2];
-                        if (parts.length > 1) {
-                            Commands command = Commands.valueOf(parts[1]);
-                            switch (command) {
-                                case LOGIN:
-                                    Log.d(NAME, attribute);
-                                    break;
-                                case QUIT:
-                                    clientSocket.close();
-                                    return;
-                            }
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                Log.e(NAME, e.getMessage(), e);
-
-            }
-        }
-    }*/
 }
