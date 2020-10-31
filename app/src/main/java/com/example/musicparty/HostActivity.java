@@ -229,6 +229,7 @@ public class HostActivity extends AppCompatActivity {
     }
 
     public void stopService(View view) {
+        doUnbindService();
         stopService(new Intent(this, ServerService.class));
         mSpotifyAppRemote.getPlayerApi().pause();
         startActivity(new Intent(this, MainActivity.class));
