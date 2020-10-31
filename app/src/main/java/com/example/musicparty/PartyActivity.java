@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -13,7 +14,11 @@ import android.os.IBinder;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
+
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.Toast;
+
 
 import com.example.musicparty.databinding.ActivityPartyBinding;
 import com.example.musicparty.music.Artist;
@@ -41,7 +46,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class PartyActivity extends AppCompatActivity implements PartyAcRecycAdapter.SongCallback, ClientService.ClientCallback {
+public class PartyActivity extends AppCompatActivity implements ShowSongFragment.ExitButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, PartyAcRecycAdapter.SongCallback, ClientService.ClientCallback {
+
 
     ActivityPartyBinding binding;
     private static final String NAME = PartyActivity.class.getName();
@@ -53,6 +59,7 @@ public class PartyActivity extends AppCompatActivity implements PartyAcRecycAdap
     private Thread clientThread;
     private Socket clientSocket;
     private PartyAcRecycAdapter mAdapter;
+    private RecyclerView recyclerView;
     private boolean mShouldUnbind;
     private ClientService mBoundService;
 
@@ -103,21 +110,48 @@ public class PartyActivity extends AppCompatActivity implements PartyAcRecycAdap
         token = getIntent().getStringExtra(Constants.TOKEN);
         binding = ActivityPartyBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        
-        RecyclerView recyclerView = (RecyclerView) binding.testrecycler;
-        //List<String> myDataset = Arrays.asList("Silas", "Jannik");
-        mAdapter = new PartyAcRecycAdapter(new ArrayList<Track>(), this);
-        recyclerView.setAdapter(mAdapter);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
 
-        Intent serviceIntent = new Intent(this, ClientService.class);
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.searchBarFragmentFrame, new SearchBarFragment(this), "SearchBarFragment").commitAllowingStateLoss();
+
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongFragmentFrame, new ShowSongFragment(this), "ShowSongFragment").commitAllowingStateLoss();
+
+      
+         Intent serviceIntent = new Intent(this, ClientService.class);
         serviceIntent.putExtra(Constants.TOKEN, token);
         serviceIntent.putExtra(Constants.ADDRESS, getIntent().getStringExtra(Constants.ADDRESS));
         serviceIntent.putExtra(Constants.PASSWORD, getIntent().getStringExtra(Constants.PASSWORD));
         startService(serviceIntent);
         doBindService();
+      
+         /*recyclerView = (RecyclerView) binding.searchOutputRecyclerView;
+        //List<String> myDataset = Arrays.asList("Silas", "Jannik");
+        mAdapter = new PartyAcRecycAdapter(new ArrayList<Track>(), this);
+        recyclerView.setAdapter(mAdapter);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);*/
     }
+
+    @Override
+    public void exitConnection() {
+        getSupportFragmentManager().beginTransaction().
+               replace(R.id.showSongFragmentFrame, new ExitConnectionFragment(this), "ExitConnectionFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void denyExit() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongFragmentFrame, new ShowSongFragment(this), "ShowSongFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void searchForSongs() {
+        Log.d("ShowSongFragment", "back to show");
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongFragmentFrame, new SearchSongsOutputFragment(), "ShowSongFragment").commitAllowingStateLoss();
+    }
+ 
 
     public void search(View view) {
         mBoundService.search(binding.etSearch.getText().toString());
@@ -129,6 +163,7 @@ public class PartyActivity extends AppCompatActivity implements PartyAcRecycAdap
         Log.d(NAME, mBoundService.getTracks().get(i).toString());
         Toast.makeText(this,  mBoundService.getTracks().get(i).getName() + " has been added to queue!", Toast.LENGTH_SHORT).show();
     }
+
 
     @Override
     public void updateView(List<Track> tracks) {

@@ -18,6 +18,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicParty">
+        <activity android:name=".ExitPopupActivity"/>
         <service
             android:name=".ClientService"
             android:enabled="true"
