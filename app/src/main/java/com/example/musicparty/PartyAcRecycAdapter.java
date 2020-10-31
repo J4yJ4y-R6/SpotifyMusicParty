@@ -27,6 +27,12 @@ import java.util.List;
 
 public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapter.ViewHolder> {
 
+    public interface SongCallback{
+        void returnSong(int i);
+    }
+
+    SongCallback songCallback;
+
     public class ViewHolder extends RecyclerView.ViewHolder {
 
         public TextView songTitleTextView;
@@ -42,7 +48,8 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
     }
 
     private List<Track> mDataset;
-    public PartyAcRecycAdapter(List<Track> test) {
+    public PartyAcRecycAdapter(List<Track> test, SongCallback songCallback) {
+        this.songCallback = songCallback;
         mDataset = test;
     }
 
@@ -73,6 +80,9 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
         textView1.setText(artist);
         ImageView imageView = holder.songCoverImageView;
         new DownloadImageTask(imageView).execute(cover);
+        holder.itemView.setOnClickListener(v -> {
+            songCallback.returnSong(position);
+        });
     }
 
     @Override
