@@ -6,6 +6,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.MediaParser;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
@@ -13,6 +14,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.example.musicparty.databinding.ActivityHostBinding;
+import com.example.musicparty.music.Artist;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
@@ -68,13 +70,25 @@ public class HostActivity extends AppCompatActivity {
         channel = manager.initialize(this, getMainLooper(), null);
         receiver = new WiFiDirectBroadcastReceiver(manager, channel, this);
 
+        com.example.musicparty.music.Track test = new com.example.musicparty.music.Track(
+                "rsadrf3241ssd",
+                "Test Track",
+                new Artist[]{new Artist("asdas", "Jannik")},
+                "URLSSAD",
+                12);
+        try {
+            Log.d(NAME, test.serialize());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
         intentFilter = new IntentFilter();
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-        token = getIntent().getStringExtra("token");
+        token = getIntent().getStringExtra(Constants.TOKEN);
         binding = ActivityHostBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         binding.tvIpAddress.setText(getIPAddress(true));
@@ -117,8 +131,8 @@ public class HostActivity extends AppCompatActivity {
                         Log.d(NAME, "Connected! Yay!");
                         //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
                         Intent serviceIntent = new Intent(hostActivity, ServerService.class);
-                        serviceIntent.putExtra("token", token);
-                        serviceIntent.putExtra("password", PASSWORD);
+                        serviceIntent.putExtra(Constants.TOKEN, token);
+                        serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
                         startService(serviceIntent);
                         // Now you can start interacting with App Remote
                         //connected();

@@ -33,13 +33,13 @@ public class MainActivity extends AppCompatActivity {
 
     public void changeHost(View view){
         Intent intent = new Intent(this, HostActivity.class);
-        intent.putExtra("token", token);
+        intent.putExtra(Constants.TOKEN, token);
         startActivity(intent);
     }
 
     public void changeClient(View view){
         Intent intent = new Intent(this, ClientActivity.class);
-        intent.putExtra("token", token);
+        intent.putExtra(Constants.TOKEN, token);
         startActivity(intent);
     }
 

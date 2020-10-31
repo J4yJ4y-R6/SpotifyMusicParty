@@ -4,7 +4,6 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -19,6 +18,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -41,6 +42,7 @@ public class ServerService extends Service {
     private String password;
     Thread serverThread = null;
     private ServerSocket serverSocket;
+    private List<CommunicationThread> clientThreads = new ArrayList<>();
     private Socket tempClientSocket;
     private String userID;
     private String token;
@@ -83,8 +85,17 @@ public class ServerService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(ServerService.class.getName(), "I have been destroyed");
+        Log.d(ServerService.class.getName(), "I have been destroyed " + clientThreads.size());
         deletePlaylist();
+        new Thread(() -> {
+            try {
+                serverSocket.close();
+                stopAll();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+        serverThread.interrupt();
     }
 
     @Override
@@ -269,6 +280,20 @@ public class ServerService extends Service {
         });
     }
 
+    private void stopAll() throws IOException {
+        Log.d(NAME, "Stopping server");
+        for(CommunicationThread client : clientThreads) {
+            client.sendMessage(Commands.QUIT, "Session has been closed");
+            client.close();
+        }
+    }
+
+    private void sendToAll(Commands command, String message) throws IOException {
+        for(CommunicationThread client : clientThreads) {
+            client.sendMessage(command, message);
+        }
+    }
+
     private void startServer(){
         Log.d(NAME, "Try to start server");
         this.serverThread = new Thread(new ServerThread());
@@ -288,8 +313,8 @@ public class ServerService extends Service {
             if(null != serverSocket){
                 while(!Thread.currentThread().isInterrupted()) {
                     try {
-                        CommunicationThread commThread = new CommunicationThread(serverSocket.accept());
-                        new Thread(commThread).start();
+                        clientThreads.add(new CommunicationThread(serverSocket.accept()));
+                        clientThreads.get(clientThreads.size()-1).start();
                     } catch (IOException e) {
                         Log.e(NAME, e.getMessage(), e);
                     }
@@ -298,7 +323,7 @@ public class ServerService extends Service {
         }
     }
 
-    class CommunicationThread implements Runnable {
+    class CommunicationThread extends Thread {
 
         private Socket clientSocket;
         private BufferedReader input;
@@ -308,6 +333,11 @@ public class ServerService extends Service {
         public CommunicationThread(Socket socket) {
             Log.d(NAME, "New client request");
             this.clientSocket = socket;
+        }
+
+        public void sendMessage(Commands command, String message) throws IOException {
+            out.writeBytes("~" + command.toString() + "~" + message + "\n\r");
+            out.flush();
         }
 
         @Override
@@ -332,20 +362,24 @@ public class ServerService extends Service {
                                 attribute = parts[2];
                             switch (command) {
                                 case QUIT:
-                                    clientSocket.close();
+                                    close();
                                     return;
                                 case LOGIN:
                                     Log.d(NAME, "New login attempt with password: " + attribute);
                                     if (login(attribute))
-                                        out.writeBytes("~LOGIN~Successful\n\n");
-                                    else
-                                        out.writeBytes("~LOGIN~Failed\n\n");
-                                    out.flush();
+                                        sendMessage(Commands.LOGIN, "Successful");
+                                    else {
+                                        sendMessage(Commands.QUIT, "Login Failed");
+                                        close();
+                                        return;
+                                    }
                                     break;
                                 case QUE:
                                     Log.d(NAME, "Added " + attribute + " to the queue");
-                                    if(this.login)
+                                    if(this.login) {
                                         addItem("spotify:track:" + attribute, "Test");
+                                        sendToAll(Commands.QUE, "New song has been added");
+                                    }
                                     break;
                                 default:
                                     Log.d(NAME, "No such command: " + command);
@@ -357,6 +391,12 @@ public class ServerService extends Service {
                     return;
                 }
             }
+        }
+
+        private void close() throws IOException {
+            out.close();
+            input.close();
+            clientSocket.close();
         }
 
         private boolean login(String input) {

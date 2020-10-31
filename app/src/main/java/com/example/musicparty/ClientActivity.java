@@ -29,9 +29,9 @@ public class ClientActivity extends AppCompatActivity {
 
     public void nextPage(View view) {
         Intent intent = new Intent(this, PartyActivity.class);
-        intent.putExtra("token", getIntent().getStringExtra("token"));
-        intent.putExtra("password", binding.etPassword.getText().toString());
-        intent.putExtra("address", binding.etAddress.getText().toString());
+        intent.putExtra(Constants.TOKEN, getIntent().getStringExtra("token"));
+        intent.putExtra(Constants.PASSWORD, binding.etPassword.getText().toString());
+        intent.putExtra(Constants.ADDRESS, binding.etAddress.getText().toString());
         startActivity(intent);
     }
 
