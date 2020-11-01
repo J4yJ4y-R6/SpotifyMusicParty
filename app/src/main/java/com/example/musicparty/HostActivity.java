@@ -48,19 +48,17 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class HostActivity extends AppCompatActivity {
+public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback {
 
     private static final String NAME = HostActivity.class.getName();
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
     private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
     private static final String PASSWORD = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
-    private static SpotifyAppRemote mSpotifyAppRemote;
     private ActivityHostBinding binding;
     private Channel channel;
     private WifiP2pManager manager;
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
-    private boolean pause;
     private String token;
     private boolean mShouldUnbind;
     private ServerService mBoundService;
@@ -133,6 +131,37 @@ public class HostActivity extends AppCompatActivity {
         binding.tvIpAddress.setText(getIPAddress(true));
         binding.tvPassword.setText(PASSWORD);
         doBindService();
+
+        HostActivity hostActivity = this;
+        ConnectionParams connectionParams =
+                new ConnectionParams.Builder(CLIENT_ID)
+                        .setRedirectUri(REDIRECT_URI)
+                        .showAuthView(false)
+                        .build();
+        SpotifyAppRemote.connect(this, connectionParams,
+                new Connector.ConnectionListener() {
+
+                    @Override
+                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                        mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
+                        Log.d(NAME, "Connected! Yay!");
+                        //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
+                        Intent serviceIntent = new Intent(hostActivity, ServerService.class);
+                        serviceIntent.putExtra(Constants.TOKEN, token);
+                        serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
+                        startService(serviceIntent);
+                        // Now you can start interacting with App Remote
+                        //connected();
+                        mBoundService.addEventListener(HostActivity.this);
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        Log.e(NAME, throwable.getMessage(), throwable);
+
+                        // Something went wrong when attempting to connect! Handle errors here
+                    }
+                });
     }
 
     @Override
@@ -150,6 +179,7 @@ public class HostActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         doUnbindService();
         Log.d(NAME, "I got destroyed");
     }
@@ -157,86 +187,23 @@ public class HostActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        HostActivity hostActivity = this;
-        ConnectionParams connectionParams =
-                new ConnectionParams.Builder(CLIENT_ID)
-                        .setRedirectUri(REDIRECT_URI)
-                        .showAuthView(true)
-                        .build();
-        SpotifyAppRemote.connect(this, connectionParams,
-                new Connector.ConnectionListener() {
-
-                    @Override
-                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                        mSpotifyAppRemote = spotifyAppRemote;
-                        Log.d(NAME, "Connected! Yay!");
-                        //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
-                        Intent serviceIntent = new Intent(hostActivity, ServerService.class);
-                        serviceIntent.putExtra(Constants.TOKEN, token);
-                        serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
-                        startService(serviceIntent);
-                        // Now you can start interacting with App Remote
-                        //connected();
-                        mSpotifyAppRemote.getPlayerApi()
-                                .subscribeToPlayerState()
-                                .setEventCallback(playerState -> {
-                                    final Track track = playerState.track;
-                                    if(playerState.playbackPosition == 0) {
-                                        Log.d(NAME, "New song has been started");
-                                        new Thread(()->{
-                                            try {
-                                                mBoundService.sendToAll(Commands.PLAYING, new com.example.musicparty.music.Track(
-                                                        track.uri.split(":")[2],
-                                                        track.name,
-                                                        track.artists,
-                                                        track.imageUri.raw,
-                                                        track.duration
-                                                        ).serialize());
-                                            } catch (IOException | JSONException e) {
-                                                Log.e(NAME, e.getMessage(), e);
-                                            }
-                                        }).start();
-                                    }
-                                    pause = playerState.isPaused;
-                                    if (track != null) {
-                                        Log.d(NAME, track.name + " by " + track.artist.name);
-                                        //if (playerState.playbackPosition == 0)
-                                            //nextSong();
-                                        hostActivity.runOnUiThread(() -> {
-                                            // Display requested url data as string into text view
-                                            binding.tvPlaying.setText(String.format("%s by %s", track.name, track.artist.name));
-                                        });
-                                    }
-                                });
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable) {
-                        Log.e(NAME, throwable.getMessage(), throwable);
-
-                        // Something went wrong when attempting to connect! Handle errors here
-                    }
-                });
-    }
-
-    public static SpotifyAppRemote getmSpotifyAppRemote() {
-        return mSpotifyAppRemote;
     }
 
     public void togglePlay(View view) {
-        if (pause) mSpotifyAppRemote.getPlayerApi().resume();
-        else mSpotifyAppRemote.getPlayerApi().pause();
+        if (mBoundService.getPause()) mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
+        else mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
     }
 
     public void stopService(View view) {
+        SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         doUnbindService();
         stopService(new Intent(this, ServerService.class));
-        mSpotifyAppRemote.getPlayerApi().pause();
-        startActivity(new Intent(this, MainActivity.class));
+        mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
+        startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
     }
 
     public void nextSong(View view) {
-        mSpotifyAppRemote.getPlayerApi().skipNext();
+        mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
     }
 
     private String getIPAddress(boolean useIPv4) {
@@ -267,8 +234,8 @@ public class HostActivity extends AppCompatActivity {
     }
 
     private void connected() {
-        mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:31OUF33qw8gZH6dmkss0Cz");
-        mSpotifyAppRemote.getPlayerApi()
+        mBoundService.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:31OUF33qw8gZH6dmkss0Cz");
+        mBoundService.getmSpotifyAppRemote().getPlayerApi()
                 .subscribeToPlayerState()
                 .setEventCallback(playerState -> {
                     final Track track = playerState.track;
@@ -281,7 +248,14 @@ public class HostActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        SpotifyAppRemote.disconnect(mSpotifyAppRemote);
         Log.d(NAME, "I have been stopped");
+    }
+
+    @Override
+    public void setNowPlaying(String nowPlaying) {
+        this.runOnUiThread(() -> {
+            Log.d(NAME, nowPlaying);
+            binding.tvPlaying.setText(nowPlaying);
+        });
     }
 }

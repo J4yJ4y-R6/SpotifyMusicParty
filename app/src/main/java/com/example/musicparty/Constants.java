@@ -12,4 +12,5 @@ public class Constants {
     public static final String COVER = "cover";
     public static final String ARTIST = "artist";
     public static final String DURATION = "duration";
+    public static final String ALBUM = "album";
 }

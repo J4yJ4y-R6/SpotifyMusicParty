@@ -61,13 +61,13 @@ public class ClientService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Intent notificationIntent = new Intent(this, HostActivity.class);
+        Intent notificationIntent = new Intent(this, PartyActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("Music Party")
-                .setContentText("A music party is running")
+                .setContentText("You are in a Music Party")
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
                 .build();
@@ -152,6 +152,9 @@ public class ClientService extends Service {
                                     }
                                     break;
                                 case QUIT:
+                                    Log.d(NAME, "Server has been closed");
+                                    input.close();
+                                    out.close();
                                     clientSocket.close();
                                     return;
                                 case QUEUE:

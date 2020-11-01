@@ -11,6 +11,7 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 
 import com.example.musicparty.music.Track;
+import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -56,6 +57,12 @@ public class ServerService extends Service {
     private String partyName = "Coole Party";
     private List<Track> tracks = new ArrayList<>();
     private ServerService mBoundService;
+    private SpotifyAppRemote mSpotifyAppRemote;
+    private boolean pause;
+
+    public interface SpotifyPlayerCallback {
+        void setNowPlaying(String nowPlaying);
+    }
 
     public class LocalBinder extends Binder {
         ServerService getService() {
@@ -115,6 +122,14 @@ public class ServerService extends Service {
         return mBinder;
     }
 
+    public SpotifyAppRemote getmSpotifyAppRemote() {
+        return mSpotifyAppRemote;
+    }
+
+    public void setmSpotifyAppRemote(SpotifyAppRemote mSpotifyAppRemote) {
+        this.mSpotifyAppRemote = mSpotifyAppRemote;
+    }
+
     private void getUserID() {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
@@ -156,6 +171,10 @@ public class ServerService extends Service {
                 }
             }
         });
+    }
+
+    public boolean getPause() {
+        return pause;
     }
 
     private void createPlaylist(String name) throws JSONException {
@@ -286,7 +305,7 @@ public class ServerService extends Service {
                 }else {
                     Log.d(NAME,"Request Successful. Track " + name + " has been added.");
                     size++;
-                    if (size == 1) HostActivity.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:" + playlistID);
+                    if (size == 1) mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:" + playlistID);
                 }
             }
         });
@@ -304,6 +323,38 @@ public class ServerService extends Service {
         for(CommunicationThread client : clientThreads) {
             client.sendMessage(command, message);
         }
+    }
+
+    public void addEventListener(SpotifyPlayerCallback spotifyPlayerCallback) {
+        mSpotifyAppRemote.getPlayerApi()
+                .subscribeToPlayerState()
+                .setEventCallback(playerState -> {
+                    final com.spotify.protocol.types.Track track = playerState.track;
+                    if(playerState.playbackPosition == 0) {
+                        Log.d(NAME, "New song has been started");
+                        new Thread(()->{
+                            try {
+                                sendToAll(Commands.PLAYING, new com.example.musicparty.music.Track(
+                                        track.uri.split(":")[2],
+                                        track.name,
+                                        track.artists,
+                                        track.imageUri.raw,
+                                        track.duration,
+                                        track.album.name
+                                ).serialize());
+                            } catch (IOException | JSONException e) {
+                                Log.e(NAME, e.getMessage(), e);
+                            }
+                        }).start();
+                    }
+                    pause = playerState.isPaused;
+                    if (track != null) {
+                        //Log.d(NAME, track.name + " by " + track.artist.name);
+                        //if (playerState.playbackPosition == 0)
+                        //nextSong();
+                        spotifyPlayerCallback.setNowPlaying(String.format("%s by %s", track.name, track.artist.name));
+                    }
+                });
     }
 
     private void startServer(){
