@@ -1,8 +1,6 @@
 package com.example.musicparty;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.content.ComponentName;
@@ -23,11 +21,10 @@ import com.example.musicparty.music.Track;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.net.Socket;
 import java.util.List;
 
 
-public class PartyActivity extends AppCompatActivity implements ShowSongFragment.ExitButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, SearchSongsOutputFragment.AddSongCallback {
+public class PartyActivity extends AppCompatActivity implements ShowSongFragment.ExitButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, SearchSongsOutputFragment.AddSongCallback, ClientService.PartyCallback {
 
 
     ActivityPartyBinding binding;
@@ -41,7 +38,11 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mBoundService = ((ClientService.LocalBinder)service).getService();
-
+            mBoundService.setPartyCallback(PartyActivity.this);
+            String partyName = mBoundService.getClientThread().getPartyName();
+            if(partyName != null) {
+                setPartyName(partyName);
+            }
             // Tell the user about this for our demo.
             Toast.makeText(PartyActivity.this, "Service connected", Toast.LENGTH_SHORT).show();
         }
@@ -97,6 +98,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         serviceIntent.putExtra(Constants.TOKEN, token);
         serviceIntent.putExtra(Constants.ADDRESS, getIntent().getStringExtra(Constants.ADDRESS));
         serviceIntent.putExtra(Constants.PASSWORD, getIntent().getStringExtra(Constants.PASSWORD));
+        serviceIntent.putExtra(Constants.USERNAME, getIntent().getStringExtra(Constants.USERNAME));
         startService(serviceIntent);
         doBindService();
 
@@ -144,5 +146,15 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                 }
             }).start();
 
+    }
+
+    @Override
+    public void setTrack(Track track) {
+        showSongFragment.showSongs(track);
+    }
+
+    @Override
+    public void setPartyName(String partyName) {
+        showSongFragment.setPartyName(partyName);
     }
 }

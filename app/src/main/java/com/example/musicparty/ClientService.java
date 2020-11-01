@@ -7,16 +7,12 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.View;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.musicparty.music.Artist;
 import com.example.musicparty.music.Track;
 
-import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -25,13 +21,6 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 import static com.example.musicparty.App.CHANNEL_ID;
 
@@ -45,6 +34,12 @@ public class ClientService extends Service {
     private Socket clientSocket;
     private boolean first = true;
     private List<Track> queue = new ArrayList<>();
+    private PartyCallback partyCallback;
+
+    public interface PartyCallback {
+        void setTrack(Track track);
+        void setPartyName(String partyName);
+    }
 
     public class LocalBinder extends Binder {
         ClientService getService() {
@@ -53,6 +48,10 @@ public class ClientService extends Service {
     }
 
     public ClientService() {
+    }
+
+    public void setPartyCallback(PartyCallback partyCallback) {
+        this.partyCallback = partyCallback;
     }
 
     public void logHi() {
@@ -78,14 +77,14 @@ public class ClientService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        if(first) connect(intent.getStringExtra(Constants.ADDRESS), intent.getStringExtra(Constants.PASSWORD));
+        if(first) connect(intent.getStringExtra(Constants.ADDRESS), intent.getStringExtra(Constants.PASSWORD), intent.getStringExtra(Constants.USERNAME));
         //password = intent.getStringExtra("password");
 
         return START_NOT_STICKY;
     }
 
-    public void connect(String ipAddress, String password){
-        clientThread = new ClientThread(ipAddress, password);
+    public void connect(String ipAddress, String password, String username){
+        clientThread = new ClientThread(ipAddress, password, username);
         clientThread.start();
     }
 
@@ -107,12 +106,17 @@ public class ClientService extends Service {
         private DataOutputStream out;
         private String password;
         private String line;
-        private String username = "Test";
+        private String username;
         private String partyName;
 
-        public ClientThread(String address, String password) {
+        public ClientThread(String address, String password, String username) {
             this.address = address;
             this.password = password;
+            this.username = username;
+        }
+
+        public String getPartyName() {
+            return partyName;
         }
 
         public void sendMessage(Commands commands, String message) throws IOException {
@@ -143,6 +147,9 @@ public class ClientService extends Service {
                                 case LOGIN:
                                     partyName = attribute;
                                     Log.d(NAME, partyName);
+                                    if(partyCallback != null) {
+                                        partyCallback.setPartyName(partyName);
+                                    }
                                     break;
                                 case QUIT:
                                     clientSocket.close();
@@ -153,6 +160,8 @@ public class ClientService extends Service {
                                     break;
                                 case PLAYING:
                                      Log.d(NAME, "Playing: " + attribute);
+                                     Track track = new Track(attribute);
+                                     partyCallback.setTrack(track);
                                      break;
                             }
                         }

@@ -4,6 +4,7 @@ public class Constants {
     public static final String TOKEN = "token";
     public static final String PASSWORD = "password";
     public static final String ADDRESS = "address";
+    public static final String USERNAME = "username";
 
 
     public static final String ID = "id";
