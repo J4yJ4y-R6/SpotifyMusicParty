@@ -32,6 +32,7 @@ public class ClientActivity extends AppCompatActivity {
         intent.putExtra(Constants.TOKEN, getIntent().getStringExtra("token"));
         intent.putExtra(Constants.PASSWORD, binding.etPassword.getText().toString());
         intent.putExtra(Constants.ADDRESS, binding.etAddress.getText().toString());
+        intent.putExtra(Constants.USERNAME, binding.usernameEditText.getText().toString());
         startActivity(intent);
     }
 
