@@ -65,7 +65,10 @@ public class MainActivity extends AppCompatActivity {
                 case TOKEN:
                     // Handle successful response
                     token = response.getAccessToken();
+                    Log.d(NAME, "Expires in: " + response.getExpiresIn());
                     Log.d(NAME, "Token gained successful: " + token);
+                    binding.button.setEnabled(true);
+                    binding.button2.setEnabled(true);
                     break;
                 // Auth flow returned an error
                 case ERROR:
@@ -73,6 +76,10 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(NAME, "Spotify login error");
                     break;
                 // Most likely auth flow was cancelled
+                case CODE:
+                    Log.d(NAME, "Code: " + response.getCode());
+                    Log.d(NAME, "State: " + response.getState());
+                    break;
                 default:
                     // Handle other cases
                     Log.e(NAME, "Something went wrong");

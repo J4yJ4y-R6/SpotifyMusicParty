@@ -18,16 +18,18 @@ public class Track {
     private final Artist [] artist;
     private final long duration;
     private final String cover;
+    private final String album;
 
-    public Track(String id, String name, Artist [] artist, String cover, long duration) {
+    public Track(String id, String name, Artist [] artist, String cover, long duration, String album) {
         this.id = id;
         this.name = name;
         this.artist = artist;
         this.cover = cover;
         this.duration = duration;
+        this.album = album;
     }
 
-    public Track(String id, String name, List<com.spotify.protocol.types.Artist> artist, String cover, long duration) {
+    public Track(String id, String name, List<com.spotify.protocol.types.Artist> artist, String cover, long duration, String album) {
         Artist [] artists = new Artist[artist.size()];
         for (int i = 0; i < artist.size(); i++) {
             artists[i] = new Artist(artist.get(i).uri, artist.get(i).name);
@@ -37,6 +39,7 @@ public class Track {
         this.artist = artists;
         this.cover = cover;
         this.duration = duration;
+        this.album = album;
     }
 
     public Track(String json) throws JSONException {
@@ -45,6 +48,7 @@ public class Track {
         this.name = tempObject.getString(Constants.NAME);
         this.duration = tempObject.getLong(Constants.DURATION);
         this.cover = tempObject.getString(Constants.COVER);
+        this.album = tempObject.getString(Constants.ALBUM);
         JSONArray array = tempObject.getJSONArray(Constants.ARTIST);
         Artist[] tempArtist = new Artist[array.length()];
         for (int i = 0; i < array.length(); i++) {
@@ -77,6 +81,10 @@ public class Track {
         return duration;
     }
 
+    public String getAlbum() {
+        return album;
+    }
+
     @Override
     public String toString() {
         return "Track{" +
@@ -102,7 +110,8 @@ public class Track {
                 .put(Constants.COVER, cover)
                 .put(Constants.ID, id)
                 .put(Constants.DURATION, duration)
-                .put(Constants.ARTIST, artistTemp);
+                .put(Constants.ARTIST, artistTemp)
+                .put(Constants.ALBUM, album);
         return tempObject.toString();
     }
 }
