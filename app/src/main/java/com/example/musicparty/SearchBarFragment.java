@@ -142,10 +142,11 @@ public class SearchBarFragment extends Fragment {
                 tracks.add(
                         new Track(
                                 track.getString("id"),
-                                track.getString("name"), array,
+                                track.getString("name"),
+                                array,
                                 image,
-                                track.getInt("duration_ms")
-                        ));
+                                track.getInt("duration_ms"),
+                                track.getJSONObject("album").getString("name")));
                 Log.d(NAME, tracks.get(i).toString());
             }
             searchForSongs.searchForSongs(tracks);

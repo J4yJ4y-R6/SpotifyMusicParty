@@ -1,9 +1,14 @@
 package com.example.musicparty;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.StyleSpan;
 import android.text.style.TtsSpan;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -66,7 +71,7 @@ public class ShowSongFragment extends Fragment {
 
     public void showSongs(Track track) {
         if(songCover != null) {
-            String coverURL = "https://i.scdn.co/image/"+track.getCover().split(":")[2];
+            String coverURL = "https://i.scdn.co/image/"+track.getCover();
             new DownloadImageTask(songCover).execute(coverURL);
         }
         if(songTitle != null) {
@@ -76,16 +81,21 @@ public class ShowSongFragment extends Fragment {
             songArtist.setText(track.getArtist(0).getName());
         }
         if(songAlbum != null) {
-            songAlbum.setText("Musteralbum");
+            songAlbum.setText(track.getAlbum());
         }
     }
 
     public void setPartyName(String name) {
 
         //TODO: Format String partyName
-        String partyName = "Verbunden mit " + name;
+        String conTo = "Verbunden mit ";
+        String partyName = conTo + name;
         if(connectedToParty != null) {
-            connectedToParty.setText(partyName);
+            connectedToParty.setText(partyName, TextView.BufferType.SPANNABLE);
+            Spannable spannable = (Spannable)connectedToParty.getText();
+            int start = conTo.length();
+            int end = start + name.length();
+            spannable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
     }
 }

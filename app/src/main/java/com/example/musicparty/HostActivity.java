@@ -107,18 +107,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         channel = manager.initialize(this, getMainLooper(), null);
         receiver = new WiFiDirectBroadcastReceiver(manager, channel, this);
 
-        com.example.musicparty.music.Track test = new com.example.musicparty.music.Track(
-                "rsadrf3241ssd",
-                "Test Track",
-                new Artist[]{new Artist("asdas", "Jannik")},
-                "URLSSAD",
-                12);
-        try {
-            Log.d(NAME, test.serialize());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
         intentFilter = new IntentFilter();
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_STATE_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_PEERS_CHANGED_ACTION);

@@ -338,7 +338,7 @@ public class ServerService extends Service {
                                         track.uri.split(":")[2],
                                         track.name,
                                         track.artists,
-                                        track.imageUri.raw,
+                                        track.imageUri.raw.split(":")[2],
                                         track.duration,
                                         track.album.name
                                 ).serialize());
