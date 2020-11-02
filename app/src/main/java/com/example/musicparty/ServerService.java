@@ -333,6 +333,7 @@ public class ServerService extends Service {
                 .subscribeToPlayerState()
                 .setEventCallback(playerState -> {
                     final com.spotify.protocol.types.Track track = playerState.track;
+                    nowPlaying = track;
                     if(playerState.playbackPosition == 0) {
                         Log.d(NAME, "New song has been started " + track.uri.split(":")[2]);
                         new Thread(()->{
@@ -407,6 +408,7 @@ public class ServerService extends Service {
         }
 
         public void sendMessage(Commands command, String message) throws IOException {
+            Log.d(NAME, "~" + command.toString() + "~" + message);
             out.writeBytes("~" + command.toString() + "~" + message + "\n\r");
             out.flush();
         }
@@ -443,7 +445,17 @@ public class ServerService extends Service {
                                         Log.d(NAME, "New login attempt from user " + attribute +" with password: " + pass);
                                         if (login(pass)) {
                                             username = attribute;
-                                            sendMessage(Commands.LOGIN, partyName);
+                                            if (nowPlaying == null)
+                                                sendMessage(Commands.LOGIN, partyName);
+                                            else
+                                                sendMessage(Commands.LOGIN, partyName + "~" + new com.example.musicparty.music.Track(
+                                                        nowPlaying.uri.split(":")[2],
+                                                        nowPlaying.name,
+                                                        nowPlaying.artists,
+                                                        nowPlaying.imageUri.raw.split(":")[2],
+                                                        nowPlaying.duration,
+                                                        nowPlaying.album.name
+                                                ).serialize());
                                         } else {
                                             sendMessage(Commands.QUIT, "Login Failed");
                                             close();

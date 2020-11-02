@@ -116,14 +116,8 @@ public class ClientService extends Service {
 
     public void setTrack() {
         new Thread(()->{
-            try {
-                if(nowPlaying != null)
-                    partyCallback.setTrack(nowPlaying);
-                else
-                    clientThread.sendMessage(Commands.PLAYING, "Get current track");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            if(nowPlaying != null)
+                partyCallback.setTrack(nowPlaying);
         }).start();
     }
 
@@ -176,6 +170,10 @@ public class ClientService extends Service {
                             switch (command) {
                                 case LOGIN:
                                     partyName = attribute;
+                                    if (parts.length > 3) {
+                                        nowPlaying = new Track(parts[3]);
+                                        partyCallback.setTrack(nowPlaying);
+                                    }
                                     Log.d(NAME, partyName);
                                     if(partyCallback != null) {
                                         partyCallback.setPartyName(partyName);
