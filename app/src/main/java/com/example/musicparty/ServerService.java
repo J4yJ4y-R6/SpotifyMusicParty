@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,6 +60,8 @@ public class ServerService extends Service {
     private ServerService mBoundService;
     private SpotifyAppRemote mSpotifyAppRemote;
     private boolean pause;
+    private SpotifyPlayerCallback spotifyPlayerCallback;
+    private  com.spotify.protocol.types.Track nowPlaying;
 
     public interface SpotifyPlayerCallback {
         void setNowPlaying(String nowPlaying);
@@ -325,13 +328,13 @@ public class ServerService extends Service {
         }
     }
 
-    public void addEventListener(SpotifyPlayerCallback spotifyPlayerCallback) {
+    public void addEventListener() {
         mSpotifyAppRemote.getPlayerApi()
                 .subscribeToPlayerState()
                 .setEventCallback(playerState -> {
                     final com.spotify.protocol.types.Track track = playerState.track;
                     if(playerState.playbackPosition == 0) {
-                        Log.d(NAME, "New song has been started");
+                        Log.d(NAME, "New song has been started " + track.uri.split(":")[2]);
                         new Thread(()->{
                             try {
                                 sendToAll(Commands.PLAYING, new com.example.musicparty.music.Track(
@@ -348,13 +351,17 @@ public class ServerService extends Service {
                         }).start();
                     }
                     pause = playerState.isPaused;
-                    if (track != null) {
+                    if (track != null && spotifyPlayerCallback != null) {
                         //Log.d(NAME, track.name + " by " + track.artist.name);
                         //if (playerState.playbackPosition == 0)
                         //nextSong();
                         spotifyPlayerCallback.setNowPlaying(String.format("%s by %s", track.name, track.artist.name));
                     }
                 });
+    }
+
+    public void setSpotifyPlayerCallback(SpotifyPlayerCallback spotifyPlayerCallback) {
+        this.spotifyPlayerCallback = spotifyPlayerCallback;
     }
 
     private void startServer(){
@@ -407,7 +414,7 @@ public class ServerService extends Service {
         @Override
         public void run() {
             try {
-                input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.ISO_8859_1));
                 out = new DataOutputStream(clientSocket.getOutputStream());
             } catch (IOException e) {
                 Log.e(NAME, e.getMessage(), e);
@@ -426,6 +433,8 @@ public class ServerService extends Service {
                                 attribute = parts[2];
                             switch (command) {
                                 case QUIT:
+                                    clientThreads.remove(this);
+                                    Log.d(NAME, "User " + username + " has left the party");
                                     close();
                                     return;
                                 case LOGIN:
@@ -449,6 +458,18 @@ public class ServerService extends Service {
                                         tracks.add(track);
                                         addItem(track.getURI(), track.getName());
                                         sendToAll(Commands.QUEUE, track.serialize());
+                                    }
+                                    break;
+                                case PLAYING:
+                                    if(nowPlaying != null) {
+                                        sendMessage(Commands.PLAYING, new com.example.musicparty.music.Track(
+                                                nowPlaying.uri.split(":")[2],
+                                                nowPlaying.name,
+                                                nowPlaying.artists,
+                                                nowPlaying.imageUri.raw.split(":")[2],
+                                                nowPlaying.duration,
+                                                nowPlaying.album.name
+                                        ).serialize());
                                     }
                                     break;
                                 default:

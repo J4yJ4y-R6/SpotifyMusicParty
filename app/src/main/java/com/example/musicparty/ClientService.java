@@ -19,6 +19,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,16 +30,19 @@ public class ClientService extends Service {
 
     private static final String NAME = ClientService.class.getName();
     private static final int PORT = 1403;
+    private boolean stopped;
     private final IBinder mBinder = new LocalBinder();
     private ClientThread clientThread;
     private Socket clientSocket;
     private boolean first = true;
     private List<Track> queue = new ArrayList<>();
     private PartyCallback partyCallback;
+    private Track nowPlaying;
 
     public interface PartyCallback {
         void setTrack(Track track);
         void setPartyName(String partyName);
+        void exitService(String text);
     }
 
     public class LocalBinder extends Binder {
@@ -48,6 +52,10 @@ public class ClientService extends Service {
     }
 
     public ClientService() {
+    }
+
+    public boolean isStopped() {
+        return stopped;
     }
 
     public void setPartyCallback(PartyCallback partyCallback) {
@@ -98,6 +106,27 @@ public class ClientService extends Service {
     }
 
 
+    public void exit() throws IOException {
+        stopped = true;
+        clientThread.out.close();
+        clientThread.input.close();
+        clientSocket.close();
+        partyCallback.exitService("Server has been closed");
+    }
+
+    public void setTrack() {
+        new Thread(()->{
+            try {
+                if(nowPlaying != null)
+                    partyCallback.setTrack(nowPlaying);
+                else
+                    clientThread.sendMessage(Commands.PLAYING, "Get current track");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).start();
+    }
+
 
     class ClientThread extends Thread {
 
@@ -108,6 +137,7 @@ public class ClientService extends Service {
         private String line;
         private String username;
         private String partyName;
+
 
         public ClientThread(String address, String password, String username) {
             this.address = address;
@@ -130,11 +160,11 @@ public class ClientService extends Service {
             try {
                 Log.d(NAME, "Try to login to " + address + ":" + PORT + " with password " + this.password);
                 clientSocket = new Socket(this.address, PORT);
-                input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.ISO_8859_1));
                 out = new DataOutputStream(clientSocket.getOutputStream());
                 sendMessage(Commands.LOGIN, this.username + "~" + this.password);
                 Log.d(NAME, "Connect successful");
-                while (true)  {
+                while (!this.isInterrupted() && !clientSocket.isClosed())  {
                     line = input.readLine();
                     if (line != null) {
                         String [] parts = line.split("~");
@@ -153,9 +183,7 @@ public class ClientService extends Service {
                                     break;
                                 case QUIT:
                                     Log.d(NAME, "Server has been closed");
-                                    input.close();
-                                    out.close();
-                                    clientSocket.close();
+                                    exit();
                                     return;
                                 case QUEUE:
                                     queue.add(new Track(attribute));
@@ -163,8 +191,8 @@ public class ClientService extends Service {
                                     break;
                                 case PLAYING:
                                      Log.d(NAME, "Playing: " + attribute);
-                                     Track track = new Track(attribute);
-                                     partyCallback.setTrack(track);
+                                     nowPlaying = new Track(attribute);
+                                     partyCallback.setTrack(nowPlaying);
                                      break;
                             }
                         }
@@ -172,7 +200,7 @@ public class ClientService extends Service {
                 }
             } catch (IOException | JSONException e) {
                 Log.e(NAME, e.getMessage(), e);
-
+                stopped = true;
             }
         }
     }
