@@ -67,6 +67,37 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         public void onServiceConnected(ComponentName className, IBinder service) {
             mBoundService = ((ServerService.LocalBinder)service).getService();
 
+            ConnectionParams connectionParams =
+                    new ConnectionParams.Builder(CLIENT_ID)
+                            .setRedirectUri(REDIRECT_URI)
+                            .showAuthView(false)
+                            .build();
+            SpotifyAppRemote.connect(HostActivity.this, connectionParams,
+                    new Connector.ConnectionListener() {
+
+                        @Override
+                        public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                            mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
+                            Log.d(NAME, "Connected! Yay!");
+                            //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
+                            Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
+                            serviceIntent.putExtra(Constants.TOKEN, token);
+                            serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
+                            startService(serviceIntent);
+                            // Now you can start interacting with App Remote
+                            //connected();
+                            mBoundService.setSpotifyPlayerCallback(HostActivity.this);
+                            mBoundService.addEventListener();
+                        }
+
+                        @Override
+                        public void onFailure(Throwable throwable) {
+                            Log.e(NAME, throwable.getMessage(), throwable);
+
+                            // Something went wrong when attempting to connect! Handle errors here
+                        }
+                    });
+
             // Tell the user about this for our demo.
             Toast.makeText(HostActivity.this, "Service connected", Toast.LENGTH_SHORT).show();
         }
@@ -91,6 +122,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     void doUnbindService() {
         if (mShouldUnbind) {
             // Release information about the service's state.
+            mBoundService.setSpotifyPlayerCallback(null);
             unbindService(mConnection);
             mShouldUnbind = false;
         }
@@ -119,37 +151,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         binding.tvIpAddress.setText(getIPAddress(true));
         binding.tvPassword.setText(PASSWORD);
         doBindService();
-
-        HostActivity hostActivity = this;
-        ConnectionParams connectionParams =
-                new ConnectionParams.Builder(CLIENT_ID)
-                        .setRedirectUri(REDIRECT_URI)
-                        .showAuthView(false)
-                        .build();
-        SpotifyAppRemote.connect(this, connectionParams,
-                new Connector.ConnectionListener() {
-
-                    @Override
-                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                        mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
-                        Log.d(NAME, "Connected! Yay!");
-                        //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
-                        Intent serviceIntent = new Intent(hostActivity, ServerService.class);
-                        serviceIntent.putExtra(Constants.TOKEN, token);
-                        serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
-                        startService(serviceIntent);
-                        // Now you can start interacting with App Remote
-                        //connected();
-                        mBoundService.addEventListener(HostActivity.this);
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable) {
-                        Log.e(NAME, throwable.getMessage(), throwable);
-
-                        // Something went wrong when attempting to connect! Handle errors here
-                    }
-                });
     }
 
     @Override
@@ -183,10 +184,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     public void stopService(View view) {
+        mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
         SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         doUnbindService();
         stopService(new Intent(this, ServerService.class));
-        mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
         startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
     }
 

@@ -3,6 +3,7 @@ package com.example.musicparty;
 import androidx.appcompat.app.AppCompatActivity;
 
 
+import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -43,8 +44,11 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
             if(partyName != null) {
                 setPartyName(partyName);
             }
+            if(mBoundService.isStopped()) {
+                exitService("Server has been closed");
+            }
             // Tell the user about this for our demo.
-            Toast.makeText(PartyActivity.this, "Service connected", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(PartyActivity.this, "Service connected", Toast.LENGTH_SHORT).show();
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -70,6 +74,11 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
             unbindService(mConnection);
             mShouldUnbind = false;
         }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
     }
 
     @Override
@@ -112,8 +121,20 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void denyExit() {
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongFragmentFrame, new ShowSongFragment(this), "ShowSongFragment").commitAllowingStateLoss();
+        showShowSongFragment();
+    }
+
+    @Override
+    public void acceptExit() {
+        new Thread(()->{
+            Log.d(NAME, "User tries to leave the party");
+            try {
+                mBoundService.getClientThread().sendMessage(Commands.QUIT, "User left the channel");
+            } catch (IOException e) {
+                Log.e(NAME, e.getMessage(), e);
+            }
+            exitService("You left the session");
+        }).start();
     }
 
     @Override
@@ -123,7 +144,15 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                 replace(R.id.showSongFragmentFrame, searchSongsOutputFragment, "ShowSongFragment").commitAllowingStateLoss();
         this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));
     }
- 
+
+    private void showShowSongFragment() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
+        this.runOnUiThread(()->{
+            mBoundService.setTrack();
+            setPartyName(mBoundService.getClientThread().getPartyName());
+        });
+    }
 
     public void search(View view) {
         //binding.etSearch.getText().toString());
@@ -131,8 +160,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void onBackPressed() {
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
+        showShowSongFragment();
     }
 
     @Override
@@ -150,11 +178,25 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void setTrack(Track track) {
+        Log.d(NAME, "Now Playing: " + track.toString());
         showSongFragment.showSongs(track);
     }
 
     @Override
     public void setPartyName(String partyName) {
         showSongFragment.setPartyName(partyName);
+    }
+
+    @Override
+    public void exitService(String text) {
+        doUnbindService();
+        stopService(new Intent(this, ClientService.class));
+        this.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(PartyActivity.this, text, Toast.LENGTH_SHORT).show();
+            }
+        });
+        startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
     }
 }

@@ -10,6 +10,7 @@ import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
 import android.text.style.TtsSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -70,6 +71,7 @@ public class ShowSongFragment extends Fragment {
     }
 
     public void showSongs(Track track) {
+        Log.d(ShowSongFragment.class.getName(), "Now Playing: " + track.toString());
         if(songCover != null) {
             String coverURL = "https://i.scdn.co/image/"+track.getCover();
             new DownloadImageTask(songCover).execute(coverURL);

@@ -16,6 +16,7 @@ public class ExitConnectionFragment extends Fragment {
 
     public interface ConfirmExit {
         void denyExit();
+        void acceptExit();
     }
 
     public ExitConnectionFragment(ConfirmExit confirmExit) {
@@ -36,12 +37,9 @@ public class ExitConnectionFragment extends Fragment {
         //binding = ActivityPartyBinding.inflate(getLayoutInflater());
 
         Button denyButton = view.findViewById(R.id.denyLeaveParty);
-        denyButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                confirmExit.denyExit();
-            }
-        });
+        Button acceptButton = view.findViewById(R.id.acceptLeaveParty);
+        denyButton.setOnClickListener(v -> confirmExit.denyExit());
+        acceptButton.setOnClickListener(v -> confirmExit.acceptExit());
 
         return view;
     }
