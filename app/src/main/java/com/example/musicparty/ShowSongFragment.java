@@ -88,7 +88,6 @@ public class ShowSongFragment extends Fragment {
     }
 
     public void setPartyName(String name) {
-
         //TODO: Format String partyName
         String conTo = "Verbunden mit ";
         String partyName = conTo + name;

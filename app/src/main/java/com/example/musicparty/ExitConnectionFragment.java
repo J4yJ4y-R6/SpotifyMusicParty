@@ -24,6 +24,7 @@ public class ExitConnectionFragment extends Fragment {
     public interface ConfirmExit {
         void denyExit();
         void acceptExit();
+        String getPartyName();
     }
 
     public ExitConnectionFragment(ConfirmExit confirmExit) {
@@ -35,6 +36,12 @@ public class ExitConnectionFragment extends Fragment {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        setPartyName(confirmExit.getPartyName());
     }
 
     @Override

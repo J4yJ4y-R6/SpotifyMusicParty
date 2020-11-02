@@ -119,6 +119,8 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                replace(R.id.showSongFragmentFrame, new ExitConnectionFragment(this), "ExitConnectionFragment").commitAllowingStateLoss();
     }
 
+
+
     @Override
     public void denyExit() {
         showShowSongFragment();
@@ -135,6 +137,11 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
             }
             exitService("You left the session");
         }).start();
+    }
+
+    @Override
+    public String getPartyName() {
+        return mBoundService.getClientThread().getPartyName();
     }
 
     @Override
