@@ -155,10 +155,13 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     private void showShowSongFragment() {
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
-        this.runOnUiThread(()->{
+        new Thread(()->{
+            while(!showSongFragment.getStarted());
             mBoundService.setTrack();
+            Log.d(NAME, "Hidden: " + showSongFragment.isHidden());
+            Log.d(NAME, "Partyname: " + mBoundService.getClientThread().getPartyName());
             setPartyName(mBoundService.getClientThread().getPartyName());
-        });
+        }).start();
     }
 
     public void search(View view) {

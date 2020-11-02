@@ -28,6 +28,8 @@ public class ShowSongFragment extends Fragment {
     private TextView songArtist;
     private TextView songAlbum;
     private TextView connectedToParty;
+    private View rootView;
+    private boolean started;
 
     public interface ExitButtonClicked {
         void exitConnection();
@@ -47,18 +49,31 @@ public class ShowSongFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        Log.d(ShowSongFragment.class.getName(), "I have been started");
+        started = true;
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        started = false;
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_show_song, container, false);
+        rootView = inflater.inflate(R.layout.fragment_show_song, container, false);
 
-        songCover = view.findViewById(R.id.songCoverImageView);
-        songTitle = view.findViewById(R.id.songtitleTextView);
-        songArtist = view.findViewById(R.id.artistTextView);
-        songAlbum = view.findViewById(R.id.albumTextView);
-        connectedToParty = view.findViewById(R.id.connectedTo);
+        songCover = rootView.findViewById(R.id.songCoverImageView);
+        songTitle = rootView.findViewById(R.id.songtitleTextView);
+        songArtist = rootView.findViewById(R.id.artistTextView);
+        songAlbum = rootView.findViewById(R.id.albumTextView);
+        connectedToParty = rootView.findViewById(R.id.connectedTo);
 
-        ImageButton exitButton = view.findViewById(R.id.exitButton);
+        ImageButton exitButton = rootView.findViewById(R.id.exitButton);
         if(exitButton != null) {
             exitButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -67,7 +82,11 @@ public class ShowSongFragment extends Fragment {
                 }
             });
         }
-        return view;
+        return rootView;
+    }
+
+    public boolean getStarted() {
+        return started;
     }
 
     public void showSongs(Track track) {
