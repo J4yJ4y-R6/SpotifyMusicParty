@@ -16,14 +16,20 @@
             android:layout_width="300dp"
             android:layout_height="42dp"
             android:layout_marginTop="30dp"
-            android:text="Songtitel"
+            android:text="@string/text_songtitel"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             android:textSize="30sp"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:focusable="true"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.495"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/songCoverImageView" />
+            app:layout_constraintTop_toBottomOf="@+id/songCoverImageView"/>
+
 
         <TextView
             android:id="@+id/albumTextView"
@@ -31,15 +37,20 @@
             android:layout_height="25dip"
             android:layout_marginStart="56dp"
             android:layout_marginEnd="55dp"
-            android:text="Albumname"
+            android:text="@string/text_albumname"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:focusable="true"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/songtitleTextView"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintVertical_bias="0.0"/>
 
         <TextView
             android:id="@+id/artistTextView"
@@ -47,7 +58,7 @@
             android:layout_height="25dip"
             android:layout_marginStart="56dp"
             android:layout_marginEnd="55dp"
-            android:text="Künstler*in"
+            android:text="@string/text_kuenstler"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -55,7 +66,12 @@
             app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/albumTextView"
-            app:layout_constraintVertical_bias="0.0" />
+            app:layout_constraintVertical_bias="0.0"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:focusable="true"/>
 
         <View
             android:id="@+id/divider3"
@@ -75,7 +91,7 @@
             android:layout_height="48dp"
             android:layout_marginTop="2dp"
             android:paddingTop="7dip"
-            android:text='Verbunden mit "123PartyXD"'
+            android:text="@string/text_verbunden_mit"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             android:textSize="24sp"

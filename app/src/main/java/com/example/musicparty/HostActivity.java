@@ -77,7 +77,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
                         @Override
                         public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                            mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
+                            if(mBoundService != null)
+                                mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
                             Log.d(NAME, "Connected! Yay!");
                             //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
                             Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
@@ -86,8 +87,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                             startService(serviceIntent);
                             // Now you can start interacting with App Remote
                             //connected();
-                            mBoundService.setSpotifyPlayerCallback(HostActivity.this);
-                            mBoundService.addEventListener();
+                            if(mBoundService != null) {
+                                mBoundService.setSpotifyPlayerCallback(HostActivity.this);
+                                mBoundService.addEventListener();
+                            }
                         }
 
                         @Override
@@ -99,12 +102,12 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     });
 
             // Tell the user about this for our demo.
-            Toast.makeText(HostActivity.this, "Service connected", Toast.LENGTH_SHORT).show();
+            Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected), Toast.LENGTH_SHORT).show();
         }
 
         public void onServiceDisconnected(ComponentName className) {
             mBoundService = null;
-            Toast.makeText(HostActivity.this, "Service disconnected",
+            Toast.makeText(HostActivity.this, getString(R.string.service_serverDisconnected),
                     Toast.LENGTH_SHORT).show();
         }
     };
@@ -168,7 +171,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
+        if(mBoundService != null)
+            SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         doUnbindService();
         Log.d(NAME, "I got destroyed");
     }
@@ -179,20 +183,23 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     public void togglePlay(View view) {
-        if (mBoundService.getPause()) mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
-        else mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
+        if (mBoundService != null && mBoundService.getPause()) mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
+        else if(mBoundService != null)  mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
     }
 
     public void stopService(View view) {
-        mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
-        SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
+        if(mBoundService != null) {
+            mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
+            SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
+        }
         doUnbindService();
         stopService(new Intent(this, ServerService.class));
         startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
     }
 
     public void nextSong(View view) {
-        mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
+        if(mBoundService != null)
+            mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
     }
 
     private String getIPAddress(boolean useIPv4) {
@@ -220,18 +227,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             }
         } catch (Exception ignored) { } // for now eat exceptions
         return "";
-    }
-
-    private void connected() {
-        mBoundService.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:31OUF33qw8gZH6dmkss0Cz");
-        mBoundService.getmSpotifyAppRemote().getPlayerApi()
-                .subscribeToPlayerState()
-                .setEventCallback(playerState -> {
-                    final Track track = playerState.track;
-                    if (track != null) {
-                        Log.d(NAME, track.name + " by " + track.artist.name);
-                    }
-                });
     }
 
     @Override

@@ -65,8 +65,7 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
 
         View textView = inflater.inflate(R.layout.partyacrecyclerview_row, parent, false);
 
-        ViewHolder viewHolder = new ViewHolder(textView);
-        return viewHolder;
+        return new ViewHolder(textView);
     }
 
     @Override
@@ -74,15 +73,19 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
         String name = mDataset.get(position).getName();
         String artist = mDataset.get(position).getArtist(0).getName();
         String cover = mDataset.get(position).getCover();
-        TextView textView = holder.songTitleTextView;
-        textView.setText(name);
-        TextView textView1 = holder.artistNameTextView;
-        textView1.setText(artist);
-        ImageView imageView = holder.songCoverImageView;
-        new DownloadImageTask(imageView).execute(cover);
+        TextView songTitleTV = holder.songTitleTextView;
+        if(songTitleTV != null)
+            songTitleTV.setText(name);
+        TextView artistNameTV = holder.artistNameTextView;
+        if(artistNameTV != null)
+            artistNameTV.setText(artist);
+        ImageView songCoverIV = holder.songCoverImageView;
+        if(songCoverIV != null)
+            new DownloadImageTask(songCoverIV).execute(cover);
         holder.itemView.setOnClickListener(v -> {
             songCallback.returnSong(mDataset.get(position));
         });
+
     }
 
     @Override

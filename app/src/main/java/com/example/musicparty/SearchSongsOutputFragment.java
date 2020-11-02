@@ -35,8 +35,6 @@ public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycA
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-        }
     }
 
     public void showResult(List<Track> tracks) {
@@ -60,7 +58,6 @@ public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycA
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(view.getContext());
             recyclerView.setLayoutManager(layoutManager);
         }
-        //List<String> myDataset = Arrays.asList("Silas", "Jannik");
 
         return view;
     }

@@ -1,5 +1,32 @@
 <resources>
     <string name="app_name">MusicParty</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="text_ip_address">IP Addresse</string>
+    <string name="app_password">Passwort</string>
+    <string name="text_connect">Verbinden</string>
+    <string name="app_username">Benutzername</string>
+    <string name="text_playbutton">Lied stoppen/spielen</string>
+    <string name="text_next">Next</string>
+    <string name="text_stopServer">Server stoppen</string>
+    <string name="text_server">Server</string>
+    <string name="text_client">Client</string>
+    <!-- TODO: leaveParty mit formatString-->
+    <string name="text_leaveParty">Möchtest du die Party verlassen von</string>
+    <string name="text_hintPartyName">Party Name</string>
+    <string name="text_leave">Verlassen</string>
+    <string name="text_stay">Bleiben</string>
+    <string name="text_songtitel">Songtitel</string>
+    <string name="text_albumname">Albumname</string>
+    <string name="text_kuenstler">Künstler*in</string>
+    <string name="text_verbunden_mit">Verbunden mit</string>
+    <string name="text_songcover">SongCover</string>
+
+    <string name="service_channelName">Music Party Service Channel</string>
+    <string name="service_name">MusicParty</string>
+    <string name="service_clientMsg">Du bist Teil einer MusicParty</string>
+    <string name="service_serverMsg">Du hostest eine MusicParty</string>
+    <string name="service_serverClosed">Der Host hat die Party beendet</string>
+    <string name="service_serverConnected">Du bist Teil einer MusicParty</string>
+    <string name="service_serverDisconnected">Du hast die MusicParty verlassen</string>
+    <string name="service_playlistDescription">Deine Playlist aus der MusicParty.</string>
+
 </resources>

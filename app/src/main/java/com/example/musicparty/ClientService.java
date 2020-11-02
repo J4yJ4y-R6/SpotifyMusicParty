@@ -62,10 +62,6 @@ public class ClientService extends Service {
         this.partyCallback = partyCallback;
     }
 
-    public void logHi() {
-        Log.d(NAME, "HELLO WORLD");
-    }
-
     @Override
     public void onCreate() {
         super.onCreate();
@@ -74,8 +70,8 @@ public class ClientService extends Service {
                 0, notificationIntent, 0);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Music Party")
-                .setContentText("You are in a Music Party")
+                .setContentTitle(getString(R.string.service_name))
+                .setContentText(getString(R.string.service_clientMsg))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
                 .build();
@@ -111,7 +107,7 @@ public class ClientService extends Service {
         clientThread.out.close();
         clientThread.input.close();
         clientSocket.close();
-        partyCallback.exitService("Server has been closed");
+        partyCallback.exitService(getString(R.string.service_serverClosed));
     }
 
     public void setTrack() {

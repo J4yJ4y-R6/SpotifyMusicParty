@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
+import android.text.method.ScrollingMovementMethod;
 import android.text.style.StyleSpan;
 import android.text.style.TtsSpan;
 import android.util.Log;
@@ -42,10 +43,6 @@ public class ShowSongFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        if (getArguments() != null) {
-        }
-
     }
 
     @Override
@@ -53,6 +50,15 @@ public class ShowSongFragment extends Fragment {
         super.onStart();
         Log.d(ShowSongFragment.class.getName(), "I have been started");
         started = true;
+        if(songTitle != null) {
+            songTitle.setSelected(true);
+        }
+        if(songArtist != null) {
+            songArtist.setSelected(true);
+        }
+        if(songAlbum != null) {
+            songAlbum.setSelected(true);
+        }
     }
 
     @Override

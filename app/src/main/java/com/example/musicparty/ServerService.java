@@ -62,6 +62,7 @@ public class ServerService extends Service {
     private boolean pause;
     private SpotifyPlayerCallback spotifyPlayerCallback;
     private  com.spotify.protocol.types.Track nowPlaying;
+    private String lastSongTitle;
 
     public interface SpotifyPlayerCallback {
         void setNowPlaying(String nowPlaying);
@@ -94,8 +95,8 @@ public class ServerService extends Service {
                 0, notificationIntent, 0);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("Music Party")
-                .setContentText("A music party is running")
+                .setContentTitle(getString(R.string.service_name))
+                .setContentText(getString(R.string.service_serverMsg))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
                 .build();
@@ -194,7 +195,7 @@ public class ServerService extends Service {
         JSONObject sampleObject = new JSONObject()
                 .put("name", name)
                 .put("public", false)
-                .put("description", "A playlist for the MusicParty app.");
+                .put("description", getString(R.string.service_playlistDescription));
         RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
         Log.d(NAME, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
@@ -334,7 +335,8 @@ public class ServerService extends Service {
                 .setEventCallback(playerState -> {
                     final com.spotify.protocol.types.Track track = playerState.track;
                     nowPlaying = track;
-                    if(playerState.playbackPosition == 0) {
+                    if((nowPlaying != null && !nowPlaying.name.equals(lastSongTitle)) || lastSongTitle == null) {
+                        lastSongTitle = nowPlaying.name;
                         Log.d(NAME, "New song has been started " + track.uri.split(":")[2]);
                         new Thread(()->{
                             try {

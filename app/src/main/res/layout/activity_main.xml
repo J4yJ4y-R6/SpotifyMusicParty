@@ -13,7 +13,7 @@
         android:layout_marginTop="120dp"
         android:enabled="false"
         android:onClick="changeHost"
-        android:text="Server"
+        android:text="@string/text_server"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -25,7 +25,7 @@
         android:layout_marginTop="40dp"
         android:enabled="false"
         android:onClick="changeClient"
-        android:text="Client"
+        android:text="@string/text_client"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button" />

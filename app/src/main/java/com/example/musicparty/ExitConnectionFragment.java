@@ -60,7 +60,6 @@ public class ExitConnectionFragment extends Fragment {
     }
 
     public void setPartyName(String name) {
-        //TODO: Format String partyName
         if(partyNameTextView != null) {
             Log.d(NAME, name);
             partyNameTextView.setText(name, TextView.BufferType.SPANNABLE);

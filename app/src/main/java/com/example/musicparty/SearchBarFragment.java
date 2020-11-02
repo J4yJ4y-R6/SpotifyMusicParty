@@ -67,15 +67,17 @@ public class SearchBarFragment extends Fragment {
         //token = savedInstanceState.getBundle();
 
         Button searchButton = view.findViewById(R.id.searchButton);
-        searchButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if  (view.findViewById(R.id.searchEditText) != null) {
+        if(searchButton != null) {
+            searchButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
                     EditText searchText = view.findViewById(R.id.searchEditText);
-                    search(searchText.getText().toString());
+                    if  (searchText != null && searchText.getText().toString().trim().equals("")) {
+                        search(searchText.getText().toString().trim());
+                    }
                 }
-            }
-        });
+            });
+        }
 
         return view;
     }

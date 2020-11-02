@@ -45,16 +45,12 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                 setPartyName(partyName);
             }
             if(mBoundService.isStopped()) {
-                exitService("Server has been closed");
+                exitService(getString(R.string.service_serverClosed));
             }
-            // Tell the user about this for our demo.
-            //Toast.makeText(PartyActivity.this, "Service connected", Toast.LENGTH_SHORT).show();
         }
 
         public void onServiceDisconnected(ComponentName className) {
             mBoundService = null;
-            Toast.makeText(PartyActivity.this, "Service disconnected",
-                    Toast.LENGTH_SHORT).show();
         }
     };
 
@@ -103,7 +99,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                 replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
 
       
-         Intent serviceIntent = new Intent(this, ClientService.class);
+        Intent serviceIntent = new Intent(this, ClientService.class);
         serviceIntent.putExtra(Constants.TOKEN, token);
         serviceIntent.putExtra(Constants.ADDRESS, getIntent().getStringExtra(Constants.ADDRESS));
         serviceIntent.putExtra(Constants.PASSWORD, getIntent().getStringExtra(Constants.PASSWORD));
@@ -131,17 +127,21 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         new Thread(()->{
             Log.d(NAME, "User tries to leave the party");
             try {
+                if(mBoundService != null)
                 mBoundService.getClientThread().sendMessage(Commands.QUIT, "User left the channel");
             } catch (IOException e) {
                 Log.e(NAME, e.getMessage(), e);
             }
-            exitService("You left the session");
+            exitService(getString(R.string.service_serverDisconnected));
         }).start();
     }
 
     @Override
     public String getPartyName() {
-        return mBoundService.getClientThread().getPartyName();
+        if(mBoundService != null)
+            return mBoundService.getClientThread().getPartyName();
+        else
+            return getString(R.string.text_hintPartyName);
     }
 
     @Override
@@ -157,15 +157,13 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                 replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
         new Thread(()->{
             while(!showSongFragment.getStarted());
-            mBoundService.setTrack();
-            Log.d(NAME, "Hidden: " + showSongFragment.isHidden());
-            Log.d(NAME, "Partyname: " + mBoundService.getClientThread().getPartyName());
-            setPartyName(mBoundService.getClientThread().getPartyName());
+            if(mBoundService != null) {
+                mBoundService.setTrack();
+                Log.d(NAME, "Hidden: " + showSongFragment.isHidden());
+                Log.d(NAME, "Partyname: " + mBoundService.getClientThread().getPartyName());
+                setPartyName(mBoundService.getClientThread().getPartyName());
+            }
         }).start();
-    }
-
-    public void search(View view) {
-        //binding.etSearch.getText().toString());
     }
 
     @Override
@@ -178,7 +176,8 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
             new Thread(() -> {
                 try {
                     Log.d(NAME, "Trying to send message to server");
-                    mBoundService.getClientThread().sendMessage(Commands.QUEUE, track.serialize());
+                    if(mBoundService != null)
+                        mBoundService.getClientThread().sendMessage(Commands.QUEUE, track.serialize());
                 } catch (IOException | JSONException e) {
                     Log.e(NAME, e.getMessage(), e);
                 }
@@ -189,7 +188,12 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     @Override
     public void setTrack(Track track) {
         Log.d(NAME, "Now Playing: " + track.toString());
-        showSongFragment.showSongs(track);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                showSongFragment.showSongs(track);
+            }
+        });
     }
 
     @Override
