@@ -18,6 +18,9 @@ import java.util.List;
 public class ClientPlaylistRecycAdapter extends RecyclerView.Adapter<ClientPlaylistRecycAdapter.ViewHolder> {
 
     private List<Track> mDataset;
+    private ImageView currentSongCoverImageView;
+    private TextView currentSongTitleTextView;
+    private TextView currentSongArtistTextView;
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -42,6 +45,20 @@ public class ClientPlaylistRecycAdapter extends RecyclerView.Adapter<ClientPlayl
         LayoutInflater inflater = LayoutInflater.from(context);
 
         View textView = inflater.inflate(R.layout.client_playlist_recyc_view_row, parent, false);
+
+
+        currentSongTitleTextView = textView.findViewById(R.id.currentSongTitleTextView);
+        if(currentSongTitleTextView != null) {
+            currentSongTitleTextView.setText(mDataset.get(0).getName());
+        }
+        currentSongArtistTextView = textView.findViewById(R.id.currentSongArtistTextView);
+        if(currentSongArtistTextView != null) {
+            currentSongArtistTextView.setText(mDataset.get(0).getArtist(0).getName());
+        }
+        currentSongCoverImageView = textView.findViewById(R.id.currentSongCoverImageView);
+        if(currentSongCoverImageView != null) {
+            new DownloadImageTask(currentSongCoverImageView).execute(mDataset.get(0).getCover());
+        }
 
         return new ViewHolder(textView);
     }
