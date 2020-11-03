@@ -1,8 +1,11 @@
-package com.example.musicparty;
+package com.tinf19.musicparty;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.musicparty.databinding.ActivityMainBinding;
+import com.tinf19.musicparty.client.ClientActivity;
+import com.tinf19.musicparty.databinding.ActivityMainBinding;
+import com.tinf19.musicparty.server.HostActivity;
+import com.tinf19.musicparty.util.Constants;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 

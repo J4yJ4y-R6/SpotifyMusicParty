@@ -1,4 +1,4 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.server;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -10,7 +10,9 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.musicparty.music.Track;
+import com.tinf19.musicparty.util.Commands;
+import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import org.json.JSONException;
@@ -35,7 +37,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import static com.example.musicparty.App.CHANNEL_ID;
+import static com.tinf19.musicparty.App.CHANNEL_ID;
 
 public class ServerService extends Service {
 
@@ -340,7 +342,7 @@ public class ServerService extends Service {
                         Log.d(NAME, "New song has been started " + track.uri.split(":")[2]);
                         new Thread(()->{
                             try {
-                                sendToAll(Commands.PLAYING, new com.example.musicparty.music.Track(
+                                sendToAll(Commands.PLAYING, new com.tinf19.musicparty.music.Track(
                                         track.uri.split(":")[2],
                                         track.name,
                                         track.artists,
@@ -450,7 +452,7 @@ public class ServerService extends Service {
                                             if (nowPlaying == null)
                                                 sendMessage(Commands.LOGIN, partyName);
                                             else
-                                                sendMessage(Commands.LOGIN, partyName + "~" + new com.example.musicparty.music.Track(
+                                                sendMessage(Commands.LOGIN, partyName + "~" + new com.tinf19.musicparty.music.Track(
                                                         nowPlaying.uri.split(":")[2],
                                                         nowPlaying.name,
                                                         nowPlaying.artists,
@@ -476,7 +478,7 @@ public class ServerService extends Service {
                                     break;
                                 case PLAYING:
                                     if(nowPlaying != null) {
-                                        sendMessage(Commands.PLAYING, new com.example.musicparty.music.Track(
+                                        sendMessage(Commands.PLAYING, new com.tinf19.musicparty.music.Track(
                                                 nowPlaying.uri.split(":")[2],
                                                 nowPlaying.name,
                                                 nowPlaying.artists,

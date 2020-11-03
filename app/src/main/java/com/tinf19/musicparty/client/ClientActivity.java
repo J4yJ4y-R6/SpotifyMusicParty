@@ -1,19 +1,13 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.client;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 
-import com.example.musicparty.databinding.ActivityClientBinding;
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.Socket;
+import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.databinding.ActivityClientBinding;
 
 public class ClientActivity extends AppCompatActivity {
 

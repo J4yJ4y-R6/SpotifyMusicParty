@@ -1,4 +1,4 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.util;
 
 public class Constants {
     public static final String TOKEN = "token";

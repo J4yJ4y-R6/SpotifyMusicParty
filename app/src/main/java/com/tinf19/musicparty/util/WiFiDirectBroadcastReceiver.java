@@ -1,10 +1,12 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.util;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
+
+import com.tinf19.musicparty.server.HostActivity;
 
 public class WiFiDirectBroadcastReceiver extends BroadcastReceiver {
 

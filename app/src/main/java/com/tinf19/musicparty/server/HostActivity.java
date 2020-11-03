@@ -1,4 +1,4 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.server;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -8,7 +8,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.media.MediaParser;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
@@ -17,36 +16,20 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
-import com.example.musicparty.databinding.ActivityHostBinding;
-import com.example.musicparty.music.Artist;
+import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.MainActivity;
+import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.util.WiFiDirectBroadcastReceiver;
+import com.tinf19.musicparty.databinding.ActivityHostBinding;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
-import com.spotify.protocol.types.Track;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
-
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.HttpUrl;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
 
 public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback {
 

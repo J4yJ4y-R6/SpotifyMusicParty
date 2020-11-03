@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.musicparty">
+    package="com.tinf19.musicparty">
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
@@ -11,7 +11,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
-        android:name=".App"
+        android:name="com.tinf19.musicparty.App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -19,21 +19,21 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicParty">
         <service
-            android:name=".ClientService"
+            android:name="com.tinf19.musicparty.client.ClientService"
             android:enabled="true"
             android:exported="true"></service>
         <service
-            android:name=".ServerService"
+            android:name="com.tinf19.musicparty.server.ServerService"
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".PartyActivity" />
-        <activity android:name=".ClientActivity" />
+        <activity android:name="com.tinf19.musicparty.client.PartyActivity" />
+        <activity android:name="com.tinf19.musicparty.client.ClientActivity" />
         <activity
             android:name="com.spotify.sdk.android.auth.LoginActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-        <activity android:name=".HostActivity" />
-        <activity android:name=".MainActivity">
+        <activity android:name="com.tinf19.musicparty.server.HostActivity" />
+        <activity android:name="com.tinf19.musicparty.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

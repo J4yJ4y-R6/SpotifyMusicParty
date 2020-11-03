@@ -1,4 +1,4 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.util;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;

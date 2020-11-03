@@ -1,4 +1,4 @@
-package com.example.musicparty;
+package com.tinf19.musicparty;
 
 import android.content.Context;
 

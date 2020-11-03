@@ -1,4 +1,4 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.client;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -10,7 +10,10 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.musicparty.music.Track;
+import com.tinf19.musicparty.util.Commands;
+import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.music.Track;
 
 import org.json.JSONException;
 
@@ -23,7 +26,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.musicparty.App.CHANNEL_ID;
+import static com.tinf19.musicparty.App.CHANNEL_ID;
 
 public class ClientService extends Service {
 

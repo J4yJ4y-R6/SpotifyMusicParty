@@ -1,17 +1,12 @@
-package com.example.musicparty.music;
+package com.tinf19.musicparty.music;
 
-import android.os.CpuUsageInfo;
-
-import com.example.musicparty.Constants;
+import com.tinf19.musicparty.util.Constants;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import static android.os.Build.VERSION_CODES.R;
 
 public class Track {
 

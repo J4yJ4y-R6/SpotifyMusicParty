@@ -1,12 +1,7 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.util;
 
 
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.os.AsyncTask;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,12 +11,9 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.musicparty.music.Artist;
-import com.example.musicparty.music.Track;
+import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.music.Track;
 
-import org.w3c.dom.Text;
-
-import java.io.InputStream;
 import java.util.List;
 
 

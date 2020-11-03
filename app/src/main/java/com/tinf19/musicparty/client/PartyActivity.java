@@ -1,9 +1,8 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.client;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 
-import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -11,13 +10,20 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.View;
 
 import android.widget.Toast;
 
 
-import com.example.musicparty.databinding.ActivityPartyBinding;
-import com.example.musicparty.music.Track;
+import com.tinf19.musicparty.util.Commands;
+import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.fragments.ExitConnectionFragment;
+import com.tinf19.musicparty.MainActivity;
+import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.fragments.SearchBarFragment;
+import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
+import com.tinf19.musicparty.fragments.ShowSongFragment;
+import com.tinf19.musicparty.databinding.ActivityPartyBinding;
+import com.tinf19.musicparty.music.Track;
 
 import org.json.JSONException;
 

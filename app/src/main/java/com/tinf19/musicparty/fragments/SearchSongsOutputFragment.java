@@ -1,4 +1,4 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.fragments;
 
 import android.os.Bundle;
 
@@ -11,7 +11,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.musicparty.music.Track;
+import com.tinf19.musicparty.util.PartyAcRecycAdapter;
+import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.music.Track;
 
 import java.util.ArrayList;
 import java.util.List;

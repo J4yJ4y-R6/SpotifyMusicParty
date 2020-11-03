@@ -1,6 +1,5 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.fragments;
 
-import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
@@ -11,12 +10,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 
-import com.example.musicparty.databinding.ActivityPartyBinding;
-import com.example.musicparty.music.Artist;
-import com.example.musicparty.music.Track;
-import com.spotify.android.appremote.api.UserApi;
+import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.music.Artist;
+import com.tinf19.musicparty.music.Track;
 
 import org.json.JSONArray;
 import org.json.JSONException;

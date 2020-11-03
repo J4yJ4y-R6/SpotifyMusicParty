@@ -1,4 +1,4 @@
-package com.example.musicparty;
+package com.tinf19.musicparty.fragments;
 
 import android.graphics.Typeface;
 import android.os.Bundle;
@@ -6,11 +6,8 @@ import android.os.Bundle;
 import androidx.fragment.app.Fragment;
 
 import android.text.Spannable;
-import android.text.SpannableString;
 import android.text.Spanned;
-import android.text.method.ScrollingMovementMethod;
 import android.text.style.StyleSpan;
-import android.text.style.TtsSpan;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,7 +16,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.example.musicparty.music.Track;
+import com.tinf19.musicparty.util.DownloadImageTask;
+import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.music.Track;
 
 public class ShowSongFragment extends Fragment {
 

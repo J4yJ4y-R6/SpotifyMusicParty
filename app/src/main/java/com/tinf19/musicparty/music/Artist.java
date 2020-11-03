@@ -1,6 +1,6 @@
-package com.example.musicparty.music;
+package com.tinf19.musicparty.music;
 
-import com.example.musicparty.Constants;
+import com.tinf19.musicparty.util.Constants;
 
 import org.json.JSONException;
 import org.json.JSONObject;
