@@ -50,10 +50,10 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         public void onServiceConnected(ComponentName className, IBinder service) {
             mBoundService = ((ClientService.LocalBinder)service).getService();
             mBoundService.setPartyCallback(PartyActivity.this);
-            String partyName = mBoundService.getClientThread().getPartyName();
+/*            String partyName = mBoundService.getClientThread().getPartyName();
             if(partyName != null) {
                 setPartyName(partyName);
-            }
+            }*/
             if(mBoundService.isStopped()) {
                 exitService(getString(R.string.service_serverClosed));
             }
@@ -121,9 +121,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     public void showFragments() {
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.searchBarFragmentFrame, searchBarFragment, "SearchBarFragment").commitAllowingStateLoss();
-
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
+        showShowSongFragment();
     }
 
     @Override
@@ -185,7 +183,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
         new Thread(()->{
-            while(!showSongFragment.getStarted());
+            while(!showSongFragment.getStarted() || mBoundService == null || mBoundService.getClientThread().getPartyName() == null);
             if(mBoundService != null) {
                 mBoundService.setTrack();
                 Log.d(NAME, "Hidden: " + showSongFragment.isHidden());
@@ -203,6 +201,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void addSong(Track track) {
+        this.runOnUiThread(() -> Toast.makeText(PartyActivity.this, track.getName() + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
             new Thread(() -> {
                 try {
                     Log.d(NAME, "Trying to send message to server");
@@ -218,17 +217,12 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     @Override
     public void setTrack(Track track) {
         Log.d(NAME, "Now Playing: " + track.toString());
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                showSongFragment.showSongs(track);
-            }
-        });
+        runOnUiThread(() -> showSongFragment.showSongs(track));
     }
 
     @Override
     public void setPartyName(String partyName) {
-        showSongFragment.setPartyName(partyName);
+        runOnUiThread(() -> showSongFragment.setPartyName(partyName));
     }
 
     @Override

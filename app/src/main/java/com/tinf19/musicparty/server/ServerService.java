@@ -327,7 +327,8 @@ public class ServerService extends Service {
 
     public void sendToAll(Commands command, String message) throws IOException {
         for(CommunicationThread client : clientThreads) {
-            client.sendMessage(command, message);
+            if (client.login)
+                client.sendMessage(command, message);
         }
     }
 
@@ -382,6 +383,17 @@ public class ServerService extends Service {
         Log.d(NAME, "Try to start server");
         this.serverThread = new Thread(new ServerThread());
         this.serverThread.start();
+    }
+
+    private Track getNowPlaying(){
+        return new com.tinf19.musicparty.music.Track(
+                nowPlaying.uri.split(":")[2],
+                nowPlaying.name,
+                nowPlaying.artists,
+                nowPlaying.imageUri.raw.split(":")[2],
+                nowPlaying.duration,
+                nowPlaying.album.name
+        );
     }
 
     class ServerThread implements Runnable {
@@ -461,14 +473,7 @@ public class ServerService extends Service {
                                             if (nowPlaying == null)
                                                 sendMessage(Commands.LOGIN, partyName);
                                             else
-                                                sendMessage(Commands.LOGIN, partyName + "~" + new com.tinf19.musicparty.music.Track(
-                                                        nowPlaying.uri.split(":")[2],
-                                                        nowPlaying.name,
-                                                        nowPlaying.artists,
-                                                        nowPlaying.imageUri.raw.split(":")[2],
-                                                        nowPlaying.duration,
-                                                        nowPlaying.album.name
-                                                ).serialize());
+                                                sendMessage(Commands.LOGIN, partyName + "~" + getNowPlaying().serialize());
                                         } else {
                                             sendMessage(Commands.QUIT, "Login Failed");
                                             close();
@@ -482,24 +487,21 @@ public class ServerService extends Service {
                                         Track track = new Track(attribute);
                                         tracks.add(track);
                                         addItem(track.getURI(), track.getName());
-                                        sendToAll(Commands.QUEUE, track.serialize());
+                                        //sendToAll(Commands.QUEUE, track.serialize());
                                     }
                                     break;
                                 case PLAYING:
                                     if(nowPlaying != null) {
-                                        sendMessage(Commands.PLAYING, new com.tinf19.musicparty.music.Track(
-                                                nowPlaying.uri.split(":")[2],
-                                                nowPlaying.name,
-                                                nowPlaying.artists,
-                                                nowPlaying.imageUri.raw.split(":")[2],
-                                                nowPlaying.duration,
-                                                nowPlaying.album.name
-                                        ).serialize());
+                                        sendMessage(Commands.PLAYING, getNowPlaying().serialize());
                                     }
                                     break;
                                 case PLAYLIST:
                                     Log.d(NAME, "Show Playlist for user " + username);
                                     StringBuilder response = new StringBuilder();
+                                    if(nowPlaying != null) {
+                                        response.append("~");
+                                        response.append(getNowPlaying().serialize());
+                                    }
                                     for (Track track: tracks) {
                                         response.append("~");
                                         response.append(track.serialize());

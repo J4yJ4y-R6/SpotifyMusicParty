@@ -131,7 +131,8 @@ public class ShowSongFragment extends Fragment {
         //TODO: Format String partyName
         String conTo = "Verbunden mit ";
         String partyName = conTo + name;
-        if(connectedToParty != null) {
+        Log.d(ShowSongFragment.class.getName(), "setPartyName: " + partyName);
+        if(connectedToParty != null && !name.equals("")) {
             connectedToParty.setText(partyName, TextView.BufferType.SPANNABLE);
             Spannable spannable = (Spannable)connectedToParty.getText();
             int start = conTo.length();

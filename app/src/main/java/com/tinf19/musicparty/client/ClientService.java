@@ -188,10 +188,10 @@ public class ClientService extends Service {
                                         nowPlaying = new Track(parts[3]);
                                     }
                                     Log.d(NAME, partyName);
-                                    if(partyCallback != null) {
+                                /*    if(partyCallback != null) {
                                         partyCallback.setPartyName(partyName);
                                         partyCallback.setTrack(nowPlaying);
-                                    }
+                                    }*/
                                     break;
                                 case QUIT:
                                     Log.d(NAME, "Server has been closed");
@@ -209,7 +209,7 @@ public class ClientService extends Service {
                                 case PLAYLIST:
                                     Log.d(NAME, "Show Playlist");
                                     List<Track> tracks = new ArrayList<>();
-                                    for (int i = 2; i < parts.length; i++) {
+                                    for (int i = 3; i < parts.length; i++) {
                                         if(!parts[i].equals(""))
                                         tracks.add(new Track(parts[i]));
                                     }
