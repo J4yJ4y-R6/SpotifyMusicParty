@@ -111,7 +111,7 @@
             app:layout_constraintTop_toBottomOf="@+id/connectedTo" />
 
         <ImageButton
-            android:id="@+id/imageButton"
+            android:id="@+id/playlistButtonImageButton"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginStart="34dp"

@@ -14,6 +14,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 
+import com.tinf19.musicparty.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.fragments.ExitConnectionFragment;
@@ -31,7 +32,7 @@ import java.io.IOException;
 import java.util.List;
 
 
-public class PartyActivity extends AppCompatActivity implements ShowSongFragment.ExitButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, SearchSongsOutputFragment.AddSongCallback, ClientService.PartyCallback {
+public class PartyActivity extends AppCompatActivity implements ShowSongFragment.PartyButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, SearchSongsOutputFragment.AddSongCallback, ClientService.PartyCallback {
 
 
     ActivityPartyBinding binding;
@@ -41,6 +42,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     private ClientService mBoundService;
     private SearchSongsOutputFragment searchSongsOutputFragment;
     private ShowSongFragment showSongFragment;
+    private ClientPlaylistFragment clientPlaylistFragment;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -97,6 +99,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         setContentView(binding.getRoot());
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
         showSongFragment = new ShowSongFragment(this);
+        clientPlaylistFragment = new ClientPlaylistFragment();
 
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.searchBarFragmentFrame, new SearchBarFragment(this, token), "SearchBarFragment").commitAllowingStateLoss();
@@ -121,6 +124,18 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                replace(R.id.showSongFragmentFrame, new ExitConnectionFragment(this), "ExitConnectionFragment").commitAllowingStateLoss();
     }
 
+    @Override
+    public void showPlaylist() {
+        if(mBoundService != null) {
+            try {
+                mBoundService.getClientThread().sendMessage(Commands.PLAYLIST, "User ask for Playlist");
+            } catch (IOException e) {
+                Log.e(NAME, e.getMessage(), e);
+            }
+        }
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongFragmentFrame, clientPlaylistFragment, "ClientPlaylistFragment").commitAllowingStateLoss();
+    }
 
 
     @Override
@@ -218,5 +233,11 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
             }
         });
         startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+    }
+
+    @Override
+    public void setPlaylist(List<Track> trackList) {
+        Log.d("ClientPlaylistFragment", "show playlist");
+        this.runOnUiThread(() -> clientPlaylistFragment.showResult(trackList));
     }
 }

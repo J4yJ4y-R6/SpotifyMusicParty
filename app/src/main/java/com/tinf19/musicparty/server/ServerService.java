@@ -488,6 +488,15 @@ public class ServerService extends Service {
                                         ).serialize());
                                     }
                                     break;
+                                case PLAYLIST:
+                                    Log.d(NAME, "Show Playlist for user " + username);
+                                    StringBuilder response = new StringBuilder();
+                                    for (Track track: tracks) {
+                                        response.append("~");
+                                        response.append(track.serialize());
+                                    }
+                                    sendMessage(Commands.PLAYLIST, response.toString());
+                                    break;
                                 default:
                                     Log.d(NAME, "No such command: " + command);
                             }

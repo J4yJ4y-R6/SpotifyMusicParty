@@ -22,7 +22,7 @@ import com.tinf19.musicparty.music.Track;
 
 public class ShowSongFragment extends Fragment {
 
-    public ExitButtonClicked exitButtonClicked;
+    public PartyButtonClicked partyButtonClicked;
     private ImageView songCover;
     private TextView songTitle;
     private TextView songArtist;
@@ -31,12 +31,13 @@ public class ShowSongFragment extends Fragment {
     private View rootView;
     private boolean started;
 
-    public interface ExitButtonClicked {
+    public interface PartyButtonClicked {
         void exitConnection();
+        void showPlaylist();
     }
 
-    public ShowSongFragment(ExitButtonClicked exitButtonClicked) {
-        this.exitButtonClicked = exitButtonClicked;
+    public ShowSongFragment(PartyButtonClicked partyButtonClicked) {
+        this.partyButtonClicked = partyButtonClicked;
     }
 
     @Override
@@ -83,7 +84,22 @@ public class ShowSongFragment extends Fragment {
             exitButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    exitButtonClicked.exitConnection();
+                    partyButtonClicked.exitConnection();
+                }
+            });
+        }
+
+        ImageButton playlistButton = rootView.findViewById(R.id.playlistButtonImageButton);
+        if(playlistButton != null) {
+            playlistButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            partyButtonClicked.showPlaylist();
+                        }
+                    }).start();
                 }
             });
         }

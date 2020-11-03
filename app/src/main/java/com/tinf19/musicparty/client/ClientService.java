@@ -46,6 +46,7 @@ public class ClientService extends Service {
         void setTrack(Track track);
         void setPartyName(String partyName);
         void exitService(String text);
+        void setPlaylist(List<Track> trackList);
     }
 
     public class LocalBinder extends Binder {
@@ -171,11 +172,11 @@ public class ClientService extends Service {
                                     partyName = attribute;
                                     if (parts.length > 3) {
                                         nowPlaying = new Track(parts[3]);
-                                        partyCallback.setTrack(nowPlaying);
                                     }
                                     Log.d(NAME, partyName);
                                     if(partyCallback != null) {
                                         partyCallback.setPartyName(partyName);
+                                        partyCallback.setTrack(nowPlaying);
                                     }
                                     break;
                                 case QUIT:
@@ -191,6 +192,15 @@ public class ClientService extends Service {
                                      nowPlaying = new Track(attribute);
                                      partyCallback.setTrack(nowPlaying);
                                      break;
+                                case PLAYLIST:
+                                    Log.d(NAME, "Show Playlist");
+                                    List<Track> tracks = new ArrayList<>();
+                                    for (int i = 2; i < parts.length; i++) {
+                                        if(!parts[i].equals(""))
+                                        tracks.add(new Track(parts[i]));
+                                    }
+                                    partyCallback.setPlaylist(tracks);
+                                    break;
                             }
                         }
                     }

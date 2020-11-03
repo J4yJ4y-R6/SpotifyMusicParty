@@ -6,5 +6,6 @@ public enum Commands {
     QUEUE,
     PLAYING,
     REMOVE,
-    ERROR
+    ERROR,
+    PLAYLIST
 }
