@@ -4,13 +4,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".ExitConnectionFragment"
-    android:background="#8E4747">
+    android:background="#00000000"
+    tools:context=".ExitConnectionFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#2A7E2D">
+        android:background="@drawable/main_background_gradient">
 
         <TextView
             android:id="@+id/leavePartyOf"
