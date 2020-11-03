@@ -354,6 +354,15 @@ public class ServerService extends Service {
                                 Log.e(NAME, e.getMessage(), e);
                             }
                         }).start();
+                        Track toRemove = null;
+                        for (Track x : tracks) {
+                            if(x.getURI().equals(nowPlaying.uri)) {
+                                toRemove = x;
+                                break;
+                            }
+                        }
+                        if(toRemove != null)
+                            tracks.remove(toRemove);
                     }
                     pause = playerState.isPaused;
                     if (track != null && spotifyPlayerCallback != null) {

@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 
 import com.tinf19.musicparty.fragments.ClientPlaylistFragment;
+import com.tinf19.musicparty.fragments.LoadingFragment;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.fragments.ExitConnectionFragment;
@@ -43,6 +44,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     private SearchSongsOutputFragment searchSongsOutputFragment;
     private ShowSongFragment showSongFragment;
     private ClientPlaylistFragment clientPlaylistFragment;
+    private SearchBarFragment searchBarFragment;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -100,12 +102,10 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
         showSongFragment = new ShowSongFragment(this);
         clientPlaylistFragment = new ClientPlaylistFragment();
+        searchBarFragment = new SearchBarFragment(this, token);
 
         getSupportFragmentManager().beginTransaction().
-                replace(R.id.searchBarFragmentFrame, new SearchBarFragment(this, token), "SearchBarFragment").commitAllowingStateLoss();
-
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
+                replace(R.id.showSongFragmentFrame, new LoadingFragment(), "LoadingFragment").commitAllowingStateLoss();
 
       
         Intent serviceIntent = new Intent(this, ClientService.class);
@@ -116,6 +116,14 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         startService(serviceIntent);
         doBindService();
 
+    }
+
+    public void showFragments() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.searchBarFragmentFrame, searchBarFragment, "SearchBarFragment").commitAllowingStateLoss();
+
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
     }
 
     @Override
@@ -189,6 +197,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void onBackPressed() {
+        searchBarFragment.clearSearch();
         showShowSongFragment();
     }
 
@@ -224,6 +233,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void exitService(String text) {
+        mBoundService.getClientThread().interrupt();
         doUnbindService();
         stopService(new Intent(this, ClientService.class));
         this.runOnUiThread(new Runnable() {

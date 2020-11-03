@@ -23,6 +23,7 @@
     <string name="service_channelName">Music Party Service Channel</string>
     <string name="service_name">MusicParty</string>
     <string name="service_clientMsg">Du bist Teil einer MusicParty</string>
+    <string name="service_clientConnectionError">Die Verbindung zum Host ist fehlgeschlagen</string>
     <string name="service_serverMsg">Du hostest eine MusicParty</string>
     <string name="service_serverClosed">Der Host hat die Party beendet</string>
     <string name="service_serverConnected">Du bist Teil einer MusicParty</string>
@@ -30,5 +31,6 @@
     <string name="service_playlistDescription">Deine Playlist aus der MusicParty.</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="tex_loadingClient">Verbindung zum Server wird hergestellt</string>
 
 </resources>

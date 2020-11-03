@@ -33,6 +33,7 @@ public class ClientService extends Service {
 
     private static final String NAME = ClientService.class.getName();
     private static final int PORT = 1403;
+    private static final short LOADING_TIME = 5;
     private boolean stopped;
     private final IBinder mBinder = new LocalBinder();
     private ClientThread clientThread;
@@ -47,6 +48,7 @@ public class ClientService extends Service {
         void setPartyName(String partyName);
         void exitService(String text);
         void setPlaylist(List<Track> trackList);
+        void showFragments();
     }
 
     public class LocalBinder extends Binder {
@@ -153,7 +155,19 @@ public class ClientService extends Service {
         public void run() {
             try {
                 Log.d(NAME, "Try to login to " + address + ":" + PORT + " with password " + this.password);
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(LOADING_TIME*1000);
+                    } catch (InterruptedException e) {
+                        Log.e(NAME, e.getMessage(), e);
+                    }
+                    if(clientSocket == null) partyCallback.exitService(getString(R.string.service_clientConnectionError));
+                }).start();
                 clientSocket = new Socket(this.address, PORT);
+                new Thread(() -> {
+                    while(partyCallback == null);
+                    partyCallback.showFragments();
+                }).start();
                 input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.ISO_8859_1));
                 out = new DataOutputStream(clientSocket.getOutputStream());
                 sendMessage(Commands.LOGIN, this.username + "~" + this.password);

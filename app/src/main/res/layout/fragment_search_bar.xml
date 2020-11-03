@@ -33,6 +33,7 @@
             android:hint="Song name"
             android:inputType="textPersonName"
             android:outlineProvider="none"
+            android:textColor="#FFFFFF"
             android:textColorHint="#FAFAFA"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

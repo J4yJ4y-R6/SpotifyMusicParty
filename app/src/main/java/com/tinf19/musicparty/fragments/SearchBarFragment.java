@@ -40,6 +40,7 @@ public class SearchBarFragment extends Fragment {
     private int limit = 10;
     private String type = "track";
     private String token;
+    EditText searchText;
 
     public interface SearchForSongs {
         void searchForSongs(List<Track> tracks);
@@ -62,14 +63,14 @@ public class SearchBarFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_search_bar, container, false);
         //token = savedInstanceState.getBundle();
-
+        searchText = view.findViewById(R.id.searchEditText);
         Button searchButton = view.findViewById(R.id.searchButton);
         if(searchButton != null) {
             searchButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    EditText searchText = view.findViewById(R.id.searchEditText);
-                    if  (searchText != null && searchText.getText().toString().trim().equals("")) {
+                    if  (searchText != null && !searchText.getText().toString().trim().equals("")) {
+                        searchText.clearFocus();
                         search(searchText.getText().toString().trim());
                     }
                 }
@@ -79,7 +80,12 @@ public class SearchBarFragment extends Fragment {
         return view;
     }
 
-    public void search(String query){
+    public void clearSearch() {
+        if(searchText != null)
+            searchText.getText().clear();
+    }
+
+    public void search(String query) {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
