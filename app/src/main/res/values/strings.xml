@@ -19,6 +19,7 @@
     <string name="text_kuenstler">Künstler*in</string>
     <string name="text_verbunden_mit">Verbunden mit</string>
     <string name="text_songcover">SongCover</string>
+    <string name="text_queAdded"> wurde zur Warteschlange hinzugefügt</string>
 
     <string name="service_channelName">Music Party Service Channel</string>
     <string name="service_name">MusicParty</string>
