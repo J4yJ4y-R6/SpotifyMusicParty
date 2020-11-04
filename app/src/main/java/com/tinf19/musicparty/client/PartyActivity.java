@@ -244,4 +244,10 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         Log.d("ClientPlaylistFragment", "show playlist");
         this.runOnUiThread(() -> clientPlaylistFragment.showResult(trackList));
     }
+
+    @Override
+    public void setCurrentTrack(Track track) {
+        Log.d(NAME, "set current track");
+        this.runOnUiThread(() -> clientPlaylistFragment.setCurrentPlaying(track));
+    }
 }

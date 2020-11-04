@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.ClientPlaylistRecycAdapter;
+import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.util.PartyAcRecycAdapter;
 
 import java.util.ArrayList;
@@ -26,6 +27,10 @@ public class ClientPlaylistFragment extends Fragment {
     private static final String TAG = ClientPlaylistFragment.class.getName();
     private RecyclerView recyclerView;
     private ClientPlaylistRecycAdapter clientPlaylistRecycAdapter;
+    private ImageView currentSongCoverImageView;
+    private TextView currentSongTitleTextView;
+    private TextView currentSongArtistTextView;
+    private Track currentTrack;
 
     public ClientPlaylistFragment() {
         // Required empty public constructor
@@ -50,7 +55,28 @@ public class ClientPlaylistFragment extends Fragment {
             recyclerView.setLayoutManager(layoutManager);
         }
 
+        currentSongTitleTextView = view.findViewById(R.id.currentSongTitleTextView);
+        currentSongArtistTextView = view.findViewById(R.id.currentSongArtistTextView);
+        currentSongCoverImageView = view.findViewById(R.id.currentSongCoverImageView);
+
         return view;
+    }
+
+    public void setCurrentPlaying(Track track) {
+        Log.d(TAG, track.getName());
+        if(currentSongTitleTextView != null) {
+            currentSongTitleTextView.setText(track.getName());
+            Log.d(TAG, "onCreateViewHolder: " + track.getName());
+        }
+        if(currentSongArtistTextView != null) {
+            currentSongArtistTextView.setText(track.getArtist(0).getName());
+            Log.d(TAG, "onCreateViewHolder: " + track.getArtist(0).getName());
+        }
+        if(currentSongCoverImageView != null) {
+            String coverURL = "https://i.scdn.co/image/"+track.getCover();
+            new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
+            Log.d(TAG, "onCreateViewHolder: " + coverURL);
+        }
     }
 
     public void showResult(List<Track> tracks) {

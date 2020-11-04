@@ -48,6 +48,7 @@ public class ClientService extends Service {
         void setPartyName(String partyName);
         void exitService(String text);
         void setPlaylist(List<Track> trackList);
+        void setCurrentTrack(Track track);
         void showFragments();
     }
 
@@ -213,6 +214,9 @@ public class ClientService extends Service {
                                         if(!parts[i].equals(""))
                                         tracks.add(new Track(parts[i]));
                                     }
+                                    Log.d(NAME, tracks.get(0).getName());
+                                    partyCallback.setCurrentTrack(tracks.get(0));
+                                    tracks.remove(0);
                                     partyCallback.setPlaylist(tracks);
                                     break;
                             }
