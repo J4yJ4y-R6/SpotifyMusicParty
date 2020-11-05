@@ -14,8 +14,13 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
+import com.tinf19.musicparty.fragments.LoadingFragment;
+import com.tinf19.musicparty.fragments.SearchBarFragment;
+import com.tinf19.musicparty.fragments.ShowSongFragment;
+import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
@@ -137,6 +142,19 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         binding.tvIpAddress.setText(getIPAddress(true));
         binding.tvPassword.setText(PASSWORD);
         doBindService();
+
+
+        Button partyActivity = findViewById(R.id.partyActivityButton);
+        if (partyActivity != null) {
+            partyActivity.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(HostActivity.this, HostPartyActivity.class);
+                    intent.putExtra(Constants.TOKEN, token);
+                    startActivity(intent);
+                }
+            });
+        }
     }
 
     @Override
@@ -225,4 +243,5 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             binding.tvPlaying.setText(nowPlaying);
         });
     }
+
 }
