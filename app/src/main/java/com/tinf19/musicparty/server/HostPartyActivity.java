@@ -2,14 +2,17 @@ package com.tinf19.musicparty.server;
 
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.fragments.ExitConnectionFragment;
 import com.tinf19.musicparty.fragments.SearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
+import com.tinf19.musicparty.fragments.SettingsHostFragment;
 import com.tinf19.musicparty.fragments.ShowSongFragment;
 import com.tinf19.musicparty.fragments.ShowSongHostFragment;
 import com.tinf19.musicparty.music.Track;
@@ -17,13 +20,14 @@ import com.tinf19.musicparty.util.Constants;
 
 import java.util.List;
 
-public class HostPartyActivity extends AppCompatActivity implements SearchBarFragment.SearchForSongs, ShowSongFragment.PartyButtonClicked, SearchSongsOutputFragment.AddSongCallback, ExitConnectionFragment.ConfirmExit {
-
-    private TextView mTextView;
+public class HostPartyActivity extends AppCompatActivity implements SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, ExitConnectionFragment.ConfirmExit {
+    
     private ShowSongHostFragment showSongFragment;
     private SearchBarFragment searchBarFragment;
     private SearchSongsOutputFragment searchSongsOutputFragment;
     private ExitConnectionFragment exitConnectionFragment;
+    private SettingsHostFragment settingsHostFragment;
+    private ClientPlaylistFragment clientPlaylistFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,9 +35,11 @@ public class HostPartyActivity extends AppCompatActivity implements SearchBarFra
         setContentView(R.layout.activity_host_party);
 
         searchBarFragment = new SearchBarFragment(this, getIntent().getStringExtra(Constants.TOKEN));
-        showSongFragment = new ShowSongHostFragment();
+        showSongFragment = new ShowSongHostFragment(this);
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
         exitConnectionFragment = new ExitConnectionFragment(this);
+        settingsHostFragment = new SettingsHostFragment(getIntent().getStringExtra(Constants.PASSWORD), getIntent().getStringExtra(Constants.ADDRESS));
+        clientPlaylistFragment = new ClientPlaylistFragment();
 
         //Todo: Host Fragment erstellen
         getSupportFragmentManager().beginTransaction().
@@ -51,16 +57,6 @@ public class HostPartyActivity extends AppCompatActivity implements SearchBarFra
         this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));
     }
 
-    @Override
-    public void exitConnection() {
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, exitConnectionFragment, "ExitConnectionFragment").commitAllowingStateLoss();
-    }
-
-    @Override
-    public void showPlaylist() {
-
-    }
 
     @Override
     public void addSong(Track track) {
@@ -69,7 +65,7 @@ public class HostPartyActivity extends AppCompatActivity implements SearchBarFra
 
     @Override
     public void denyExit() {
-        
+
     }
 
     @Override
@@ -80,5 +76,29 @@ public class HostPartyActivity extends AppCompatActivity implements SearchBarFra
     @Override
     public String getPartyName() {
         return null;
+    }
+
+    @Override
+    public void openSettingsFragment() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, settingsHostFragment, "SettingsHostFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void openPeopleFragment() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, settingsHostFragment, "SettingsHostFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void openPlaylistFragment() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, clientPlaylistFragment, "SettingsHostFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void openExitFragment() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, exitConnectionFragment, "ExitConnectionFragment").commitAllowingStateLoss();
     }
 }

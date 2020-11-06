@@ -21,6 +21,13 @@
     <string name="text_songcover">SongCover</string>
     <string name="text_queAdded"> wurde zur Warteschlange hinzugefügt</string>
     <string name="text_partyNameCountPeople">Party Name    0</string>
+    <string name="text_changePartyName">Gib hier deinen Party Namen ein</string>
+    <string name="text_partyType">Party-Typ einstellen</string>
+    <string name="text_allInType">All-In</string>
+    <string name="text_vetoType">Veto</string>
+    <string name="text_votingType">Voting</string>
+
+    <string name="heading_settings">Einstellungen</string>
 
     <string name="service_channelName">Music Party Service Channel</string>
     <string name="service_name">MusicParty</string>

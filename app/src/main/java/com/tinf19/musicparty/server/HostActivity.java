@@ -151,6 +151,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 public void onClick(View v) {
                     Intent intent = new Intent(HostActivity.this, HostPartyActivity.class);
                     intent.putExtra(Constants.TOKEN, token);
+                    intent.putExtra(Constants.ADDRESS, getIPAddress(true));
+                    intent.putExtra(Constants.PASSWORD, PASSWORD);
                     startActivity(intent);
                 }
             });
