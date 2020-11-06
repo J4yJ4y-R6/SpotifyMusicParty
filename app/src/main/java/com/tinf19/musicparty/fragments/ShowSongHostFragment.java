@@ -12,12 +12,16 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.databinding.FragmentShowSongHostBinding;
+import com.tinf19.musicparty.music.Track;
 
 public class ShowSongHostFragment extends Fragment {
 
     private static final String TAG = ShowSongHostFragment.class.getName();
     private OpenHostFragments openHostFragments;
     private String partyName  = "Coole Party";
+    private Track nowPlaying;
+    private FragmentShowSongHostBinding binding;
 
 
     public interface OpenHostFragments {
@@ -25,6 +29,10 @@ public class ShowSongHostFragment extends Fragment {
         void openPeopleFragment();
         void openPlaylistFragment();
         void openExitFragment();
+        void nextTrack();
+        void lastTrack();
+        void playTrack();
+        Track setShowNowPlaying();
     }
 
 
@@ -39,6 +47,7 @@ public class ShowSongHostFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        binding = FragmentShowSongHostBinding.inflate(getLayoutInflater());
     }
 
     @Override
@@ -47,39 +56,44 @@ public class ShowSongHostFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_show_song_host, container, false);
 
-        TextView partyNameTextView = view.findViewById(R.id.partyOverviewTextView);
-        if(partyNameTextView != null) {
-            String text = partyName + " 0";
-            partyNameTextView.setText(text);
-        }
+        nowPlaying = openHostFragments.setShowNowPlaying();
+//        Log.d(TAG, "onCreateView: " + nowPlaying.getName());
+
+        TextView partyNameTextView = binding.partyOverviewTextView;
+        String text = partyName + " 0";
+        partyNameTextView.setText(text);
+
+//        TextView currentPlayingTitleTextView = binding.songtitleHostTextView;
+//        currentPlayingTitleTextView.setText(nowPlaying.getName());
+//        TextView currentPlayingArtistTextView = binding.artistHostTextView;
+//        currentPlayingArtistTextView.setText(nowPlaying.getArtist(0).getName());
+//        TextView currentPlayingAlbumTextView = binding.albumHostTextView;
+//        currentPlayingAlbumTextView.setText(nowPlaying.getAlbum());
 
         ImageButton openPlaylistButton = view.findViewById(R.id.playlistButtonHostImageButton);
         if(openPlaylistButton != null) {
             openPlaylistButton.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
-                    openHostFragments.openPlaylistFragment();
-                }
+                public void onClick(View v) { openHostFragments.openPlaylistFragment(); }
             });
         }
+
         ImageButton openSettingsButton = view.findViewById(R.id.optionsButton);
         if(openSettingsButton != null) {
             openSettingsButton.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
-                    openHostFragments.openSettingsFragment();
-                }
+                public void onClick(View v) { openHostFragments.openSettingsFragment(); }
             });
         }
+
         ImageButton openPeopleButton = view.findViewById(R.id.partyPeopleButton);
         if(openPeopleButton != null) {
             openPeopleButton.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
-                    openHostFragments.openPeopleFragment();
-                }
+                public void onClick(View v) { openHostFragments.openPeopleFragment(); }
             });
         }
+
         ImageButton openExitButton = view.findViewById(R.id.endPartyButton);
         if(openExitButton != null) {
             openExitButton.setOnClickListener(new View.OnClickListener() {
@@ -87,30 +101,36 @@ public class ShowSongHostFragment extends Fragment {
                 public void onClick(View v) { openHostFragments.openExitFragment(); }
             });
         }
-        ImageButton lastTrackImageButton = view.findViewById(R.id.lastTrackImagebutton);
+
+        ImageButton lastTrackImageButton = view.findViewById(R.id.lastTrackImageButton);
         if(lastTrackImageButton != null) {
             lastTrackImageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Log.d(TAG, "onClick: play last track");
+//                    openHostFragments.lastTrack();
                 }
             });
         }
+
         ImageButton playTrackImageButton = view.findViewById(R.id.playTrackImageButton);
         if(playTrackImageButton != null) {
             playTrackImageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Log.d(TAG, "onClick: play track");
+//                    openHostFragments.playTrack();
                 }
             });
         }
+
         ImageButton nextTrackImageButton = view.findViewById(R.id.nextTrackImageButton);
         if(nextTrackImageButton != null) {
             nextTrackImageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Log.d(TAG, "onClick: play next track");
+//                    openHostFragments.nextTrack();
                 }
             });
         }

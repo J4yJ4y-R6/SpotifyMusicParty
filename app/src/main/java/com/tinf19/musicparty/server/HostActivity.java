@@ -15,13 +15,21 @@ import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tinf19.musicparty.fragments.ClientPlaylistFragment;
+import com.tinf19.musicparty.fragments.ExitConnectionFragment;
+import com.tinf19.musicparty.fragments.SearchBarFragment;
+import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
+import com.tinf19.musicparty.fragments.SettingsHostFragment;
+import com.tinf19.musicparty.fragments.ShowSongHostFragment;
+import com.tinf19.musicparty.music.Artist;
+import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.WiFiDirectBroadcastReceiver;
-import com.tinf19.musicparty.databinding.ActivityHostBinding;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
@@ -32,13 +40,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback {
+public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, ExitConnectionFragment.ConfirmExit {
 
     private static final String TAG = HostActivity.class.getName();
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
     private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
     private static final String PASSWORD = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
-    private ActivityHostBinding binding;
     private Channel channel;
     private WifiP2pManager manager;
     private BroadcastReceiver receiver;
@@ -46,6 +53,15 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private String token;
     private boolean mShouldUnbind;
     private ServerService mBoundService;
+
+    private Track nowPlaying;
+
+    private ShowSongHostFragment showSongFragment;
+    private SearchBarFragment searchBarFragment;
+    private SearchSongsOutputFragment searchSongsOutputFragment;
+    private ExitConnectionFragment exitConnectionFragment;
+    private SettingsHostFragment settingsHostFragment;
+    private ClientPlaylistFragment clientPlaylistFragment;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -133,23 +149,31 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
         token = getIntent().getStringExtra(Constants.TOKEN);
-        binding = ActivityHostBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        binding.tvIpAddress.setText(getIPAddress(true));
-        binding.tvPassword.setText(PASSWORD);
+        setContentView(R.layout.activity_host_party);
         doBindService();
 
+        searchBarFragment = new SearchBarFragment(this, getIntent().getStringExtra(Constants.TOKEN));
+        showSongFragment = new ShowSongHostFragment(this);
+        searchSongsOutputFragment = new SearchSongsOutputFragment(this);
+        exitConnectionFragment = new ExitConnectionFragment(this);
+        settingsHostFragment = new SettingsHostFragment(getIntent().getStringExtra(Constants.PASSWORD), getIntent().getStringExtra(Constants.ADDRESS));
+        clientPlaylistFragment = new ClientPlaylistFragment();
+
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.searchBarHostFragmentFrame, searchBarFragment, "SearchBarFragment").commitAllowingStateLoss();
 
         Button partyActivity = findViewById(R.id.partyActivityButton);
         if (partyActivity != null) {
             partyActivity.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Intent intent = new Intent(HostActivity.this, HostPartyActivity.class);
-                    intent.putExtra(Constants.TOKEN, token);
-                    intent.putExtra(Constants.ADDRESS, getIPAddress(true));
-                    intent.putExtra(Constants.PASSWORD, PASSWORD);
-                    startActivity(intent);
+//                    Intent intent = new Intent(HostActivity.this, HostPartyActivity.class);
+//                    intent.putExtra(Constants.TOKEN, token);
+//                    intent.putExtra(Constants.ADDRESS, getIPAddress(true));
+//                    intent.putExtra(Constants.PASSWORD, PASSWORD);
+//                    startActivity(intent);
                 }
             });
         }
@@ -235,11 +259,83 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void setNowPlaying(String nowPlaying) {
-        this.runOnUiThread(() -> {
-            Log.d(TAG, nowPlaying);
-            binding.tvPlaying.setText(nowPlaying);
-        });
+    public void setNowPlaying(Track nowPlaying) {
+        this.nowPlaying = nowPlaying;
     }
 
+    @Override
+    public void denyExit() {
+
+    }
+
+    @Override
+    public void acceptExit() {
+
+    }
+
+    @Override
+    public String getPartyName() {
+        return null;
+    }
+
+    @Override
+    public void searchForSongs(List<Track> tracks) {
+        Log.d("ShowSongFragment", "back to show");
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, searchSongsOutputFragment, "ShowSongFragment").commitAllowingStateLoss();
+        this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));
+    }
+
+    @Override
+    public void addSong(Track track) {
+
+    }
+
+    @Override
+    public void openSettingsFragment() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, settingsHostFragment, "SettingsHostFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void openPeopleFragment() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, settingsHostFragment, "SettingsHostFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void openPlaylistFragment() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, clientPlaylistFragment, "SettingsHostFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void openExitFragment() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, exitConnectionFragment, "ExitConnectionFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void nextTrack() {
+        if(mBoundService != null)
+            mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
+    }
+
+    @Override
+    public void lastTrack() {
+        if(mBoundService != null)
+            mBoundService.getmSpotifyAppRemote().getPlayerApi().skipPrevious();
+    }
+
+    @Override
+    public void playTrack() {
+        if (mBoundService != null && mBoundService.getPause()) mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
+        else if(mBoundService != null)  mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
+    }
+
+    @Override
+    public Track setShowNowPlaying() {
+        Log.d(TAG, "setShowNowPlaying: " + nowPlaying);
+        return nowPlaying;
+    }
 }

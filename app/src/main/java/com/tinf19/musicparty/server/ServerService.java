@@ -68,7 +68,7 @@ public class ServerService extends Service {
     private String lastSongTitle;
 
     public interface SpotifyPlayerCallback {
-        void setNowPlaying(String nowPlaying);
+        void setNowPlaying(Track nowPlaying);
     }
 
     public class LocalBinder extends Binder {
@@ -371,7 +371,7 @@ public class ServerService extends Service {
                         //Log.d(NAME, track.name + " by " + track.artist.name);
                         //if (playerState.playbackPosition == 0)
                         //nextSong();
-                        spotifyPlayerCallback.setNowPlaying(String.format("%s by %s", track.name, track.artist.name));
+                        spotifyPlayerCallback.setNowPlaying(new Track(track.name, track.name, track.artists, track.imageUri.toString(), track.duration, track.album.toString()));
                     }
                 });
     }
