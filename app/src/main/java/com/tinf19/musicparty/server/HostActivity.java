@@ -51,44 +51,20 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private boolean mShouldUnbind;
     private ServerService mBoundService;
 
+    public interface ConnectionCallback {
+        void afterConnection(SpotifyAppRemote appRemote);
+    }
+
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mBoundService = ((ServerService.LocalBinder)service).getService();
 
-            ConnectionParams connectionParams =
-                    new ConnectionParams.Builder(CLIENT_ID)
-                            .setRedirectUri(REDIRECT_URI)
-                            .showAuthView(false)
-                            .build();
-            SpotifyAppRemote.connect(HostActivity.this, connectionParams,
-                    new Connector.ConnectionListener() {
-
-                        @Override
-                        public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                            if(mBoundService != null)
-                                mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
-                            Log.d(NAME, "Connected! Yay!");
-                            //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
-                            Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
-                            serviceIntent.putExtra(Constants.TOKEN, token);
-                            serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
-                            startService(serviceIntent);
-                            // Now you can start interacting with App Remote
-                            //connected();
-                            if(mBoundService != null) {
-                                mBoundService.setSpotifyPlayerCallback(HostActivity.this);
-                                mBoundService.addEventListener();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Throwable throwable) {
-                            Log.e(NAME, throwable.getMessage(), throwable);
-
-                            // Something went wrong when attempting to connect! Handle errors here
-                        }
-                    });
-
+            connect(appRemote -> {
+                Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
+                serviceIntent.putExtra(Constants.TOKEN, token);
+                serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
+                startService(serviceIntent);
+            });
             // Tell the user about this for our demo.
             Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected), Toast.LENGTH_SHORT).show();
         }
@@ -99,6 +75,39 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     Toast.LENGTH_SHORT).show();
         }
     };
+
+    private void connect(ConnectionCallback connectionCallback) {
+        ConnectionParams connectionParams =
+                new ConnectionParams.Builder(CLIENT_ID)
+                        .setRedirectUri(REDIRECT_URI)
+                        .showAuthView(false)
+                        .build();
+        SpotifyAppRemote.connect(HostActivity.this, connectionParams,
+                new Connector.ConnectionListener() {
+
+                    @Override
+                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                        if(mBoundService != null)
+                            mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
+                        Log.d(NAME, "Connected! Yay!");
+                        //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
+                        // Now you can start interacting with App Remote
+                        connectionCallback.afterConnection(spotifyAppRemote);
+
+                        if(mBoundService != null) {
+                            mBoundService.setSpotifyPlayerCallback(HostActivity.this);
+                            mBoundService.addEventListener();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        Log.e(NAME, throwable.getMessage(), throwable);
+
+                        // Something went wrong when attempting to connect! Handle errors here
+                    }
+                });
+    }
 
     void doBindService() {
         if (bindService(new Intent(this, ServerService.class),
@@ -172,7 +181,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(mBoundService != null)
+        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
             SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         doUnbindService();
         Log.d(NAME, "I got destroyed");
@@ -184,12 +193,19 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     public void togglePlay(View view) {
-        if (mBoundService != null && mBoundService.getPause()) mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
-        else if(mBoundService != null)  mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
+        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null) {
+            if(mBoundService.getPause()) mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
+            else mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
+        } else if(mBoundService != null) {
+            connect(appRemote -> {
+                if(mBoundService.getPause()) appRemote.getPlayerApi().resume();
+                else appRemote.getPlayerApi().pause();
+            });
+        }
     }
 
     public void stopService(View view) {
-        if(mBoundService != null) {
+        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null) {
             mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
             SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         }
@@ -199,8 +215,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     public void nextSong(View view) {
-        if(mBoundService != null)
+        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
             mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
+        else if(mBoundService != null)
+            connect(appRemote -> appRemote.getPlayerApi().skipNext());
     }
 
     private String getIPAddress(boolean useIPv4) {
