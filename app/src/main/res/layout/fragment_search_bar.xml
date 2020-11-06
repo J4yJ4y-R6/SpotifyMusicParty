@@ -18,7 +18,7 @@
             android:layout_marginTop="10dp"
             android:layout_marginEnd="40dp"
             android:layout_weight="1"
-            android:text="Search"
+            android:text="@string/text_search"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -30,7 +30,7 @@
             android:layout_marginTop="10dp"
             android:layout_weight="1"
             android:ems="10"
-            android:hint="Song name"
+            android:hint="@string/text_songTitle"
             android:inputType="textPersonName"
             android:outlineProvider="none"
             android:textColor="#FFFFFF"

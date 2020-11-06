@@ -21,7 +21,8 @@ import com.tinf19.musicparty.util.Constants;
 import java.util.List;
 
 public class HostPartyActivity extends AppCompatActivity implements SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, ExitConnectionFragment.ConfirmExit {
-    
+
+    private static final String TAG = HostPartyActivity.class.getName();
     private ShowSongHostFragment showSongFragment;
     private SearchBarFragment searchBarFragment;
     private SearchSongsOutputFragment searchSongsOutputFragment;

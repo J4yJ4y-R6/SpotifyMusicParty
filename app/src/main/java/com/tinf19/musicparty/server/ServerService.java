@@ -14,6 +14,7 @@ import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
+import com.tinf19.musicparty.util.Constants;
 
 import org.json.JSONException;
 import org.json.JSONObject;

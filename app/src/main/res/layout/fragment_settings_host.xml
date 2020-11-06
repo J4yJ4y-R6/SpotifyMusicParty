@@ -16,14 +16,17 @@
 
             <EditText
                 android:id="@+id/changePartyNameEditText"
-                android:layout_width="350dp"
+                android:layout_width="200dp"
                 android:layout_height="52dp"
-                android:layout_marginTop="20dp"
+                android:layout_marginStart="28dp"
+                android:layout_marginTop="16dp"
                 android:ems="10"
                 android:hint="@string/text_changePartyName"
                 android:inputType="textPersonName"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.491"
+                android:textColor="#FFFFFF"
+                android:textColorHint="#FFFFFF"
+                app:layout_constraintEnd_toStartOf="@+id/button3"
+                app:layout_constraintHorizontal_bias="0.052"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/settingsHeadingTextView" />
 
@@ -34,6 +37,7 @@
                 android:layout_marginTop="5dp"
                 android:text="@string/heading_settings"
                 android:textAlignment="center"
+                android:textColor="#FFFFFF"
                 android:textSize="36sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -46,6 +50,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:text="@string/text_ip_address"
+                android:textColor="#FFFFFF"
                 android:textSize="24sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -57,6 +62,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="20dp"
                 android:text="@string/app_password"
+                android:textColor="#FDFDFD"
                 android:textSize="24sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -79,7 +85,7 @@
                 android:layout_height="200dp"
                 android:layout_marginTop="30dp"
                 android:background="@color/button_green"
-                android:src="@drawable/ic_launcher_foreground"
+                android:src="@drawable/ic_qr_code_image"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/shareButtonSettingsImageButton" />
@@ -91,6 +97,7 @@
                 android:layout_marginTop="30dp"
                 android:text="@string/text_partyType"
                 android:textAlignment="center"
+                android:textColor="#FDFDFD"
                 android:textSize="24sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
@@ -111,21 +118,35 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="@string/text_allInType" />
+                    android:text="@string/text_allInType"
+                    android:textColor="#FFF"
+                    app:useMaterialThemeColors="false" />
 
                 <RadioButton
                     android:id="@+id/vetoSettingRadioButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/text_vetoType" />
+                    android:text="@string/text_vetoType"
+                    android:textColor="#FFFFFF" />
 
                 <RadioButton
                     android:id="@+id/votingSettingsRadioButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="@string/text_votingType" />
+                    android:text="@string/text_votingType"
+                    android:textColor="#FFF" />
             </RadioGroup>
+
+            <Button
+                android:id="@+id/button3"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="28dp"
+                android:text="@string/text_save"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/settingsHeadingTextView" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>

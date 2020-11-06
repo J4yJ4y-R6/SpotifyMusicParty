@@ -21,11 +21,12 @@
     <string name="text_songcover">SongCover</string>
     <string name="text_queAdded"> wurde zur Warteschlange hinzugefügt</string>
     <string name="text_partyNameCountPeople">Party Name    0</string>
-    <string name="text_changePartyName">Gib hier deinen Party Namen ein</string>
+    <string name="text_changePartyName">Neuer Party Name</string>
     <string name="text_partyType">Party-Typ einstellen</string>
     <string name="text_allInType">All-In</string>
     <string name="text_vetoType">Veto</string>
     <string name="text_votingType">Voting</string>
+    <string name="text_save">Sichern</string>
 
     <string name="heading_settings">Einstellungen</string>
 
@@ -47,5 +48,7 @@
     values-round/strings.xml for round devices.
     -->
     <string name="hello_world">Hello Square World!</string>
+    <string name="text_search">Suchen</string>
+    <string name="text_songTitle">Song Titel eingeben</string>
 
 </resources>

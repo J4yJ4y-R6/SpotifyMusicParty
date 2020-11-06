@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 
@@ -16,6 +17,7 @@ public class ShowSongHostFragment extends Fragment {
 
     private static final String TAG = ShowSongHostFragment.class.getName();
     private OpenHostFragments openHostFragments;
+    private String partyName  = "Coole Party";
 
 
     public interface OpenHostFragments {
@@ -44,6 +46,12 @@ public class ShowSongHostFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_show_song_host, container, false);
+
+        TextView partyNameTextView = view.findViewById(R.id.partyOverviewTextView);
+        if(partyNameTextView != null) {
+            String text = partyName + " 0";
+            partyNameTextView.setText(text);
+        }
 
         ImageButton openPlaylistButton = view.findViewById(R.id.playlistButtonHostImageButton);
         if(openPlaylistButton != null) {

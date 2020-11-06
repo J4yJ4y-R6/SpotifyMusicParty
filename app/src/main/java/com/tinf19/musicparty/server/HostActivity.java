@@ -17,10 +17,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import com.tinf19.musicparty.fragments.LoadingFragment;
-import com.tinf19.musicparty.fragments.SearchBarFragment;
-import com.tinf19.musicparty.fragments.ShowSongFragment;
-import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
@@ -38,7 +34,7 @@ import java.util.Random;
 
 public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback {
 
-    private static final String NAME = HostActivity.class.getName();
+    private static final String TAG = HostActivity.class.getName();
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
     private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
     private static final String PASSWORD = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
@@ -67,7 +63,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                         public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                             if(mBoundService != null)
                                 mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
-                            Log.d(NAME, "Connected! Yay!");
+                            Log.d(TAG, "Connected! Yay!");
                             //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
                             Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
                             serviceIntent.putExtra(Constants.TOKEN, token);
@@ -83,7 +79,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
                         @Override
                         public void onFailure(Throwable throwable) {
-                            Log.e(NAME, throwable.getMessage(), throwable);
+                            Log.e(TAG, throwable.getMessage(), throwable);
 
                             // Something went wrong when attempting to connect! Handle errors here
                         }
@@ -105,7 +101,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 mConnection, Context.BIND_AUTO_CREATE)) {
             mShouldUnbind = true;
         } else {
-            Log.e(NAME, "Error: The requested service doesn't " +
+            Log.e(TAG, "Error: The requested service doesn't " +
                     "exist, or this client isn't allowed access to it.");
         }
     }
@@ -177,7 +173,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         if(mBoundService != null)
             SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         doUnbindService();
-        Log.d(NAME, "I got destroyed");
+        Log.d(TAG, "I got destroyed");
     }
 
     @Override
@@ -235,13 +231,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d(NAME, "I have been stopped");
+        Log.d(TAG, "I have been stopped");
     }
 
     @Override
     public void setNowPlaying(String nowPlaying) {
         this.runOnUiThread(() -> {
-            Log.d(NAME, nowPlaying);
+            Log.d(TAG, nowPlaying);
             binding.tvPlaying.setText(nowPlaying);
         });
     }
