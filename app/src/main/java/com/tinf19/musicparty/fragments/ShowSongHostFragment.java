@@ -59,16 +59,19 @@ public class ShowSongHostFragment extends Fragment {
         nowPlaying = openHostFragments.setShowNowPlaying();
 //        Log.d(TAG, "onCreateView: " + nowPlaying.getName());
 
-        TextView partyNameTextView = binding.partyOverviewTextView;
-        String text = partyName + " 0";
-        partyNameTextView.setText(text);
+        TextView partyNameTextView = view.findViewById(R.id.partyOverviewTextView);
+        if(partyNameTextView != null) {
+            String text = partyName + " 0";
+            partyNameTextView.setText(text);
 
-//        TextView currentPlayingTitleTextView = binding.songtitleHostTextView;
-//        currentPlayingTitleTextView.setText(nowPlaying.getName());
-//        TextView currentPlayingArtistTextView = binding.artistHostTextView;
-//        currentPlayingArtistTextView.setText(nowPlaying.getArtist(0).getName());
-//        TextView currentPlayingAlbumTextView = binding.albumHostTextView;
-//        currentPlayingAlbumTextView.setText(nowPlaying.getAlbum());
+        }
+
+//        TextView currentPlayingTitleTextView = view.findViewById(R.id.songtitleHostTextView);
+//        if(currentPlayingTitleTextView != null) currentPlayingTitleTextView.setText(nowPlaying.getName());
+//        TextView currentPlayingArtistTextView = view.findViewById(R.id.artistHostTextView);
+//        if(currentPlayingArtistTextView != null) currentPlayingArtistTextView.setText(nowPlaying.getArtist(0).getName());
+//        TextView currentPlayingAlbumTextView = view.findViewById(R.id.albumHostTextView);
+//        if(currentPlayingAlbumTextView != null) currentPlayingAlbumTextView.setText(nowPlaying.getAlbum());
 
         ImageButton openPlaylistButton = view.findViewById(R.id.playlistButtonHostImageButton);
         if(openPlaylistButton != null) {
