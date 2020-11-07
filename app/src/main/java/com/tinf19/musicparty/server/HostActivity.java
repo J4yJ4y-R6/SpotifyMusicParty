@@ -18,8 +18,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.tinf19.musicparty.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.fragments.ExitConnectionFragment;
+import com.tinf19.musicparty.fragments.HostPlaylistFragment;
 import com.tinf19.musicparty.fragments.SearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.fragments.SettingsHostFragment;
@@ -61,7 +61,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private SearchSongsOutputFragment searchSongsOutputFragment;
     private ExitConnectionFragment exitConnectionFragment;
     private SettingsHostFragment settingsHostFragment;
-    private ClientPlaylistFragment clientPlaylistFragment;
+    private HostPlaylistFragment hostPlaylistFragment;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -157,7 +157,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
         exitConnectionFragment = new ExitConnectionFragment(this);
         settingsHostFragment = new SettingsHostFragment(getIntent().getStringExtra(Constants.PASSWORD), getIntent().getStringExtra(Constants.ADDRESS));
-        clientPlaylistFragment = new ClientPlaylistFragment();
+        hostPlaylistFragment = new HostPlaylistFragment();
 
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
@@ -306,7 +306,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void openPlaylistFragment() {
         getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, clientPlaylistFragment, "SettingsHostFragment").commitAllowingStateLoss();
+                replace(R.id.showSongHostFragmentFrame, hostPlaylistFragment, "SettingsHostFragment").commitAllowingStateLoss();
     }
 
     @Override
