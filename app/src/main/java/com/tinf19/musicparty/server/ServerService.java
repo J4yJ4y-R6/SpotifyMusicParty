@@ -129,7 +129,7 @@ public class ServerService extends Service {
     }
 
     public SpotifyAppRemote getmSpotifyAppRemote() {
-        return mSpotifyAppRemote.isConnected() ? mSpotifyAppRemote : null;
+        return ( mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()) ? mSpotifyAppRemote : null;
     }
 
     public void setmSpotifyAppRemote(SpotifyAppRemote mSpotifyAppRemote) {
