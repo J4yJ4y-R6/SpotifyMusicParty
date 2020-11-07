@@ -180,6 +180,10 @@ public class ServerService extends Service {
         });
     }
 
+    public List<Track> getPlaylist() {
+        return tracks;
+    }
+
     public boolean getPause() {
         return pause;
     }
@@ -371,7 +375,7 @@ public class ServerService extends Service {
                         //Log.d(NAME, track.name + " by " + track.artist.name);
                         //if (playerState.playbackPosition == 0)
                         //nextSong();
-                        spotifyPlayerCallback.setNowPlaying(new Track(track.name, track.name, track.artists, track.imageUri.toString(), track.duration, track.album.toString()));
+                        spotifyPlayerCallback.setNowPlaying(getNowPlaying());
                     }
                 });
     }

@@ -26,6 +26,7 @@ import com.tinf19.musicparty.fragments.SettingsHostFragment;
 import com.tinf19.musicparty.fragments.ShowSongHostFragment;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
@@ -34,6 +35,7 @@ import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.Collections;
@@ -305,6 +307,12 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void openPlaylistFragment() {
+
+        if(mBoundService != null) {
+            List<Track> trackList = mBoundService.getPlaylist();
+            this.runOnUiThread(() -> hostPlaylistFragment.showResult(trackList));
+        }
+
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, hostPlaylistFragment, "SettingsHostFragment").commitAllowingStateLoss();
     }
