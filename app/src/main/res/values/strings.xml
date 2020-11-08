@@ -51,5 +51,8 @@
     <string name="text_search">Suchen</string>
     <string name="text_songTitle">Song Titel eingeben</string>
     <string name="heading_partyPeople">Folgende Persoen sind gerade bei deiner Party</string>
+    <string name="text_endParty">Möchtest du deine Party wirklich beenden</string>
+    <string name="text_end">Beenden</string>
+    <string name="text_cancel">Abbrechen</string>
 
 </resources>

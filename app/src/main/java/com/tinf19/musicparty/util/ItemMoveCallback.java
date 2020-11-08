@@ -12,7 +12,6 @@ public class ItemMoveCallback extends ItemTouchHelper.Callback {
     private final ItemTouchHelperContract mAdapter;
 
     public interface ItemTouchHelperContract {
-        void onBindViewHolder(HostPlaylistRecycAdapter.MyViewHolder holder, int position);
         void onRowMoved(int fromPosition, int toPosition);
         void onRowSelected(HostPlaylistRecycAdapter.MyViewHolder myViewHolder);
         void onRowClear(HostPlaylistRecycAdapter.MyViewHolder myViewHolder);

@@ -33,8 +33,8 @@ public class PartyPeopleRecycAdapter extends RecyclerView.Adapter<PartyPeopleRec
         }
     }
 
-    public PartyPeopleRecycAdapter(List<PartyPeople> trackList) {
-        this.mDataset = trackList;
+    public PartyPeopleRecycAdapter(List<PartyPeople> partyPeopleList) {
+        this.mDataset = partyPeopleList;
     }
 
     @NonNull

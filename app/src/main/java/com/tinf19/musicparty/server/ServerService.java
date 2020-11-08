@@ -10,6 +10,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
@@ -23,6 +24,7 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -80,6 +82,10 @@ public class ServerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        Artist[] artists = { new Artist("123", "artistname") };
+        tracks.add(new Track("123", "name", artists, "cover", 123456, "album"));
+        tracks.add(new Track("456", "name", artists, "cover", 123456, "album"));
         startServer();
     }
 
@@ -391,7 +397,7 @@ public class ServerService extends Service {
         this.serverThread.start();
     }
 
-    private Track getNowPlaying(){
+    public Track getNowPlaying(){
         return new com.tinf19.musicparty.music.Track(
                 nowPlaying.uri.split(":")[2],
                 nowPlaying.name,

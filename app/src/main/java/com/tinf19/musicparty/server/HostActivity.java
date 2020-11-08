@@ -18,7 +18,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.tinf19.musicparty.fragments.ExitConnectionFragment;
+import com.tinf19.musicparty.fragments.HostClosePartyFragment;
 import com.tinf19.musicparty.fragments.HostPlaylistFragment;
 import com.tinf19.musicparty.fragments.PartyPeopleFragment;
 import com.tinf19.musicparty.fragments.SearchBarFragment;
@@ -46,12 +46,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, ExitConnectionFragment.ConfirmExit {
+public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList {
 
     private static final String TAG = HostActivity.class.getName();
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
     private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
-    private static final String PASSWORD = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
+    private static final String PASSWORD = "0000";
+    //    private static final String PASSWORD = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
     private Channel channel;
     private WifiP2pManager manager;
     private BroadcastReceiver receiver;
@@ -68,7 +69,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private ShowSongHostFragment showSongFragment;
     private SearchBarFragment searchBarFragment;
     private SearchSongsOutputFragment searchSongsOutputFragment;
-    private ExitConnectionFragment exitConnectionFragment;
+    private HostClosePartyFragment hostClosePartyFragment;
     private SettingsHostFragment settingsHostFragment;
     private HostPlaylistFragment hostPlaylistFragment;
     private PartyPeopleFragment partyPeopleFragment;
@@ -166,10 +167,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         searchBarFragment = new SearchBarFragment(this, getIntent().getStringExtra(Constants.TOKEN));
         showSongFragment = new ShowSongHostFragment(this);
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
-        exitConnectionFragment = new ExitConnectionFragment(this);
+        hostClosePartyFragment = new HostClosePartyFragment(this);
         settingsHostFragment = new SettingsHostFragment(getIntent().getStringExtra(Constants.PASSWORD), getIntent().getStringExtra(Constants.ADDRESS));
-        hostPlaylistFragment = new HostPlaylistFragment();
-        partyPeopleFragment = new PartyPeopleFragment();
+        hostPlaylistFragment = new HostPlaylistFragment(this);
+        partyPeopleFragment = new PartyPeopleFragment(this);
 
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
@@ -233,7 +234,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         else if(mBoundService != null)  mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
     }
 
-    public void stopService(View view) {
+    public void stopService() {
         if(mBoundService != null) {
             mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
             SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
@@ -283,27 +284,17 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void setNowPlaying(Track nowPlaying) {
-        this.nowPlaying = nowPlaying;
+        showSongFragment.setNowPlaying(nowPlaying);
     }
 
     @Override
-    public void denyExit() {
-
+    public int getPartyPeopleSize() {
+        return partyPeople.size();
     }
 
     @Override
-    public void acceptExit() {
-
-    }
-
-    @Override
-    public String getPartyName() {
+    public String getPartyPeoplePartyName() {
         return partyName;
-    }
-
-    public ArrayList<PartyPeople> getPartyPeople() {
-        Log.d(TAG, "getPartyPeople: " + partyPeople.get(0).getUsername());
-        return partyPeople;
     }
 
     @Override
@@ -333,12 +324,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void openPlaylistFragment() {
-
-        if(mBoundService != null) {
-            List<Track> trackList = mBoundService.getPlaylist();
-            this.runOnUiThread(() -> hostPlaylistFragment.showResult(trackList));
-        }
-
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, hostPlaylistFragment, "SettingsHostFragment").commitAllowingStateLoss();
     }
@@ -346,7 +331,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void openExitFragment() {
         getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, exitConnectionFragment, "ExitConnectionFragment").commitAllowingStateLoss();
+                replace(R.id.showSongHostFragmentFrame, hostClosePartyFragment, "HostClosePartyFragment").commitAllowingStateLoss();
     }
 
     @Override
@@ -368,8 +353,49 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
+    public boolean getPauseState() {
+        return mBoundService != null && mBoundService.getPause();
+    }
+
+    @Override
     public Track setShowNowPlaying() {
-        Log.d(TAG, "setShowNowPlaying: " + nowPlaying);
-        return nowPlaying;
+        if(mBoundService != null) return mBoundService.getNowPlaying();
+        else return null;
+    }
+
+    @Override
+    public void showPlaylist() {
+        if(mBoundService != null) {
+            List<Track> trackList = mBoundService.getPlaylist();
+            Log.d(TAG, "openPlaylistFragment: " + trackList.get(0).toString());
+            this.runOnUiThread(() -> hostPlaylistFragment.showResult(trackList));
+        }
+    }
+
+    @Override
+    public Track getCurrentPlaying() {
+        if(mBoundService != null) return mBoundService.getNowPlaying();
+        else return null;
+    }
+
+    @Override
+    public void onBackPressed() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongFragment").commitAllowingStateLoss();
+    }
+
+    @Override
+    public void denyEndParty() {
+        onBackPressed();
+    }
+
+    @Override
+    public void acceptEndParty() {
+        stopService();
+    }
+
+    @Override
+    public ArrayList<PartyPeople> getPartyPeopleList() {
+        return partyPeople;
     }
 }

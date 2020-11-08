@@ -1,9 +1,9 @@
 package com.tinf19.musicparty.fragments;
 
-import android.media.Image;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -19,6 +19,7 @@ import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.ClientPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.util.HostPlaylistRecycAdapter;
+import com.tinf19.musicparty.util.ItemMoveCallback;
 
 import org.w3c.dom.Text;
 
@@ -33,10 +34,32 @@ public class HostPlaylistFragment extends Fragment {
     private TextView currentSongArtistTextView;
     private ImageView currentSongCoverImageView;
     private HostPlaylistRecycAdapter hostPlaylistRecycAdapter;
-    ArrayList<Track> tracks = new ArrayList<>();
+    private PlaylistCallback playlistCallback;
+
+    public interface PlaylistCallback {
+        void showPlaylist();
+        Track getCurrentPlaying();
+    }
+
+    public HostPlaylistFragment(PlaylistCallback playlistCallback) {
+        this.playlistCallback = playlistCallback;
+    }
 
     public HostPlaylistFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        playlistCallback.showPlaylist();
+        Track currentPlaying = playlistCallback.getCurrentPlaying();
+        if(currentSongTitleTextView != null) currentSongTitleTextView.setText(currentPlaying.getName());
+        if(currentSongArtistTextView != null) currentSongArtistTextView.setText(currentPlaying.getArtist(0).getName());
+        if(currentSongCoverImageView != null) {
+            String coverURL = "https://i.scdn.co/image/" + currentPlaying.getCover();
+            new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
+        };
     }
 
     @Override
@@ -53,6 +76,10 @@ public class HostPlaylistFragment extends Fragment {
         recyclerView = view.findViewById(R.id.hostPlaylistRecyclerView);
         if(recyclerView != null) {
             hostPlaylistRecycAdapter = new HostPlaylistRecycAdapter(new ArrayList<Track>());
+            ItemTouchHelper.Callback callback =
+                    new ItemMoveCallback(hostPlaylistRecycAdapter);
+            ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+            touchHelper.attachToRecyclerView(recyclerView);
             recyclerView.setAdapter(hostPlaylistRecycAdapter);
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(view.getContext());
             recyclerView.setLayoutManager(layoutManager);
@@ -63,23 +90,6 @@ public class HostPlaylistFragment extends Fragment {
         currentSongCoverImageView = view.findViewById(R.id.currentSongCoverHostImageView);
 
         return view;
-    }
-
-    public void setCurrentPlaying(Track track) {
-        Log.d(TAG, track.getName());
-        if(currentSongTitleTextView != null) {
-            currentSongTitleTextView.setText(track.getName());
-            Log.d(TAG, "onCreateViewHolder: " + track.getName());
-        }
-        if(currentSongArtistTextView != null) {
-            currentSongArtistTextView.setText(track.getArtist(0).getName());
-            Log.d(TAG, "onCreateViewHolder: " + track.getArtist(0).getName());
-        }
-        if(currentSongCoverImageView != null) {
-            String coverURL = "https://i.scdn.co/image/"+track.getCover();
-            new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
-            Log.d(TAG, "onCreateViewHolder: " + coverURL);
-        }
     }
 
     public void showResult(List<Track> tracks) {

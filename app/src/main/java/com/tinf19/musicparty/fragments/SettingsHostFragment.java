@@ -63,7 +63,7 @@ public class SettingsHostFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     changePartyName = view.findViewById(R.id.changePartyNameEditText);
-                    if(changePartyName != null) {
+                    if(changePartyName != null && changePartyName.getText().toString().equals("")) {
                         String newPartyName = changePartyName.getText().toString();
                         Log.d(TAG, "onClick: new Party Name set to: " + newPartyName);
                     }

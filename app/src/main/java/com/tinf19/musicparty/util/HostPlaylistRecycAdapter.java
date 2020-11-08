@@ -1,12 +1,15 @@
 package com.tinf19.musicparty.util;
 
+import android.content.res.Resources;
 import android.graphics.Color;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,6 +27,8 @@ import java.util.List;
 public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistRecycAdapter.MyViewHolder> implements ItemMoveCallback.ItemTouchHelperContract {
 
     private List<Track> mdataset;
+    private View view;
+    private static final String TAG = HostPlaylistRecycAdapter.class.getName();
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
 
@@ -46,8 +51,8 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
     @NotNull
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.client_playlist_recyc_view_row, parent, false);
-        return new MyViewHolder(itemView);
+        view = LayoutInflater.from(parent.getContext()).inflate(R.layout.client_playlist_recyc_view_row, parent, false);
+        return new MyViewHolder(view);
     }
 
     @Override
@@ -66,6 +71,7 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
 
     @Override
     public void onRowMoved(int fromPosition, int toPosition) {
+        Log.d(TAG, "onRowMoved: done");
         if(fromPosition < toPosition) {
             for (int i = fromPosition; i < toPosition; i++) {
                 Collections.swap(mdataset, i, i+1);
@@ -80,12 +86,12 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
 
     @Override
     public void onRowSelected(MyViewHolder myViewHolder) {
-        myViewHolder.rowView.setBackgroundColor(Color.GRAY);
+        myViewHolder.rowView.setBackgroundColor(ContextCompat.getColor(view.getContext(), R.color.button_green));
     }
 
     @Override
     public void onRowClear(MyViewHolder myViewHolder) {
-        myViewHolder.rowView.setBackgroundColor(Color.WHITE);
+        myViewHolder.rowView.setBackgroundColor(Color.TRANSPARENT);
     }
 
 
