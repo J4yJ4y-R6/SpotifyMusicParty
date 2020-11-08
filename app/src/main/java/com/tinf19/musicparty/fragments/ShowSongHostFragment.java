@@ -13,16 +13,22 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.databinding.FragmentShowSongHostBinding;
+import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.server.HostActivity;
+
+import java.util.ArrayList;
 
 public class ShowSongHostFragment extends Fragment {
 
     private static final String TAG = ShowSongHostFragment.class.getName();
     private OpenHostFragments openHostFragments;
-    private HostActivity hostActivity;
+    private HostActivity hostActivity = new HostActivity();
     private String partyName;
     private Track nowPlaying;
+    private ArrayList<PartyPeople> partyPeopleList;
+
+    private TextView partyNameTextView;
 
 
     public interface OpenHostFragments {
@@ -49,6 +55,12 @@ public class ShowSongHostFragment extends Fragment {
     public void onStart() {
         super.onStart();
         this.partyName = hostActivity.getPartyName();
+        this.partyPeopleList = hostActivity.getPartyPeople();
+        Log.d(TAG, "onStart: partyPeopleList" + this.partyPeopleList.get(0).getUsername());
+        if(partyNameTextView != null) {
+            String text = partyName + " mit " + partyPeopleList.size() + " Menschen";
+            partyNameTextView.setText(text);
+        }
         Log.d(TAG, "onStart: got party name: " + partyName);
     }
 
@@ -66,7 +78,7 @@ public class ShowSongHostFragment extends Fragment {
         nowPlaying = openHostFragments.setShowNowPlaying();
 //        Log.d(TAG, "onCreateView: " + nowPlaying.getName());
 
-        TextView partyNameTextView = view.findViewById(R.id.partyOverviewTextView);
+        partyNameTextView = view.findViewById(R.id.partyOverviewTextView);
         if(partyNameTextView != null) {
             String text = partyName + " 0";
             partyNameTextView.setText(text);

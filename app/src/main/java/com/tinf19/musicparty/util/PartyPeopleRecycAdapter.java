@@ -34,16 +34,7 @@ public class PartyPeopleRecycAdapter extends RecyclerView.Adapter<PartyPeopleRec
     }
 
     public PartyPeopleRecycAdapter(List<PartyPeople> trackList) {
-        this.mDataset = new ArrayList<>();
-        mDataset.add(new PartyPeople("Silas", 123456));
-        mDataset.add(new PartyPeople("Jannik", 123456));
-        mDataset.add(new PartyPeople("Hung", 123456));
-        mDataset.add(new PartyPeople("Olli", 123456));
-        mDataset.add(new PartyPeople("Leander", 123456));
-        mDataset.add(new PartyPeople("Tim", 123456));
-        mDataset.add(new PartyPeople("Christian", 123456));
-        mDataset.add(new PartyPeople("Christian", 123456));
-
+        this.mDataset = trackList;
     }
 
     @NonNull

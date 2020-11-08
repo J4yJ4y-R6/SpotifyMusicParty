@@ -26,6 +26,7 @@ import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.fragments.SettingsHostFragment;
 import com.tinf19.musicparty.fragments.ShowSongHostFragment;
 import com.tinf19.musicparty.music.Artist;
+import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
@@ -37,8 +38,10 @@ import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -56,6 +59,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private String token;
 //    Music Party standard name
     private String partyName = "Music Party";
+    private ArrayList<PartyPeople> partyPeople;
     private boolean mShouldUnbind;
     private ServerService mBoundService;
 
@@ -185,6 +189,17 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 }
             });
         }
+
+        partyPeople = new ArrayList<>();
+        partyPeople.add(new PartyPeople("Silas", 123456));
+        partyPeople.add(new PartyPeople("Jannik", 123456));
+        partyPeople.add(new PartyPeople("Hung", 123456));
+        partyPeople.add(new PartyPeople("Olli", 123456));
+        partyPeople.add(new PartyPeople("Leander", 123456));
+        partyPeople.add(new PartyPeople("Tim", 123456));
+        partyPeople.add(new PartyPeople("Christian", 123456));
+        partyPeople.add(new PartyPeople("Christian", 123456));
+        Log.d(TAG, "onCreate: " + partyPeople.get(0).getUsername());
     }
 
     @Override
@@ -284,6 +299,11 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public String getPartyName() {
         return partyName;
+    }
+
+    public ArrayList<PartyPeople> getPartyPeople() {
+        Log.d(TAG, "getPartyPeople: " + partyPeople.get(0).getUsername());
+        return partyPeople;
     }
 
     @Override
