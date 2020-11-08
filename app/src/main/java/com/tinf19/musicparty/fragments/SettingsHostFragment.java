@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
@@ -18,6 +20,7 @@ public class SettingsHostFragment extends Fragment {
     private static final String TAG = SettingsHostFragment.class.getName();
     private String ipAddress;
     private String conPassword;
+    private EditText changePartyName;
 
     public SettingsHostFragment(String password, String address) {
         this.ipAddress = address;
@@ -54,6 +57,19 @@ public class SettingsHostFragment extends Fragment {
             passwordTextView.setText(text);
         }
 
+        Button savePartyNameButton = view.findViewById(R.id.savePartyNameButton);
+        if (savePartyNameButton != null) {
+            savePartyNameButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    changePartyName = view.findViewById(R.id.changePartyNameEditText);
+                    if(changePartyName != null) {
+                        String newPartyName = changePartyName.getText().toString();
+                        Log.d(TAG, "onClick: new Party Name set to: " + newPartyName);
+                    }
+                }
+            });
+        }
         return view;
     }
 }

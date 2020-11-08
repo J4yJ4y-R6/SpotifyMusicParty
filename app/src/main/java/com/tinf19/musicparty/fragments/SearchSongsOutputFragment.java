@@ -34,6 +34,9 @@ public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycA
         this.addSongCallback = addSongCallback;
     }
 
+    public SearchSongsOutputFragment() {
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

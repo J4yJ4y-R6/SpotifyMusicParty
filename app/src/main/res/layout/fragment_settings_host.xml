@@ -25,7 +25,7 @@
                 android:inputType="textPersonName"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#FFFFFF"
-                app:layout_constraintEnd_toStartOf="@+id/button3"
+                app:layout_constraintEnd_toStartOf="@+id/savePartyNameButton"
                 app:layout_constraintHorizontal_bias="0.052"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/settingsHeadingTextView" />
@@ -139,7 +139,7 @@
             </RadioGroup>
 
             <Button
-                android:id="@+id/button3"
+                android:id="@+id/savePartyNameButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"

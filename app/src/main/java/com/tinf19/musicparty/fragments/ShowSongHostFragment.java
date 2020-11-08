@@ -14,14 +14,15 @@ import android.widget.TextView;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.databinding.FragmentShowSongHostBinding;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.server.HostActivity;
 
 public class ShowSongHostFragment extends Fragment {
 
     private static final String TAG = ShowSongHostFragment.class.getName();
     private OpenHostFragments openHostFragments;
-    private String partyName  = "Coole Party";
+    private HostActivity hostActivity;
+    private String partyName;
     private Track nowPlaying;
-    private FragmentShowSongHostBinding binding;
 
 
     public interface OpenHostFragments {
@@ -45,9 +46,15 @@ public class ShowSongHostFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        this.partyName = hostActivity.getPartyName();
+        Log.d(TAG, "onStart: got party name: " + partyName);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = FragmentShowSongHostBinding.inflate(getLayoutInflater());
     }
 
     @Override
@@ -63,7 +70,6 @@ public class ShowSongHostFragment extends Fragment {
         if(partyNameTextView != null) {
             String text = partyName + " 0";
             partyNameTextView.setText(text);
-
         }
 
 //        TextView currentPlayingTitleTextView = view.findViewById(R.id.songtitleHostTextView);

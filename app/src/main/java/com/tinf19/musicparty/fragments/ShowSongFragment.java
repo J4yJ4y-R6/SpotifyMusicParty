@@ -40,6 +40,9 @@ public class ShowSongFragment extends Fragment {
         this.partyButtonClicked = partyButtonClicked;
     }
 
+    public ShowSongFragment() {
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

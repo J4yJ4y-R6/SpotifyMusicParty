@@ -20,6 +20,7 @@ import android.widget.Toast;
 
 import com.tinf19.musicparty.fragments.ExitConnectionFragment;
 import com.tinf19.musicparty.fragments.HostPlaylistFragment;
+import com.tinf19.musicparty.fragments.PartyPeopleFragment;
 import com.tinf19.musicparty.fragments.SearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.fragments.SettingsHostFragment;
@@ -53,6 +54,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
     private String token;
+//    Music Party standard name
+    private String partyName = "Music Party";
     private boolean mShouldUnbind;
     private ServerService mBoundService;
 
@@ -64,6 +67,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private ExitConnectionFragment exitConnectionFragment;
     private SettingsHostFragment settingsHostFragment;
     private HostPlaylistFragment hostPlaylistFragment;
+    private PartyPeopleFragment partyPeopleFragment;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -86,6 +90,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                             Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
                             serviceIntent.putExtra(Constants.TOKEN, token);
                             serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
+                            serviceIntent.putExtra(Constants.PARTYNAME, partyName);
                             startService(serviceIntent);
                             // Now you can start interacting with App Remote
                             //connected();
@@ -160,6 +165,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         exitConnectionFragment = new ExitConnectionFragment(this);
         settingsHostFragment = new SettingsHostFragment(getIntent().getStringExtra(Constants.PASSWORD), getIntent().getStringExtra(Constants.ADDRESS));
         hostPlaylistFragment = new HostPlaylistFragment();
+        partyPeopleFragment = new PartyPeopleFragment();
 
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
@@ -277,7 +283,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public String getPartyName() {
-        return null;
+        return partyName;
     }
 
     @Override
@@ -302,7 +308,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void openPeopleFragment() {
         getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, settingsHostFragment, "SettingsHostFragment").commitAllowingStateLoss();
+                replace(R.id.showSongHostFragmentFrame, partyPeopleFragment, "PartyPeopleFragment").commitAllowingStateLoss();
     }
 
     @Override

@@ -58,7 +58,7 @@ public class ServerService extends Service {
     private String playlistID;
     private int size = 0;
     private boolean first = true;
-    private String partyName = "Coole Party";
+    private String partyName;
     private List<Track> tracks = new ArrayList<>();
     private ServerService mBoundService;
     private SpotifyAppRemote mSpotifyAppRemote;
@@ -88,6 +88,7 @@ public class ServerService extends Service {
 
         token = intent.getStringExtra("token");
         password = intent.getStringExtra("password");
+        partyName = intent.getStringExtra("partyname");
         if (first) {
             getUserID();
             first = false;
