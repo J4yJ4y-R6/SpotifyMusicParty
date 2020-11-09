@@ -1,11 +1,14 @@
 package com.tinf19.musicparty.fragments;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,13 +17,24 @@ import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -32,6 +46,7 @@ public class SettingsHostFragment extends Fragment {
     private TextView passwordTextView;
     private GetServerSettings getServerSettings;
     private String partyName = "Music Party";
+    private Bitmap bitmap;
 
     public interface GetServerSettings {
         String getIpAddress();
@@ -56,12 +71,12 @@ public class SettingsHostFragment extends Fragment {
     public void onStart() {
         super.onStart();
         if(ipAddressTextView != null) {
-            String text = getString(R.string.text_ip_address) + ": " + getServerSettings.getIpAddress();;
+            String text = getString(R.string.text_ip_address) + ": " + getServerSettings.getIpAddress();
             Log.d(TAG, "onStart IpAddress: " + text);
             ipAddressTextView.setText(text);
         }
         if(passwordTextView != null) {
-            String text = getString(R.string.app_password) + ": " + getServerSettings.getPassword();;
+            String text = getString(R.string.app_password) + ": " + getServerSettings.getPassword();
             Log.d(TAG, "onStart Password: " + text);
             passwordTextView.setText(text);
         }
@@ -72,6 +87,21 @@ public class SettingsHostFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_settings_host, container, false);
+
+        ImageView qrCodeImageView = view.findViewById(R.id.qrConnectionSettingsImageView);
+
+        JSONObject json = new JSONObject();
+        try {
+            json.put("ipaddress", getServerSettings.getIpAddress());
+            json.put("password", getServerSettings.getPassword());
+            MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
+            BitMatrix bitMatrix = multiFormatWriter.encode(json.toString(), BarcodeFormat.QR_CODE, 200, 200);
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            bitmap = barcodeEncoder.createBitmap(bitMatrix);
+            if(qrCodeImageView != null) qrCodeImageView.setImageBitmap(bitmap);
+        } catch (JSONException | WriterException e) {
+            e.printStackTrace();
+        }
 
         ipAddressTextView = view.findViewById(R.id.ipAddressSettingsTextView);
         passwordTextView = view.findViewById(R.id.passwordSettingsTextView);
@@ -100,18 +130,15 @@ public class SettingsHostFragment extends Fragment {
             shareQRButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    //TODO: Generate File somehow
-                    File imageFile = new File("test");
-                    MimeTypeMap mime = MimeTypeMap.getSingleton();
-                    String ext = imageFile.getName().substring(imageFile.getName().lastIndexOf(".") + 1);
-                    String type = mime.getMimeTypeFromExtension(ext);
+                    String bitmapPath = MediaStore.Images.Media.insertImage(getContext().getContentResolver(), bitmap,"title", null);
+                    Uri bitmapUri = Uri.parse(bitmapPath);
                     Intent sendIntent = new Intent();
                     sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(imageFile));
-                    sendIntent.setType(type);
-
-                    Intent shareIntent = Intent.createChooser(sendIntent, null);
-//                    startActivity(shareIntent);
+                    sendIntent.putExtra(Intent.EXTRA_STREAM, bitmapUri);
+                    sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    sendIntent.setType("image/png");
+                    Intent shareIntent = Intent.createChooser(sendIntent, "Share");
+                    startActivity(shareIntent);
                 }
             });
         }
@@ -131,4 +158,5 @@ public class SettingsHostFragment extends Fragment {
         }
         return view;
     }
+
 }

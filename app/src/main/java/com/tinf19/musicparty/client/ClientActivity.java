@@ -69,11 +69,12 @@ public class ClientActivity extends AppCompatActivity {
                 try {
                     JSONObject obj = new JSONObject(result.getContents());
 //                    https://www.simplifiedcoding.net/android-qr-code-scanner-tutorial/
-                    Log.d(TAG, "onActivityResult: " + obj.getString("name"));
+                    Log.d(TAG, "onActivityResult: " + obj.getString("ipaddress"));
+                    Log.d(TAG, "onActivityResult: " + obj.getString("password"));
                     if(ipAddressEditText != null) {
                         //TODO: connect after scan or setText()
-                        ipAddressEditText.setText(obj.getString("name"));
-                        passwordEditText.setText(obj.getString("address"));
+                        ipAddressEditText.setText(obj.getString("ipaddress"));
+                        passwordEditText.setText(obj.getString("password"));
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
