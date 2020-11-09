@@ -33,6 +33,7 @@ import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.util.HostPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.WiFiDirectBroadcastReceiver;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
@@ -49,7 +50,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings {
+public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings, HostPlaylistRecycAdapter.HostPlaylistAdapterCallback {
 
     private static final String TAG = HostActivity.class.getName();
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
@@ -171,7 +172,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
         hostClosePartyFragment = new HostClosePartyFragment(this);
         settingsHostFragment = new SettingsHostFragment(this);
-        hostPlaylistFragment = new HostPlaylistFragment(this);
+        hostPlaylistFragment = new HostPlaylistFragment(this, this);
         partyPeopleFragment = new PartyPeopleFragment(this);
 
         getSupportFragmentManager().beginTransaction().
@@ -420,5 +421,16 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public String getPassword() {
         return PASSWORD;
+    }
+
+    @Override
+    public void swapPlaylistItems(int from, int to) {
+        if(mBoundService != null) {
+            try {
+                mBoundService.moveItem(from, to);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

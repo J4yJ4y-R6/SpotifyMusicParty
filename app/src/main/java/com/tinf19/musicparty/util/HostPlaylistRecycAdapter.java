@@ -29,6 +29,11 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
     private List<Track> mdataset;
     private View view;
     private static final String TAG = HostPlaylistRecycAdapter.class.getName();
+    private HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
+
+    public interface HostPlaylistAdapterCallback {
+        void swapPlaylistItems(int from, int to);
+    }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
 
@@ -44,8 +49,9 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
         }
     }
 
-    public HostPlaylistRecycAdapter(ArrayList<Track> mDataset) {
+    public HostPlaylistRecycAdapter(ArrayList<Track> mDataset, HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
         this.mdataset = mDataset;
+        this.hostPlaylistAdapterCallback = hostPlaylistAdapterCallback;
     }
 
     @NotNull
@@ -82,6 +88,8 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
             }
         }
         notifyItemMoved(fromPosition, toPosition);
+        hostPlaylistAdapterCallback.swapPlaylistItems(fromPosition, toPosition);
+
     }
 
     @Override

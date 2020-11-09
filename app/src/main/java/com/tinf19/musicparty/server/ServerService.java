@@ -329,6 +329,47 @@ public class ServerService extends Service {
         });
     }
 
+    public void moveItem(int from, int to) throws JSONException {
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(HOST)
+                .addPathSegment("v1")
+                .addPathSegment("playlists")
+                .addPathSegment(playlistID)
+                .addPathSegment("tracks")
+                .build();
+        Log.d(NAME, "Making request to " + completeURL.toString());
+        JSONObject sampleObject = new JSONObject()
+                .put("range_start", from)
+                .put("insert_before", to);
+        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
+        Request request = new Request.Builder()
+                .url(completeURL)
+                .put(body)
+                .addHeader("Authorization", "Bearer " + token)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Do something when request failed
+                e.printStackTrace();
+                Log.d(NAME, "Request Failed.");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if(!response.isSuccessful()){
+                    Log.d(NAME, response.body().string());
+                    throw new IOException("Error : " + response);
+                }else {
+                    Log.d(NAME,"Request Successful. Track moved.");
+                }
+            }
+        });
+    }
+
     public void addItemToTrackList(Track track) {
         tracks.add(track);
     }

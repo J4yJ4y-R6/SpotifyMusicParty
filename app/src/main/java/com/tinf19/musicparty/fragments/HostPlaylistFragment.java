@@ -35,14 +35,16 @@ public class HostPlaylistFragment extends Fragment {
     private ImageView currentSongCoverImageView;
     private HostPlaylistRecycAdapter hostPlaylistRecycAdapter;
     private PlaylistCallback playlistCallback;
+    private HostPlaylistRecycAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
 
     public interface PlaylistCallback {
         void showPlaylist();
         Track getCurrentPlaying();
     }
 
-    public HostPlaylistFragment(PlaylistCallback playlistCallback) {
+    public HostPlaylistFragment(PlaylistCallback playlistCallback, HostPlaylistRecycAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
         this.playlistCallback = playlistCallback;
+        this.hostPlaylistAdapterCallback = hostPlaylistAdapterCallback;
     }
 
     public HostPlaylistFragment() {
@@ -75,7 +77,7 @@ public class HostPlaylistFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.hostPlaylistRecyclerView);
         if(recyclerView != null) {
-            hostPlaylistRecycAdapter = new HostPlaylistRecycAdapter(new ArrayList<Track>());
+            hostPlaylistRecycAdapter = new HostPlaylistRecycAdapter(new ArrayList<Track>(), hostPlaylistAdapterCallback);
             ItemTouchHelper.Callback callback =
                     new ItemMoveCallback(hostPlaylistRecycAdapter);
             ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
