@@ -76,10 +76,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private HostPlaylistFragment hostPlaylistFragment;
     private PartyPeopleFragment partyPeopleFragment;
 
-    public interface HostActitivyCallback {
-        void addSongToPlaylist(Track track);
-    }
-
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mBoundService = ((ServerService.LocalBinder)service).getService();
@@ -313,14 +309,15 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void addSong(Track track) {
-        this.runOnUiThread(() -> Toast.makeText(HostActivity.this, track.getName() + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
+        this.runOnUiThread(() -> Toast.makeText(HostActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
         new Thread(() -> {
             try {
                 Log.d(TAG, "Trying to send message to server");
                 if(mBoundService != null) {
-                    //QUEUE hier einfügen
+                    mBoundService.addItem(track.getURI(), track.getName());
+                    mBoundService.addItemToTrackList(track);
                 }
-            } catch (IOException | JSONException e) {
+            } catch (JSONException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
         }).start();

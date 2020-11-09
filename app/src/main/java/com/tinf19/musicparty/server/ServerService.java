@@ -42,7 +42,7 @@ import okhttp3.Response;
 
 import static com.tinf19.musicparty.App.CHANNEL_ID;
 
-public class ServerService extends Service implements HostActivity.HostActitivyCallback {
+public class ServerService extends Service {
 
     private static final String NAME = ServerService.class.getName();
     private static final int PORT = 1403;
@@ -68,17 +68,6 @@ public class ServerService extends Service implements HostActivity.HostActitivyC
     private SpotifyPlayerCallback spotifyPlayerCallback;
     private  com.spotify.protocol.types.Track nowPlaying;
     private String lastSongTitle;
-
-    @Override
-    public void addSongToPlaylist(Track track) {
-        tracks.add(track);
-        try {
-            addItem(track.getURI(), track.getName());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        //sendToAll(Commands.QUEUE, track.serialize());
-    }
 
     public interface SpotifyPlayerCallback {
         void setNowPlaying(Track nowPlaying);
@@ -295,7 +284,7 @@ public class ServerService extends Service implements HostActivity.HostActitivyC
         });
     }
 
-    private void addItem(String uri, String name) throws JSONException {
+    public void addItem(String uri, String name) throws JSONException {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
@@ -338,6 +327,10 @@ public class ServerService extends Service implements HostActivity.HostActitivyC
                 }
             }
         });
+    }
+
+    public void addItemToTrackList(Track track) {
+        tracks.add(track);
     }
 
     private void stopAll() throws IOException {

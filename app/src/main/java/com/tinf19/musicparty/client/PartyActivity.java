@@ -201,7 +201,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void addSong(Track track) {
-        this.runOnUiThread(() -> Toast.makeText(PartyActivity.this, track.getName() + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
+        this.runOnUiThread(() -> Toast.makeText(PartyActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
             new Thread(() -> {
                 try {
                     Log.d(NAME, "Trying to send message to server");
