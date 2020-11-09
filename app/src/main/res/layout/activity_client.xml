@@ -70,16 +70,17 @@
 
     <TextView
         android:id="@+id/usernameDescriptionTextView"
-        android:layout_width="300dp"
+        android:layout_width="250dp"
         android:layout_height="56dp"
+        android:layout_marginStart="5dp"
         android:layout_marginTop="40dp"
+        android:layout_marginEnd="40dp"
         android:text="Gib hier deinen Benutzernamen ein. Wenn du das Feld frei lässt, wird ein Standardname angezeigt."
         android:textAlignment="center"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/infoSymbolImageView2"
         app:layout_constraintTop_toBottomOf="@+id/headerClientActivityTextView" />
 
     <TextView
@@ -96,16 +97,17 @@
 
     <TextView
         android:id="@+id/loginDescriptionTextView"
-        android:layout_width="300dp"
+        android:layout_width="250dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
         android:layout_marginTop="40dp"
+        android:layout_marginEnd="40dp"
         android:text="Du kannst hier die IP-Adresse und das Passwort eingeben oder den QR-Code der Party scannen."
         android:textAlignment="center"
         android:textColor="#FDFDFD"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/infoSymbolImageView"
         app:layout_constraintTop_toBottomOf="@+id/usernameEditText" />
 
     <ImageButton
@@ -118,6 +120,26 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/et_password"
-        app:srcCompat="@drawable/ic_qr_code_image" />
+        android:src="@drawable/ic_qr_code_image" />
+
+    <ImageView
+        android:id="@+id/infoSymbolImageView"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="40dp"
+        android:src="@drawable/ic_iconmonstr_info_2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/usernameEditText" />
+
+    <ImageView
+        android:id="@+id/infoSymbolImageView2"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="40dp"
+        android:src="@drawable/ic_iconmonstr_info_2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/headerClientActivityTextView" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
