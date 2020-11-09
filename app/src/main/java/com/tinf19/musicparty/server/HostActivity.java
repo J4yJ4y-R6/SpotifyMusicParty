@@ -18,6 +18,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.tinf19.musicparty.client.PartyActivity;
 import com.tinf19.musicparty.fragments.HostClosePartyFragment;
 import com.tinf19.musicparty.fragments.HostPlaylistFragment;
 import com.tinf19.musicparty.fragments.PartyPeopleFragment;
@@ -37,6 +38,8 @@ import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
+import org.json.JSONException;
+
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.net.InetAddress;
@@ -46,13 +49,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList {
+public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings {
 
     private static final String TAG = HostActivity.class.getName();
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
     private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
-    private static final String PASSWORD = "0000";
-    //    private static final String PASSWORD = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
+    private static final String PASSWORD = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
     private Channel channel;
     private WifiP2pManager manager;
     private BroadcastReceiver receiver;
@@ -73,6 +75,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private SettingsHostFragment settingsHostFragment;
     private HostPlaylistFragment hostPlaylistFragment;
     private PartyPeopleFragment partyPeopleFragment;
+
+    public interface HostActitivyCallback {
+        void addSongToPlaylist(Track track);
+    }
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -168,7 +174,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         showSongFragment = new ShowSongHostFragment(this);
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
         hostClosePartyFragment = new HostClosePartyFragment(this);
-        settingsHostFragment = new SettingsHostFragment(getIntent().getStringExtra(Constants.PASSWORD), getIntent().getStringExtra(Constants.ADDRESS));
+        settingsHostFragment = new SettingsHostFragment(this);
         hostPlaylistFragment = new HostPlaylistFragment(this);
         partyPeopleFragment = new PartyPeopleFragment(this);
 
@@ -307,7 +313,17 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void addSong(Track track) {
-
+        this.runOnUiThread(() -> Toast.makeText(HostActivity.this, track.getName() + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
+        new Thread(() -> {
+            try {
+                Log.d(TAG, "Trying to send message to server");
+                if(mBoundService != null) {
+                    //QUEUE hier einfügen
+                }
+            } catch (IOException | JSONException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+        }).start();
     }
 
     @Override
@@ -325,7 +341,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void openPlaylistFragment() {
         getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, hostPlaylistFragment, "SettingsHostFragment").commitAllowingStateLoss();
+                replace(R.id.showSongHostFragmentFrame, hostPlaylistFragment, "HostPlaylistFragment").commitAllowingStateLoss();
     }
 
     @Override
@@ -397,5 +413,15 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public ArrayList<PartyPeople> getPartyPeopleList() {
         return partyPeople;
+    }
+
+    @Override
+    public String getIpAddress() {
+        return getIPAddress(true);
+    }
+
+    @Override
+    public String getPassword() {
+        return PASSWORD;
     }
 }

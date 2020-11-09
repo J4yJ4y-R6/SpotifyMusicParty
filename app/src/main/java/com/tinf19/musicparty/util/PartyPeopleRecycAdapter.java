@@ -58,7 +58,7 @@ public class PartyPeopleRecycAdapter extends RecyclerView.Adapter<PartyPeopleRec
             nameTV.setText(name);
         TextView durationTV = holder.partyPeopleDurationTextView;
         if(durationTV != null) {
-            String durationTime = (duration / 1000) + " Sekunden";
+            String durationTime = (int)((duration / 1000)/60) + " Minuten";
             durationTV.setText(durationTime);
         }
     }

@@ -18,13 +18,18 @@ import com.tinf19.musicparty.util.Constants;
 public class SettingsHostFragment extends Fragment {
 
     private static final String TAG = SettingsHostFragment.class.getName();
-    private String ipAddress;
-    private String conPassword;
     private EditText changePartyName;
+    private TextView ipAddressTextView;
+    private TextView passwordTextView;
+    private GetServerSettings getServerSettings;
 
-    public SettingsHostFragment(String password, String address) {
-        this.ipAddress = address;
-        this.conPassword = password;
+    public interface GetServerSettings {
+        String getIpAddress();
+        String getPassword();
+    }
+
+    public SettingsHostFragment(GetServerSettings getServerSettings) {
+        this.getServerSettings = getServerSettings;
     }
 
     public SettingsHostFragment() {
@@ -35,7 +40,21 @@ public class SettingsHostFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+    }
 
+    @Override
+    public void onStart() {
+        super.onStart();
+        if(ipAddressTextView != null) {
+            String text = getString(R.string.text_ip_address) + ": " + getServerSettings.getIpAddress();;
+            Log.d(TAG, "onStart IpAddress: " + text);
+            ipAddressTextView.setText(text);
+        }
+        if(passwordTextView != null) {
+            String text = getString(R.string.app_password) + ": " + getServerSettings.getPassword();;
+            Log.d(TAG, "onStart Password: " + text);
+            passwordTextView.setText(text);
+        }
     }
 
     @Override
@@ -44,18 +63,8 @@ public class SettingsHostFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_settings_host, container, false);
 
-        TextView ipAddressTextView = view.findViewById(R.id.ipAddressSettingsTextView);
-        if(ipAddressTextView != null) {
-            String text = "IP-Adresse: " + ipAddress;
-            Log.d(TAG, "onCreateView: " + text);
-            ipAddressTextView.setText(text);
-        }
-        TextView passwordTextView = view.findViewById(R.id.passwordSettingsTextView);
-        if(passwordTextView != null) {
-            String text = "Password: " + conPassword;
-            Log.d(TAG, "onCreateView: " + text);
-            passwordTextView.setText(text);
-        }
+        ipAddressTextView = view.findViewById(R.id.ipAddressSettingsTextView);
+        passwordTextView = view.findViewById(R.id.passwordSettingsTextView);
 
         Button savePartyNameButton = view.findViewById(R.id.savePartyNameButton);
         if (savePartyNameButton != null) {

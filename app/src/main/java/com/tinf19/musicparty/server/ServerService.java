@@ -42,7 +42,7 @@ import okhttp3.Response;
 
 import static com.tinf19.musicparty.App.CHANNEL_ID;
 
-public class ServerService extends Service {
+public class ServerService extends Service implements HostActivity.HostActitivyCallback {
 
     private static final String NAME = ServerService.class.getName();
     private static final int PORT = 1403;
@@ -68,6 +68,17 @@ public class ServerService extends Service {
     private SpotifyPlayerCallback spotifyPlayerCallback;
     private  com.spotify.protocol.types.Track nowPlaying;
     private String lastSongTitle;
+
+    @Override
+    public void addSongToPlaylist(Track track) {
+        tracks.add(track);
+        try {
+            addItem(track.getURI(), track.getName());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        //sendToAll(Commands.QUEUE, track.serialize());
+    }
 
     public interface SpotifyPlayerCallback {
         void setNowPlaying(Track nowPlaying);
