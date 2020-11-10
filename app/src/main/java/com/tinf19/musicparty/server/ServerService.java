@@ -194,6 +194,7 @@ public class ServerService extends Service {
                 } catch (JSONException e) {
                     Log.e(NAME, e.getMessage(), e);
                 }
+                response.close();
             }
         });
     }
@@ -251,10 +252,11 @@ public class ServerService extends Service {
                 Log.d(NAME, playlistID);
                 try {
                     addItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen");
-                    addItem("spotify:track:76nqCfJOcFFWBJN32PAksn", "Kings and Queens");
+                    //addItem("spotify:track:76nqCfJOcFFWBJN32PAksn", "Kings and Queens");
                 } catch (JSONException e) {
                     Log.e(NAME, e.getMessage(), e);
                 }
+                response.close();
             }
         });
     }
@@ -291,6 +293,7 @@ public class ServerService extends Service {
                 }else {
                     Log.d(NAME,"Request Successful. Playlist has been deleted.");
                 }
+                response.close();
             }
         });
     }
@@ -336,11 +339,17 @@ public class ServerService extends Service {
                     size++;
                     if (size == 1) mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:" + playlistID);
                 }
+                response.close();
             }
         });
     }
 
     public void moveItem(int from, int to) throws JSONException {
+        int position = size - tracks.size();
+        Log.d(NAME, "moveItem: From " + from + " To: " + to + " Position: " + position);
+        from = from + position;
+        to = to + position;
+        if (from < to) to++;
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
@@ -377,6 +386,7 @@ public class ServerService extends Service {
                 }else {
                     Log.d(NAME,"Request Successful. Track moved.");
                 }
+                response.close();
             }
         });
     }
