@@ -12,12 +12,12 @@
         android:layout_height="match_parent">
 
         <TextView
-            android:id="@+id/leavePartyOf"
+            android:id="@+id/closePartyTextView"
             android:layout_width="275dp"
-            android:layout_height="92dp"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="300dp"
             android:lineSpacingExtra="18sp"
-            android:text="@string/text_leaveParty"
+            android:text="@string/text_endParty"
             android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             android:textColor="#FFFFFF"
@@ -27,41 +27,30 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/leavePartyNameTextView"
-            android:layout_width="275dp"
-            android:layout_height="60dp"
-            android:paddingTop="10dp"
-            android:text="@string/text_hintPartyName"
-            android:textAlignment="center"
-            android:textColor="#FFFFFF"
-            android:textSize="30sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/leavePartyOf" />
-
         <Button
-            android:id="@+id/acceptLeavePartyButton"
+            android:id="@+id/acceptEndPartyButton"
             android:layout_width="wrap_content"
             android:layout_height="60dp"
-            android:layout_marginTop="37dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginTop="50dp"
             android:layout_marginEnd="67dp"
-            android:text="@string/text_leave"
+            android:text="@string/text_end"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/leavePartyNameTextView" />
+            app:layout_constraintStart_toEndOf="@+id/denyEndPartyButton"
+            app:layout_constraintTop_toBottomOf="@+id/closePartyTextView" />
 
         <Button
-            android:id="@+id/denyLeavePartyButton"
+            android:id="@+id/denyEndPartyButton"
             android:layout_width="wrap_content"
             android:layout_height="60dp"
             android:layout_marginStart="64dp"
-            android:layout_marginTop="37dp"
-            android:text="@string/text_stay"
+            android:layout_marginTop="50dp"
+            android:text="@string/text_cancel"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/leavePartyNameTextView" />
+            app:layout_constraintTop_toBottomOf="@+id/closePartyTextView" />
 
         <View
-            android:id="@+id/exitConnectionDivider"
+            android:id="@+id/closePartyDivider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/divider"

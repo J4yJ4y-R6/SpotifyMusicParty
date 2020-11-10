@@ -33,6 +33,8 @@ public class ExitConnectionFragment extends Fragment {
         this.confirmExit = confirmExit;
     }
 
+    public ExitConnectionFragment() { }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

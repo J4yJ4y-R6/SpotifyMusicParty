@@ -10,10 +10,13 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.tinf19.musicparty.music.Artist;
+import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
+import com.tinf19.musicparty.util.Constants;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,10 +25,12 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import okhttp3.Call;
@@ -57,7 +62,7 @@ public class ServerService extends Service {
     private String playlistID;
     private int size = 0;
     private boolean first = true;
-    private String partyName = "Coole Party";
+    private String partyName;
     private List<Track> tracks = new ArrayList<>();
     private ServerService mBoundService;
     private SpotifyAppRemote mSpotifyAppRemote;
@@ -67,7 +72,8 @@ public class ServerService extends Service {
     private String lastSongTitle;
 
     public interface SpotifyPlayerCallback {
-        void setNowPlaying(String nowPlaying);
+        void setNowPlaying(Track nowPlaying);
+        void setPeopleCount(int count);
     }
 
     public class LocalBinder extends Binder {
@@ -87,6 +93,7 @@ public class ServerService extends Service {
 
         token = intent.getStringExtra("token");
         password = intent.getStringExtra("password");
+        partyName = intent.getStringExtra("partyname");
         if (first) {
             getUserID();
             first = false;
@@ -135,6 +142,18 @@ public class ServerService extends Service {
     public void setmSpotifyAppRemote(SpotifyAppRemote mSpotifyAppRemote) {
         this.mSpotifyAppRemote = mSpotifyAppRemote;
     }
+    
+    public List<PartyPeople> getPeopleList() {
+        List<PartyPeople> tmpPeopleList = new ArrayList<>();
+        for (CommunicationThread client: clientThreads) {
+            tmpPeopleList.add(new PartyPeople(client.username, System.currentTimeMillis() - client.createdTime));
+        }
+        return tmpPeopleList;
+    }
+
+    public int getClientListSize() {
+        return clientThreads.size();
+    }
 
     private void getUserID() {
         OkHttpClient client = new OkHttpClient();
@@ -177,6 +196,10 @@ public class ServerService extends Service {
                 }
             }
         });
+    }
+
+    public List<Track> getPlaylist() {
+        return tracks;
     }
 
     public boolean getPause() {
@@ -272,7 +295,7 @@ public class ServerService extends Service {
         });
     }
 
-    private void addItem(String uri, String name) throws JSONException {
+    public void addItem(String uri, String name) throws JSONException {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
@@ -315,6 +338,51 @@ public class ServerService extends Service {
                 }
             }
         });
+    }
+
+    public void moveItem(int from, int to) throws JSONException {
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(HOST)
+                .addPathSegment("v1")
+                .addPathSegment("playlists")
+                .addPathSegment(playlistID)
+                .addPathSegment("tracks")
+                .build();
+        Log.d(NAME, "Making request to " + completeURL.toString());
+        JSONObject sampleObject = new JSONObject()
+                .put("range_start", from)
+                .put("insert_before", to);
+        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
+        Request request = new Request.Builder()
+                .url(completeURL)
+                .put(body)
+                .addHeader("Authorization", "Bearer " + token)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Do something when request failed
+                e.printStackTrace();
+                Log.d(NAME, "Request Failed.");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if(!response.isSuccessful()){
+                    Log.d(NAME, response.body().string());
+                    throw new IOException("Error : " + response);
+                }else {
+                    Log.d(NAME,"Request Successful. Track moved.");
+                }
+            }
+        });
+    }
+
+    public void addItemToTrackList(Track track) {
+        tracks.add(track);
     }
 
     private void stopAll() throws IOException {
@@ -370,7 +438,7 @@ public class ServerService extends Service {
                         //Log.d(NAME, track.name + " by " + track.artist.name);
                         //if (playerState.playbackPosition == 0)
                         //nextSong();
-                        spotifyPlayerCallback.setNowPlaying(String.format("%s by %s", track.name, track.artist.name));
+                        spotifyPlayerCallback.setNowPlaying(getNowPlaying());
                     }
                 });
     }
@@ -385,7 +453,7 @@ public class ServerService extends Service {
         this.serverThread.start();
     }
 
-    private Track getNowPlaying(){
+    public Track getNowPlaying(){
         return new com.tinf19.musicparty.music.Track(
                 nowPlaying.uri.split(":")[2],
                 nowPlaying.name,
@@ -426,10 +494,12 @@ public class ServerService extends Service {
         private DataOutputStream out;
         private boolean login = false;
         private String username;
+        private final long createdTime;
 
         public CommunicationThread(Socket socket) {
             Log.d(NAME, "New client request");
             this.clientSocket = socket;
+            this.createdTime = System.currentTimeMillis();
         }
 
         public void sendMessage(Commands command, String message) throws IOException {
@@ -461,6 +531,7 @@ public class ServerService extends Service {
                             switch (command) {
                                 case QUIT:
                                     clientThreads.remove(this);
+                                    if(spotifyPlayerCallback!= null) spotifyPlayerCallback.setPeopleCount(clientThreads.size());
                                     Log.d(NAME, "User " + username + " has left the party");
                                     close();
                                     return;
@@ -474,6 +545,7 @@ public class ServerService extends Service {
                                                 sendMessage(Commands.LOGIN, partyName);
                                             else
                                                 sendMessage(Commands.LOGIN, partyName + "~" + getNowPlaying().serialize());
+                                            if(spotifyPlayerCallback!= null) spotifyPlayerCallback.setPeopleCount(clientThreads.size());
                                         } else {
                                             sendMessage(Commands.QUIT, "Login Failed");
                                             close();

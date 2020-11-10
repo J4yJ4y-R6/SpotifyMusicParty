@@ -48,6 +48,9 @@ public class SearchBarFragment extends Fragment {
         void searchForSongs(List<Track> tracks);
     }
 
+    public SearchBarFragment() {
+    }
+
     public SearchBarFragment(SearchForSongs searchForSongs, String token) {
         this.searchForSongs = searchForSongs;
         this.token = token;

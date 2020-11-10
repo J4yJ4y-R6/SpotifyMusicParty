@@ -21,6 +21,14 @@
     <string name="text_songcover">SongCover</string>
     <string name="text_queAdded"> wurde zur Warteschlange hinzugefügt</string>
     <string name="text_partyNameCountPeople">Party Name    0</string>
+    <string name="text_changePartyName">Neuer Party Name</string>
+    <string name="text_partyType">Party-Typ einstellen</string>
+    <string name="text_allInType">All-In</string>
+    <string name="text_vetoType">Veto</string>
+    <string name="text_votingType">Voting</string>
+    <string name="text_save">Sichern</string>
+
+    <string name="heading_settings">Einstellungen</string>
 
     <string name="service_channelName">Music Party Service Channel</string>
     <string name="service_name">MusicParty</string>
@@ -40,5 +48,16 @@
     values-round/strings.xml for round devices.
     -->
     <string name="hello_world">Hello Square World!</string>
+    <string name="text_search">Suchen</string>
+    <string name="text_songTitle">Song Titel eingeben</string>
+    <string name="heading_partyPeople">Folgende Personen sind gerade bei deiner Party</string>
+    <string name="text_endParty">Möchtest du deine Party wirklich beenden</string>
+    <string name="text_end">Beenden</string>
+    <string name="text_cancel">Abbrechen</string>
+    <string name="text_infobox_username">Gib hier deinen Benutzernamen ein. Wenn du das Feld frei lässt, wird ein zufälliger Name gesetzt angezeigt.</string>
+    <string name="header_activity_client">Party beitreten</string>
+    <string name="text_infobox_connecttion">Du kannst hier die IP-Adresse und das Passwort eingeben oder den QR-Code der Party scannen.</string>
+    <string name="text_qrButtonHint">QR Code scannen</string>
+    <string name="text_infobox">Infobox</string>
 
 </resources>

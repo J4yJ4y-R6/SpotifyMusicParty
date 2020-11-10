@@ -4,14 +4,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.ClientPlaylistFragment">
+    tools:context=".fragments.HostPlaylistFragment">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <RelativeLayout
-            android:id="@+id/relativeLayout"
+            android:id="@+id/relativeLayout2"
             android:layout_width="fill_parent"
             android:layout_height="?android:attr/listPreferredItemHeight"
             android:layout_marginStart="15dp"
@@ -25,7 +25,7 @@
             app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
-                android:id="@+id/currentSongCoverImageView"
+                android:id="@+id/currentSongCoverHostImageView"
                 android:layout_width="50dip"
                 android:layout_height="fill_parent"
                 android:layout_alignParentTop="true"
@@ -36,12 +36,12 @@
 
 
             <TextView
-                android:id="@+id/currentSongArtistTextView"
+                android:id="@+id/currentSongArtistHostTextView"
                 android:layout_width="fill_parent"
                 android:layout_height="26dip"
                 android:layout_alignParentEnd="true"
                 android:layout_alignParentBottom="true"
-                android:layout_toEndOf="@id/currentSongCoverImageView"
+                android:layout_toEndOf="@id/currentSongCoverHostImageView"
                 android:ellipsize="marquee"
                 android:singleLine="true"
                 android:text="@string/text_kuenstler"
@@ -49,13 +49,13 @@
                 android:textSize="12sp" />
 
             <TextView
-                android:id="@+id/currentSongTitleTextView"
+                android:id="@+id/currentSongTitleHostTextView"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignWithParentIfMissing="true"
                 android:layout_alignParentTop="true"
                 android:layout_alignParentEnd="true"
-                android:layout_toEndOf="@id/currentSongCoverImageView"
+                android:layout_toEndOf="@id/currentSongCoverHostImageView"
                 android:gravity="center_vertical"
                 android:singleLine="true"
                 android:text="@string/text_songtitel"
@@ -65,7 +65,7 @@
         </RelativeLayout>
 
         <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/clientPlaylistRecyclerView"
+            android:id="@+id/hostPlaylistRecyclerView"
             android:layout_width="416dp"
             android:layout_height="485dp"
             android:layout_marginTop="10dp"
@@ -86,17 +86,18 @@
             android:layout_marginTop="35dp"
             android:layout_marginBottom="35dp"
             android:background="@color/divider"
-            app:layout_constraintBottom_toTopOf="@+id/clientPlaylistRecyclerView"
+            app:layout_constraintBottom_toTopOf="@+id/hostPlaylistRecyclerView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/relativeLayout" />
+            app:layout_constraintTop_toBottomOf="@+id/relativeLayout2" />
 
         <View
-            android:id="@+id/divider5"
+            android:id="@+id/divider2"
             android:layout_width="match_parent"
             android:layout_height="1dp"
             android:background="@color/divider"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
