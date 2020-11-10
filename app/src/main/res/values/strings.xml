@@ -5,6 +5,7 @@
     <string name="text_connect">Verbinden</string>
     <string name="app_username">Benutzername</string>
     <string name="text_playbutton">Lied stoppen/spielen</string>
+    <string name="text_partyName">Music Party</string>
     <string name="text_next">Next</string>
     <string name="text_stopServer">Server stoppen</string>
     <string name="text_server">Server</string>

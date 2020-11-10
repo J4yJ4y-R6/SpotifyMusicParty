@@ -63,10 +63,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private IntentFilter intentFilter;
     private ServerService mBoundService;
 
-//    Music Party standard name
-    private String partyName = "Music Party";
     private String token;
-    private ArrayList<PartyPeople> partyPeople;
     private boolean mShouldUnbind;
 
     private ShowSongHostFragment showSongFragment;
@@ -90,6 +87,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
                 serviceIntent.putExtra(Constants.TOKEN, token);
                 serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
+                serviceIntent.putExtra(Constants.PARTYNAME, getString(R.string.text_partyName));
                 startService(serviceIntent);
             });
             // Tell the user about this for our demo.
@@ -116,7 +114,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                         if(mBoundService != null)
                             mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
-                        Log.d(NAME, "Connected! Yay!");
+                        Log.d(TAG, "Connected! Yay!");
                         //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
                         // Now you can start interacting with App Remote
                         connectionCallback.afterConnection(spotifyAppRemote);
@@ -129,7 +127,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
                     @Override
                     public void onFailure(Throwable throwable) {
-                        Log.e(NAME, throwable.getMessage(), throwable);
+                        Log.e(TAG, throwable.getMessage(), throwable);
 
                         // Something went wrong when attempting to connect! Handle errors here
                     }
@@ -156,7 +154,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     public void stopService() {
-        if(mBoundService != null) {
+        if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null) {
             mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
             SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         }
@@ -299,25 +297,25 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public String getPartyPeoplePartyName() {
-        return partyName;
+        return mBoundService != null ? mBoundService.getPartyName() : getString(R.string.text_partyName);
     }
 
     @Override
     public void nextTrack() {
-        if(mBoundService != null)
+        if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null)
             mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
     }
 
     @Override
     public void lastTrack() {
-        if(mBoundService != null)
+        if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null)
             mBoundService.getmSpotifyAppRemote().getPlayerApi().skipPrevious();
     }
 
     @Override
     public void playTrack() {
-        if (mBoundService != null && mBoundService.getPause()) mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
-        else if(mBoundService != null)  mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
+        if (mBoundService != null && mBoundService.getPause() &&  mBoundService.getmSpotifyAppRemote() != null) mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
+        else if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null)  mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
     }
 
     @Override
@@ -364,10 +362,11 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     public void nextSong(View view) {
-        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
+        if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
             mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
-        else if(mBoundService != null)
+        else if (mBoundService != null)
             connect(appRemote -> appRemote.getPlayerApi().skipNext());
+    }
 
     @Override
     public Track getCurrentPlaying() {
@@ -453,13 +452,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void setNewPartyName(String newPartyName) {
-        this.partyName = newPartyName;
         if(mBoundService != null) {
+            mBoundService.setPartyName(newPartyName);
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        mBoundService.sendToAll(Commands.LOGIN, partyName);
+                        mBoundService.sendToAll(Commands.LOGIN, mBoundService.getPartyName());
                     } catch (IOException e) {
                         e.printStackTrace();
                     }

@@ -91,9 +91,10 @@ public class ServerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        token = intent.getStringExtra("token");
-        password = intent.getStringExtra("password");
-        partyName = intent.getStringExtra("partyname");
+        token = intent.getStringExtra(Constants.TOKEN);
+        password = intent.getStringExtra(Constants.PASSWORD);
+        partyName = intent.getStringExtra(Constants.PARTYNAME);
+        Log.d(NAME, "partyName: " + partyName);
         if (first) {
             getUserID();
             first = false;
@@ -153,6 +154,14 @@ public class ServerService extends Service {
 
     public int getClientListSize() {
         return clientThreads.size();
+    }
+
+    public String getPartyName() {
+        return partyName;
+    }
+
+    public void setPartyName(String partyName) {
+        this.partyName = partyName;
     }
 
     private void getUserID() {
