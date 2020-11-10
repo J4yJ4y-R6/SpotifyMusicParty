@@ -54,5 +54,10 @@
     <string name="text_endParty">Möchtest du deine Party wirklich beenden</string>
     <string name="text_end">Beenden</string>
     <string name="text_cancel">Abbrechen</string>
+    <string name="text_infobox_username">Gib hier deinen Benutzernamen ein. Wenn du das Feld frei lässt, wird ein zufälliger Name gesetzt angezeigt.</string>
+    <string name="header_activity_client">Party beitreten</string>
+    <string name="text_infobox_connecttion">Du kannst hier die IP-Adresse und das Passwort eingeben oder den QR-Code der Party scannen.</string>
+    <string name="text_qrButtonHint">QR Code scannen</string>
+    <string name="text_infobox">Infobox</string>
 
 </resources>

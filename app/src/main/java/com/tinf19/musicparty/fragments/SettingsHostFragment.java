@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.os.Environment;
@@ -19,13 +20,16 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.server.HostActivity;
 import com.tinf19.musicparty.util.Constants;
 
 import org.json.JSONException;
@@ -51,6 +55,7 @@ public class SettingsHostFragment extends Fragment {
     public interface GetServerSettings {
         String getIpAddress();
         String getPassword();
+        void setNewPartyName(String newPartyName);
     }
 
     public SettingsHostFragment(GetServerSettings getServerSettings) {
@@ -97,7 +102,13 @@ public class SettingsHostFragment extends Fragment {
             MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
             BitMatrix bitMatrix = multiFormatWriter.encode(json.toString(), BarcodeFormat.QR_CODE, 200, 200);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            int width = bitMatrix.getWidth();
             bitmap = barcodeEncoder.createBitmap(bitMatrix);
+            for (int x = 0; x < width; x++) {
+                for (int y = 0; y < width; y++) {
+                    bitmap.setPixel(y, x, bitMatrix.get(x, y) ? ContextCompat.getColor(view.getContext(), R.color.white) : ContextCompat.getColor(view.getContext(), R.color.button_green));
+                }
+            }
             if(qrCodeImageView != null) qrCodeImageView.setImageBitmap(bitmap);
         } catch (JSONException | WriterException e) {
             e.printStackTrace();
@@ -106,8 +117,6 @@ public class SettingsHostFragment extends Fragment {
         ipAddressTextView = view.findViewById(R.id.ipAddressSettingsTextView);
         passwordTextView = view.findViewById(R.id.passwordSettingsTextView);
         ImageButton shareButton = view.findViewById(R.id.shareButtonSettingsImageButton);
-
-        //TODO: check on Strings in edittext?
         if(shareButton != null) {
             shareButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -124,8 +133,6 @@ public class SettingsHostFragment extends Fragment {
         }
 
         ImageButton shareQRButton = view.findViewById(R.id.shareQRButtonSettingsImageButton);
-
-        //TODO: check on QR Code exists?
         if(shareQRButton != null) {
             shareQRButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -149,9 +156,12 @@ public class SettingsHostFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     changePartyName = view.findViewById(R.id.changePartyNameEditText);
-                    if(changePartyName != null && changePartyName.getText().toString().equals("")) {
+                    if(changePartyName != null && !changePartyName.getText().toString().equals("")) {
                         String newPartyName = changePartyName.getText().toString();
                         Log.d(TAG, "onClick: new Party Name set to: " + newPartyName);
+                        partyName = newPartyName;
+                        getServerSettings.setNewPartyName(newPartyName);
+                        Toast.makeText(getContext(), "Der Partyname wurde auf " + newPartyName + " geändert.", Toast.LENGTH_SHORT).show();
                     }
                 }
             });

@@ -44,8 +44,6 @@ public class PartyPeopleRecycAdapter extends RecyclerView.Adapter<PartyPeopleRec
         LayoutInflater inflater = LayoutInflater.from(context);
 
         View textView = inflater.inflate(R.layout.party_people_recyc_view_row, parent, false);
-
-
         return new ViewHolder(textView);
     }
 

@@ -189,10 +189,9 @@ public class ClientService extends Service {
                                         nowPlaying = new Track(parts[3]);
                                     }
                                     Log.d(NAME, partyName);
-                                /*    if(partyCallback != null) {
+                                    if(partyCallback != null) {
                                         partyCallback.setPartyName(partyName);
-                                        partyCallback.setTrack(nowPlaying);
-                                    }*/
+                                    }
                                     break;
                                 case QUIT:
                                     Log.d(NAME, "Server has been closed");
