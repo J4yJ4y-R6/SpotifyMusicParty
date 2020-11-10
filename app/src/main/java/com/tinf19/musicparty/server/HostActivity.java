@@ -56,18 +56,18 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
     private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
     private static final String PASSWORD = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
+
     private Channel channel;
     private WifiP2pManager manager;
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
-    private String token;
-//    Music Party standard name
-    private String partyName = "Music Party";
-    private ArrayList<PartyPeople> partyPeople;
-    private boolean mShouldUnbind;
     private ServerService mBoundService;
 
-    private Track nowPlaying;
+//    Music Party standard name
+    private String partyName = "Music Party";
+    private String token;
+    private ArrayList<PartyPeople> partyPeople;
+    private boolean mShouldUnbind;
 
     private ShowSongHostFragment showSongFragment;
     private SearchBarFragment searchBarFragment;
@@ -77,45 +77,21 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private HostPlaylistFragment hostPlaylistFragment;
     private PartyPeopleFragment partyPeopleFragment;
 
+    public interface ConnectionCallback {
+        void afterConnection(SpotifyAppRemote appRemote);
+    }
+
+
+//    methods and objects for ServerService-Connection
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mBoundService = ((ServerService.LocalBinder)service).getService();
-
-            ConnectionParams connectionParams =
-                    new ConnectionParams.Builder(CLIENT_ID)
-                            .setRedirectUri(REDIRECT_URI)
-                            .showAuthView(false)
-                            .build();
-            SpotifyAppRemote.connect(HostActivity.this, connectionParams,
-                    new Connector.ConnectionListener() {
-
-                        @Override
-                        public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                            if(mBoundService != null)
-                                mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
-                            Log.d(TAG, "Connected! Yay!");
-                            //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
-                            Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
-                            serviceIntent.putExtra(Constants.TOKEN, token);
-                            serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
-                            serviceIntent.putExtra(Constants.PARTYNAME, partyName);
-                            startService(serviceIntent);
-                            // Now you can start interacting with App Remote
-                            //connected();
-                            if(mBoundService != null) {
-                                mBoundService.setSpotifyPlayerCallback(HostActivity.this);
-                                mBoundService.addEventListener();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Throwable throwable) {
-                            Log.e(TAG, throwable.getMessage(), throwable);
-
-                            // Something went wrong when attempting to connect! Handle errors here
-                        }
-                    });
-
+            connect(appRemote -> {
+                Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
+                serviceIntent.putExtra(Constants.TOKEN, token);
+                serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
+                startService(serviceIntent);
+            });
             // Tell the user about this for our demo.
             Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected), Toast.LENGTH_SHORT).show();
         }
@@ -126,6 +102,39 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     Toast.LENGTH_SHORT).show();
         }
     };
+
+    private void connect(ConnectionCallback connectionCallback) {
+        ConnectionParams connectionParams =
+                new ConnectionParams.Builder(CLIENT_ID)
+                        .setRedirectUri(REDIRECT_URI)
+                        .showAuthView(false)
+                        .build();
+        SpotifyAppRemote.connect(HostActivity.this, connectionParams,
+                new Connector.ConnectionListener() {
+
+                    @Override
+                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                        if(mBoundService != null)
+                            mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
+                        Log.d(NAME, "Connected! Yay!");
+                        //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
+                        // Now you can start interacting with App Remote
+                        connectionCallback.afterConnection(spotifyAppRemote);
+
+                        if(mBoundService != null) {
+                            mBoundService.setSpotifyPlayerCallback(HostActivity.this);
+                            mBoundService.addEventListener();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Throwable throwable) {
+                        Log.e(NAME, throwable.getMessage(), throwable);
+
+                        // Something went wrong when attempting to connect! Handle errors here
+                    }
+                });
+    }
 
     void doBindService() {
         if (bindService(new Intent(this, ServerService.class),
@@ -146,9 +155,24 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         }
     }
 
+    public void stopService() {
+        if(mBoundService != null) {
+            mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
+            SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
+        }
+        doUnbindService();
+        stopService(new Intent(this, ServerService.class));
+        startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+    }
+
+
+
+//    Interaction with Activity
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_host_party);
 
         //Que.getInstance().add(new com.example.musicparty.music.Track("3cfOd4CMv2snFaKAnMdnvK"));
         //Que.getInstance().add(new com.example.musicparty.music.Track("76nqCfJOcFFWBJN32PAksn"));
@@ -164,7 +188,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
         token = getIntent().getStringExtra(Constants.TOKEN);
-        setContentView(R.layout.activity_host_party);
+
         doBindService();
 
         searchBarFragment = new SearchBarFragment(this, getIntent().getStringExtra(Constants.TOKEN));
@@ -179,31 +203,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.searchBarHostFragmentFrame, searchBarFragment, "SearchBarFragment").commitAllowingStateLoss();
-
-        Button partyActivity = findViewById(R.id.partyActivityButton);
-        if (partyActivity != null) {
-            partyActivity.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-//                    Intent intent = new Intent(HostActivity.this, HostPartyActivity.class);
-//                    intent.putExtra(Constants.TOKEN, token);
-//                    intent.putExtra(Constants.ADDRESS, getIPAddress(true));
-//                    intent.putExtra(Constants.PASSWORD, PASSWORD);
-//                    startActivity(intent);
-                }
-            });
-        }
-
-        partyPeople = new ArrayList<>();
-        partyPeople.add(new PartyPeople("Silas", 123456));
-        partyPeople.add(new PartyPeople("Jannik", 123456));
-        partyPeople.add(new PartyPeople("Hung", 123456));
-        partyPeople.add(new PartyPeople("Olli", 123456));
-        partyPeople.add(new PartyPeople("Leander", 123456));
-        partyPeople.add(new PartyPeople("Tim", 123456));
-        partyPeople.add(new PartyPeople("Christian", 123456));
-        partyPeople.add(new PartyPeople("Christian", 123456));
-        Log.d(TAG, "onCreate: " + partyPeople.get(0).getUsername());
     }
 
     @Override
@@ -221,7 +220,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(mBoundService != null)
+        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
             SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         doUnbindService();
         Log.d(TAG, "I got destroyed");
@@ -232,53 +231,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         super.onStart();
     }
 
-    public void togglePlay(View view) {
-        if (mBoundService != null && mBoundService.getPause()) mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
-        else if(mBoundService != null)  mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
-    }
-
-    public void stopService() {
-        if(mBoundService != null) {
-            mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
-            SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
-        }
-        doUnbindService();
-        stopService(new Intent(this, ServerService.class));
-        startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-    }
-
-    public void nextSong(View view) {
-        if(mBoundService != null)
-            mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
-    }
-
-    private String getIPAddress(boolean useIPv4) {
-        try {
-            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
-            for (NetworkInterface intf : interfaces) {
-                List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
-                for (InetAddress addr : addrs) {
-                    if (!addr.isLoopbackAddress()) {
-                        String sAddr = addr.getHostAddress();
-                        //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
-                        boolean isIPv4 = sAddr.indexOf(':')<0;
-
-                        if (useIPv4) {
-                            if (isIPv4)
-                                return sAddr;
-                        } else {
-                            if (!isIPv4) {
-                                int delim = sAddr.indexOf('%'); // drop ip6 zone suffix
-                                return delim<0 ? sAddr.toUpperCase() : sAddr.substring(0, delim).toUpperCase();
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception ignored) { } // for now eat exceptions
-        return "";
-    }
-
     @Override
     protected void onStop() {
         super.onStop();
@@ -286,19 +238,14 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void setNowPlaying(Track nowPlaying) {
-        showSongFragment.setNowPlaying(nowPlaying);
+    public void onBackPressed() {
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongFragment").commitAllowingStateLoss();
     }
 
-    @Override
-    public int getPartyPeopleSize() {
-        return partyPeople.size();
-    }
 
-    @Override
-    public String getPartyPeoplePartyName() {
-        return partyName;
-    }
+
+    //  changing fragment source
 
     @Override
     public void searchForSongs(List<Track> tracks) {
@@ -306,22 +253,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, searchSongsOutputFragment, "ShowSongFragment").commitAllowingStateLoss();
         this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));
-    }
-
-    @Override
-    public void addSong(Track track) {
-        this.runOnUiThread(() -> Toast.makeText(HostActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
-        new Thread(() -> {
-            try {
-                Log.d(TAG, "Trying to send message to server");
-                if(mBoundService != null) {
-                    mBoundService.addItem(track.getURI(), track.getName());
-                    mBoundService.addItemToTrackList(track);
-                }
-            } catch (JSONException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
-        }).start();
     }
 
     @Override
@@ -346,6 +277,29 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     public void openExitFragment() {
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, hostClosePartyFragment, "HostClosePartyFragment").commitAllowingStateLoss();
+    }
+
+
+
+//    Methods for ShowSongFragment
+
+    @Override
+    public void setNowPlaying(Track nowPlaying) {
+        showSongFragment.setNowPlaying(nowPlaying);
+    }
+
+    @Override
+    public void setPeopleCount(int count) { this.runOnUiThread(()->showSongFragment.setPartyNameCount(count)); }
+
+    @Override
+    public int getPartyPeopleSize() {
+        if(mBoundService != null) return mBoundService.getClientListSize();
+        else return 0;
+    }
+
+    @Override
+    public String getPartyPeoplePartyName() {
+        return partyName;
     }
 
     @Override
@@ -377,14 +331,43 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         else return null;
     }
 
+
+
+//    Methods for SearchSongsOutput
+
+    @Override
+    public void addSong(Track track) {
+        this.runOnUiThread(() -> Toast.makeText(HostActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
+        new Thread(() -> {
+            try {
+                Log.d(TAG, "Trying to send message to server");
+                if(mBoundService != null) {
+                    mBoundService.addItem(track.getURI(), track.getName());
+                    mBoundService.addItemToTrackList(track);
+                }
+            } catch (JSONException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+        }).start();
+    }
+
+
+
+//    Methods for HostPlaylist
+
     @Override
     public void showPlaylist() {
         if(mBoundService != null) {
             List<Track> trackList = mBoundService.getPlaylist();
-            Log.d(TAG, "openPlaylistFragment: " + trackList.get(0).toString());
             this.runOnUiThread(() -> hostPlaylistFragment.showResult(trackList));
         }
     }
+
+    public void nextSong(View view) {
+        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
+            mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
+        else if(mBoundService != null)
+            connect(appRemote -> appRemote.getPlayerApi().skipNext());
 
     @Override
     public Track getCurrentPlaying() {
@@ -393,10 +376,19 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void onBackPressed() {
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongFragment").commitAllowingStateLoss();
+    public void swapPlaylistItems(int from, int to) {
+        if(mBoundService != null) {
+            try {
+                mBoundService.moveItem(from, to);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
+
+
+
+//    Methods for HostCloseParty
 
     @Override
     public void denyEndParty() {
@@ -408,9 +400,45 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         stopService();
     }
 
+
+
+//    Methods for PartyPeople
+
     @Override
     public ArrayList<PartyPeople> getPartyPeopleList() {
-        return partyPeople;
+        if(mBoundService != null) return (ArrayList<PartyPeople>) mBoundService.getPeopleList();
+        else return new ArrayList<>();
+    }
+
+
+
+//    Methods for SettingsHost
+
+    private String getIPAddress(boolean useIPv4) {
+        try {
+            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface intf : interfaces) {
+                List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
+                for (InetAddress addr : addrs) {
+                    if (!addr.isLoopbackAddress()) {
+                        String sAddr = addr.getHostAddress();
+                        //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
+                        boolean isIPv4 = sAddr.indexOf(':')<0;
+
+                        if (useIPv4) {
+                            if (isIPv4)
+                                return sAddr;
+                        } else {
+                            if (!isIPv4) {
+                                int delim = sAddr.indexOf('%'); // drop ip6 zone suffix
+                                return delim<0 ? sAddr.toUpperCase() : sAddr.substring(0, delim).toUpperCase();
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) { } // for now eat exceptions
+        return "";
     }
 
     @Override
@@ -424,13 +452,19 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void swapPlaylistItems(int from, int to) {
+    public void setNewPartyName(String newPartyName) {
+        this.partyName = newPartyName;
         if(mBoundService != null) {
-            try {
-                mBoundService.moveItem(from, to);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mBoundService.sendToAll(Commands.LOGIN, partyName);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
         }
     }
 }

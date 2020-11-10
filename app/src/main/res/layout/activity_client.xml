@@ -17,7 +17,6 @@
         android:ems="10"
         android:hint="@string/text_ip_address"
         android:inputType="textPersonName"
-        android:text="192.168.8.129"
         android:textColor="#FFFFFF"
         android:textColorHint="#FFFFFF"
         app:layout_constraintEnd_toEndOf="parent"
@@ -44,8 +43,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="40dp"
+        android:layout_marginBottom="50dp"
         android:onClick="nextPage"
         android:text="@string/text_connect"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
@@ -60,7 +61,6 @@
         android:ems="10"
         android:hint="@string/app_username"
         android:inputType="textPersonName"
-        android:text="Silas"
         android:textColor="#FFFFFF"
         android:textColorHint="#F8F8F8"
         app:layout_constraintEnd_toEndOf="parent"
@@ -75,7 +75,7 @@
         android:layout_marginStart="5dp"
         android:layout_marginTop="40dp"
         android:layout_marginEnd="40dp"
-        android:text="Gib hier deinen Benutzernamen ein. Wenn du das Feld frei lässt, wird ein Standardname angezeigt."
+        android:text="@string/text_infobox_username"
         android:textAlignment="center"
         android:textColor="#FFFFFF"
         android:textSize="16sp"
@@ -88,7 +88,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="Party beitreten"
+        android:text="@string/header_activity_client"
         android:textColor="#FFFFFF"
         android:textSize="30sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -102,7 +102,7 @@
         android:layout_marginStart="5dp"
         android:layout_marginTop="40dp"
         android:layout_marginEnd="40dp"
-        android:text="Du kannst hier die IP-Adresse und das Passwort eingeben oder den QR-Code der Party scannen."
+        android:text="@string/text_infobox_connecttion"
         android:textAlignment="center"
         android:textColor="#FDFDFD"
         android:textSize="16sp"
@@ -120,7 +120,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/et_password"
-        android:src="@drawable/ic_qr_code_image" />
+        android:src="@drawable/ic_qr_code_image"
+        android:contentDescription="@string/text_qrButtonHint" />
 
     <ImageView
         android:id="@+id/infoSymbolImageView"
@@ -130,7 +131,8 @@
         android:layout_marginTop="40dp"
         android:src="@drawable/ic_iconmonstr_info_2"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/usernameEditText" />
+        app:layout_constraintTop_toBottomOf="@+id/usernameEditText"
+        android:contentDescription="@string/text_infobox" />
 
     <ImageView
         android:id="@+id/infoSymbolImageView2"
@@ -140,6 +142,7 @@
         android:layout_marginTop="40dp"
         android:src="@drawable/ic_iconmonstr_info_2"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/headerClientActivityTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/headerClientActivityTextView"
+        android:contentDescription="@string/text_infobox" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

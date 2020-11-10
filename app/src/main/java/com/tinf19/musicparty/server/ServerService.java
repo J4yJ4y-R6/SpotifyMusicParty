@@ -11,6 +11,7 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 
 import com.tinf19.musicparty.music.Artist;
+import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
@@ -29,6 +30,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import okhttp3.Call;
@@ -71,6 +73,7 @@ public class ServerService extends Service {
 
     public interface SpotifyPlayerCallback {
         void setNowPlaying(Track nowPlaying);
+        void setPeopleCount(int count);
     }
 
     public class LocalBinder extends Binder {
@@ -82,10 +85,6 @@ public class ServerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        //Artist[] artists = { new Artist("123", "Disney") };
-        //tracks.add(new Track("123", "Frozen", artists, "Test", 123456, "album"));
-        //tracks.add(new Track("456", "name", artists, "cover", 123456, "album"));
         startServer();
     }
 
@@ -137,11 +136,23 @@ public class ServerService extends Service {
     }
 
     public SpotifyAppRemote getmSpotifyAppRemote() {
-        return mSpotifyAppRemote;
+        return ( mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()) ? mSpotifyAppRemote : null;
     }
 
     public void setmSpotifyAppRemote(SpotifyAppRemote mSpotifyAppRemote) {
         this.mSpotifyAppRemote = mSpotifyAppRemote;
+    }
+    
+    public List<PartyPeople> getPeopleList() {
+        List<PartyPeople> tmpPeopleList = new ArrayList<>();
+        for (CommunicationThread client: clientThreads) {
+            tmpPeopleList.add(new PartyPeople(client.username, System.currentTimeMillis() - client.createdTime));
+        }
+        return tmpPeopleList;
+    }
+
+    public int getClientListSize() {
+        return clientThreads.size();
     }
 
     private void getUserID() {
@@ -493,10 +504,12 @@ public class ServerService extends Service {
         private DataOutputStream out;
         private boolean login = false;
         private String username;
+        private final long createdTime;
 
         public CommunicationThread(Socket socket) {
             Log.d(NAME, "New client request");
             this.clientSocket = socket;
+            this.createdTime = System.currentTimeMillis();
         }
 
         public void sendMessage(Commands command, String message) throws IOException {
@@ -528,6 +541,7 @@ public class ServerService extends Service {
                             switch (command) {
                                 case QUIT:
                                     clientThreads.remove(this);
+                                    if(spotifyPlayerCallback!= null) spotifyPlayerCallback.setPeopleCount(clientThreads.size());
                                     Log.d(NAME, "User " + username + " has left the party");
                                     close();
                                     return;
@@ -541,6 +555,7 @@ public class ServerService extends Service {
                                                 sendMessage(Commands.LOGIN, partyName);
                                             else
                                                 sendMessage(Commands.LOGIN, partyName + "~" + getNowPlaying().serialize());
+                                            if(spotifyPlayerCallback!= null) spotifyPlayerCallback.setPeopleCount(clientThreads.size());
                                         } else {
                                             sendMessage(Commands.QUIT, "Login Failed");
                                             close();

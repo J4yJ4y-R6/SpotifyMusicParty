@@ -64,10 +64,7 @@ public class ShowSongHostFragment extends Fragment {
     public void onStart() {
         super.onStart();
         this.partyName = openHostFragments.getPartyPeoplePartyName();
-        if(partyNameTextView != null) {
-            String text = partyName + " mit " + openHostFragments.getPartyPeopleSize() + " Menschen";
-            partyNameTextView.setText(text);
-        }
+        setPartyNameCount(openHostFragments.getPartyPeopleSize());
         Log.d(TAG, "onStart: got party name: " + partyName);
         if(openHostFragments != null) {
             setPlayTrackButtonImage(openHostFragments.getPauseState());
@@ -77,6 +74,13 @@ public class ShowSongHostFragment extends Fragment {
         if(currentPlayingTitleTextView != null) currentPlayingTitleTextView.setSelected(true);
         if(currentPlayingAlbumTextView != null) currentPlayingAlbumTextView.setSelected(true);
         if(currentPlayingArtistTextView != null) currentPlayingArtistTextView.setSelected(true);
+    }
+
+    public void setPartyNameCount(int count) {
+        if(partyNameTextView != null) {
+            String text = partyName + " mit " + count + " Menschen";
+            partyNameTextView.setText(text);
+        }
     }
 
     @Override

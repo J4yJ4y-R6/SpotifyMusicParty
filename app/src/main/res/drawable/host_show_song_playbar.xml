@@ -4,7 +4,7 @@
     <solid android:color="@color/button_green" />
 
     <corners
-        android:topLeftRadius="80dp"
-        android:topRightRadius="80dp" />
+        android:bottomLeftRadius="80dp"
+        android:bottomRightRadius="80dp" />
 
 </shape>

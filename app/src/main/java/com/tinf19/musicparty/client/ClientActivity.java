@@ -68,7 +68,6 @@ public class ClientActivity extends AppCompatActivity {
             } else {
                 try {
                     JSONObject obj = new JSONObject(result.getContents());
-//                    https://www.simplifiedcoding.net/android-qr-code-scanner-tutorial/
                     Log.d(TAG, "onActivityResult: " + obj.getString("ipaddress"));
                     Log.d(TAG, "onActivityResult: " + obj.getString("password"));
                     if(ipAddressEditText != null) {

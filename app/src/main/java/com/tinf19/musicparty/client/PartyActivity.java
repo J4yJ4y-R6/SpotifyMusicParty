@@ -14,6 +14,7 @@ import android.util.Log;
 import android.widget.Toast;
 
 
+import com.tinf19.musicparty.databinding.ActivityClientPartyBinding;
 import com.tinf19.musicparty.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.fragments.LoadingFragment;
 import com.tinf19.musicparty.util.Commands;
@@ -24,7 +25,6 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.fragments.SearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.fragments.ShowSongFragment;
-import com.tinf19.musicparty.databinding.ActivityPartyBinding;
 import com.tinf19.musicparty.music.Track;
 
 import org.json.JSONException;
@@ -36,7 +36,7 @@ import java.util.List;
 public class PartyActivity extends AppCompatActivity implements ShowSongFragment.PartyButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, SearchSongsOutputFragment.AddSongCallback, ClientService.PartyCallback {
 
 
-    ActivityPartyBinding binding;
+    ActivityClientPartyBinding binding;
     private static final String NAME = PartyActivity.class.getName();
     private static String token;
     private boolean mShouldUnbind;
@@ -97,7 +97,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         token = getIntent().getStringExtra(Constants.TOKEN);
-        binding = ActivityPartyBinding.inflate(getLayoutInflater());
+        binding = ActivityClientPartyBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
         showSongFragment = new ShowSongFragment(this);
@@ -195,8 +195,13 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void onBackPressed() {
-        searchBarFragment.clearSearch();
-        showShowSongFragment();
+        if(showSongFragment.isVisible())
+            getSupportFragmentManager().beginTransaction().
+                    replace(R.id.showSongFragmentFrame, new ExitConnectionFragment(this), "ExitConnectionFragment").commitAllowingStateLoss();
+        else {
+            searchBarFragment.clearSearch();
+            showShowSongFragment();
+        }
     }
 
     @Override
