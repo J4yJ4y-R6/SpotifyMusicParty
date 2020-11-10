@@ -195,8 +195,13 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void onBackPressed() {
-        searchBarFragment.clearSearch();
-        showShowSongFragment();
+        if(showSongFragment.isVisible())
+            getSupportFragmentManager().beginTransaction().
+                    replace(R.id.showSongFragmentFrame, new ExitConnectionFragment(this), "ExitConnectionFragment").commitAllowingStateLoss();
+        else {
+            searchBarFragment.clearSearch();
+            showShowSongFragment();
+        }
     }
 
     @Override
