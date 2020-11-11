@@ -7,7 +7,7 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class ItemMoveCallback extends ItemTouchHelper.Callback {
+public class HostPlaylistItemMoveCallback extends ItemTouchHelper.Callback {
 
     private final ItemTouchHelperContract mAdapter;
 
@@ -17,7 +17,7 @@ public class ItemMoveCallback extends ItemTouchHelper.Callback {
         void onRowClear(HostPlaylistRecycAdapter.MyViewHolder myViewHolder);
     }
 
-    public ItemMoveCallback(ItemTouchHelperContract adapter) {
+    public HostPlaylistItemMoveCallback(ItemTouchHelperContract adapter) {
         this.mAdapter = adapter;
     }
 

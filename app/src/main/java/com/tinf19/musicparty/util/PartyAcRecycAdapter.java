@@ -2,6 +2,7 @@ package com.tinf19.musicparty.util;
 
 
 import android.content.Context;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -9,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.tinf19.musicparty.R;
@@ -17,7 +19,7 @@ import com.tinf19.musicparty.music.Track;
 import java.util.List;
 
 
-public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapter.ViewHolder> {
+public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapter.ViewHolder> implements SearchSongsOutputItemTouchHelperCallback.ItemTouchHelperAdapter{
 
     public interface SongCallback{
         void returnSong(Track track);
@@ -25,8 +27,10 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
 
     SongCallback songCallback;
     private List<Track> mDataset;
+    private static final String TAG = PartyAcRecycAdapter.class.getName();
+    private View textView;
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder implements SearchSongsOutputItemTouchHelperCallback.ItemTouchHelperViewHolder {
 
         public TextView songTitleTextView;
         public TextView artistNameTextView;
@@ -37,6 +41,16 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
             songTitleTextView = (TextView) itemView.findViewById(R.id.searchSongTitleTextView);
             artistNameTextView = (TextView) itemView.findViewById(R.id.searchArtistNameTextView);
             songCoverImageView = (ImageView) itemView.findViewById(R.id.songCover);
+        }
+
+        @Override
+        public void onItemSelected() {
+            itemView.setBackgroundColor(ContextCompat.getColor(textView.getContext(), R.color.button_green));
+        }
+
+        @Override
+        public void onItemClear() {
+            itemView.setBackgroundColor(0);
         }
     }
 
@@ -55,7 +69,7 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
 
-        View textView = inflater.inflate(R.layout.partyacrecyclerview_row, parent, false);
+        textView = inflater.inflate(R.layout.partyacrecyclerview_row, parent, false);
 
         return new ViewHolder(textView);
     }
@@ -74,14 +88,19 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
         ImageView songCoverIV = holder.songCoverImageView;
         if(songCoverIV != null)
             new DownloadImageTask(songCoverIV).execute(cover);
-        holder.itemView.setOnClickListener(v -> {
-            songCallback.returnSong(mDataset.get(position));
-        });
+//        holder.itemView.setOnClickListener(v -> {
+//            songCallback.returnSong(mDataset.get(position));
+//        });
 
     }
 
     @Override
     public int getItemCount() {
         return mDataset.size();
+    }
+
+    @Override
+    public void sendToPlaylist(int position) {
+        songCallback.returnSong(mDataset.get(position));
     }
 }
