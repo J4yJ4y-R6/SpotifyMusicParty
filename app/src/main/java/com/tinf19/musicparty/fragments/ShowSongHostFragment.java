@@ -16,11 +16,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
-import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.DownloadImageTask;
-
-import java.util.ArrayList;
 
 public class ShowSongHostFragment extends Fragment {
 

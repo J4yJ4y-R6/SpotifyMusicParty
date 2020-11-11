@@ -14,11 +14,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.tinf19.musicparty.client.PartyActivity;
 import com.tinf19.musicparty.fragments.HostClosePartyFragment;
 import com.tinf19.musicparty.fragments.HostPlaylistFragment;
 import com.tinf19.musicparty.fragments.PartyPeopleFragment;
@@ -26,7 +23,6 @@ import com.tinf19.musicparty.fragments.SearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.fragments.SettingsHostFragment;
 import com.tinf19.musicparty.fragments.ShowSongHostFragment;
-import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.Commands;
@@ -42,7 +38,6 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
@@ -79,10 +74,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
 
-//    methods and objects for ServerService-Connection
+    //    methods and objects for ServerService-Connection
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
-            mBoundService = ((ServerService.LocalBinder)service).getService();
+            mBoundService = ((ServerService.LocalBinder) service).getService();
             connect(appRemote -> {
                 Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
                 serviceIntent.putExtra(Constants.TOKEN, token);
@@ -112,14 +107,14 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
                     @Override
                     public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                        if(mBoundService != null)
+                        if (mBoundService != null)
                             mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
                         Log.d(TAG, "Connected! Yay!");
                         //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
                         // Now you can start interacting with App Remote
                         connectionCallback.afterConnection(spotifyAppRemote);
 
-                        if(mBoundService != null) {
+                        if (mBoundService != null) {
                             mBoundService.setSpotifyPlayerCallback(HostActivity.this);
                             mBoundService.addEventListener();
                         }
@@ -154,7 +149,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     public void stopService() {
-        if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null) {
+        if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null) {
             mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
             SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         }
@@ -162,7 +157,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         stopService(new Intent(this, ServerService.class));
         startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
     }
-
 
 
 //    Interaction with Activity
@@ -218,7 +212,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
+        if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
             SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         doUnbindService();
         Log.d(TAG, "I got destroyed");
@@ -240,7 +234,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongFragment").commitAllowingStateLoss();
     }
-
 
 
     //  changing fragment source
@@ -278,7 +271,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
 
-
 //    Methods for ShowSongFragment
 
     @Override
@@ -287,11 +279,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void setPeopleCount(int count) { this.runOnUiThread(()->showSongFragment.setPartyNameCount(count)); }
+    public void setPeopleCount(int count) {
+        this.runOnUiThread(() -> showSongFragment.setPartyNameCount(count));
+    }
 
     @Override
     public int getPartyPeopleSize() {
-        if(mBoundService != null) return mBoundService.getClientListSize();
+        if (mBoundService != null) return mBoundService.getClientListSize();
         else return 0;
     }
 
@@ -302,20 +296,22 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void nextTrack() {
-        if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null)
+        if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
             mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
     }
 
     @Override
     public void lastTrack() {
-        if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null)
+        if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
             mBoundService.getmSpotifyAppRemote().getPlayerApi().skipPrevious();
     }
 
     @Override
     public void playTrack() {
-        if (mBoundService != null && mBoundService.getPause() &&  mBoundService.getmSpotifyAppRemote() != null) mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
-        else if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null)  mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
+        if (mBoundService != null && mBoundService.getPause() && mBoundService.getmSpotifyAppRemote() != null)
+            mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
+        else if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
+            mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
     }
 
     @Override
@@ -325,10 +321,9 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public Track setShowNowPlaying() {
-        if(mBoundService != null) return mBoundService.getNowPlaying();
+        if (mBoundService != null) return mBoundService.getNowPlaying();
         else return null;
     }
-
 
 
 //    Methods for SearchSongsOutput
@@ -339,7 +334,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         new Thread(() -> {
             try {
                 Log.d(TAG, "Trying to send message to server");
-                if(mBoundService != null) {
+                if (mBoundService != null) {
                     mBoundService.addItem(track.getURI(), track.getName());
                     mBoundService.addItemToTrackList(track);
                 }
@@ -350,12 +345,11 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
 
-
 //    Methods for HostPlaylist
 
     @Override
     public void showPlaylist() {
-        if(mBoundService != null) {
+        if (mBoundService != null) {
             List<Track> trackList = mBoundService.getPlaylist();
             this.runOnUiThread(() -> hostPlaylistFragment.showResult(trackList));
         }
@@ -370,13 +364,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public Track getCurrentPlaying() {
-        if(mBoundService != null) return mBoundService.getNowPlaying();
+        if (mBoundService != null) return mBoundService.getNowPlaying();
         else return null;
     }
 
     @Override
     public void swapPlaylistItems(int from, int to) {
-        if(mBoundService != null) {
+        if (mBoundService != null) {
             try {
                 mBoundService.moveItem(from, to);
             } catch (JSONException e) {
@@ -384,7 +378,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             }
         }
     }
-
 
 
 //    Methods for HostCloseParty
@@ -400,15 +393,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
 
-
 //    Methods for PartyPeople
 
     @Override
     public ArrayList<PartyPeople> getPartyPeopleList() {
-        if(mBoundService != null) return (ArrayList<PartyPeople>) mBoundService.getPeopleList();
+        if (mBoundService != null) return (ArrayList<PartyPeople>) mBoundService.getPeopleList();
         else return new ArrayList<>();
     }
-
 
 
 //    Methods for SettingsHost
@@ -422,7 +413,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     if (!addr.isLoopbackAddress()) {
                         String sAddr = addr.getHostAddress();
                         //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
-                        boolean isIPv4 = sAddr.indexOf(':')<0;
+                        boolean isIPv4 = sAddr.indexOf(':') < 0;
 
                         if (useIPv4) {
                             if (isIPv4)
@@ -430,13 +421,14 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                         } else {
                             if (!isIPv4) {
                                 int delim = sAddr.indexOf('%'); // drop ip6 zone suffix
-                                return delim<0 ? sAddr.toUpperCase() : sAddr.substring(0, delim).toUpperCase();
+                                return delim < 0 ? sAddr.toUpperCase() : sAddr.substring(0, delim).toUpperCase();
                             }
                         }
                     }
                 }
             }
-        } catch (Exception ignored) { } // for now eat exceptions
+        } catch (Exception ignored) {
+        } // for now eat exceptions
         return "";
     }
 
@@ -452,7 +444,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void setNewPartyName(String newPartyName) {
-        if(mBoundService != null) {
+        if (mBoundService != null) {
             mBoundService.setPartyName(newPartyName);
             new Thread(new Runnable() {
                 @Override

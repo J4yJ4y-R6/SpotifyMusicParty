@@ -5,16 +5,13 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.webkit.MimeTypeMap;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -23,24 +20,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.zxing.BarcodeFormat;
-import com.google.zxing.EncodeHintType;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.tinf19.musicparty.R;
-import com.tinf19.musicparty.server.HostActivity;
-import com.tinf19.musicparty.util.Constants;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public class SettingsHostFragment extends Fragment {
 
@@ -102,13 +89,7 @@ public class SettingsHostFragment extends Fragment {
             MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
             BitMatrix bitMatrix = multiFormatWriter.encode(json.toString(), BarcodeFormat.QR_CODE, 200, 200);
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-            int width = bitMatrix.getWidth();
             bitmap = barcodeEncoder.createBitmap(bitMatrix);
-            for (int x = 0; x < width; x++) {
-                for (int y = 0; y < width; y++) {
-                    bitmap.setPixel(y, x, bitMatrix.get(x, y) ? ContextCompat.getColor(view.getContext(), R.color.white) : ContextCompat.getColor(view.getContext(), R.color.button_green));
-                }
-            }
             if(qrCodeImageView != null) qrCodeImageView.setImageBitmap(bitmap);
         } catch (JSONException | WriterException e) {
             e.printStackTrace();

@@ -42,7 +42,7 @@
         android:id="@+id/bt_connect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
+        android:layout_marginTop="20dp"
         android:layout_marginBottom="50dp"
         android:onClick="nextPage"
         android:text="@string/text_connect"
@@ -115,13 +115,15 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
         android:background="@drawable/rounded_button"
+        android:contentDescription="@string/text_qrButtonHint"
         android:padding="15dp"
+        app:srcCompat="@drawable/ic_qr_code_image"
+        app:layout_constraintBottom_toTopOf="@+id/bt_connect"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/et_password"
-        android:src="@drawable/ic_qr_code_image"
-        android:contentDescription="@string/text_qrButtonHint" />
+        app:layout_constraintTop_toBottomOf="@+id/et_password" />
 
     <ImageView
         android:id="@+id/infoSymbolImageView"

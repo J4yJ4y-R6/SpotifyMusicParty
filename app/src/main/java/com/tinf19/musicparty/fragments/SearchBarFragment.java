@@ -10,8 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Artist;
@@ -69,7 +69,7 @@ public class SearchBarFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_search_bar, container, false);
         //token = savedInstanceState.getBundle();
         searchText = view.findViewById(R.id.searchEditText);
-        Button searchButton = view.findViewById(R.id.searchButton);
+        ImageButton searchButton = view.findViewById(R.id.searchButton);
         if(searchButton != null) {
             searchButton.setOnClickListener(new View.OnClickListener() {
                 @Override

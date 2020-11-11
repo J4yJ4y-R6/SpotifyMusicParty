@@ -109,11 +109,13 @@
 
         <TextView
             android:id="@+id/albumHostTextView"
-            android:layout_width="300dip"
+            android:layout_width="0dp"
             android:layout_height="25dip"
             android:ellipsize="marquee"
             android:focusable="true"
             android:marqueeRepeatLimit="marquee_forever"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
             android:scrollHorizontally="true"
             android:singleLine="true"
             android:text="@string/text_albumname"
@@ -128,11 +130,13 @@
 
         <TextView
             android:id="@+id/artistHostTextView"
-            android:layout_width="300dp"
+            android:layout_width="0dp"
             android:layout_height="25dip"
             android:ellipsize="marquee"
             android:focusable="true"
             android:marqueeRepeatLimit="marquee_forever"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
             android:scrollHorizontally="true"
             android:singleLine="true"
             android:text="@string/text_kuenstler"

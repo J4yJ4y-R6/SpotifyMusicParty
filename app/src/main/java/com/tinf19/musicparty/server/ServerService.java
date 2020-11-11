@@ -10,7 +10,6 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.R;
@@ -25,12 +24,10 @@ import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import okhttp3.Call;
@@ -430,7 +427,7 @@ public class ServerService extends Service {
                         Log.d(NAME, "New song has been started " + track.uri.split(":")[2]);
                         new Thread(()->{
                             try {
-                                sendToAll(Commands.PLAYING, new com.tinf19.musicparty.music.Track(
+                                sendToAll(Commands.PLAYING, new Track(
                                         track.uri.split(":")[2],
                                         track.name,
                                         track.artists,
@@ -473,7 +470,7 @@ public class ServerService extends Service {
     }
 
     public Track getNowPlaying(){
-        return new com.tinf19.musicparty.music.Track(
+        return new Track(
                 nowPlaying.uri.split(":")[2],
                 nowPlaying.name,
                 nowPlaying.artists,

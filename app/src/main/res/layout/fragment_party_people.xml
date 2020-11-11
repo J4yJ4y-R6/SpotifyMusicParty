@@ -14,23 +14,29 @@
             android:id="@+id/headerPartyPeopleTextView"
             android:layout_width="match_parent"
             android:layout_height="60dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="150dp"
+            android:layout_marginBottom="30dp"
             android:text="@string/heading_partyPeople"
             android:textAlignment="center"
             android:textSize="24sp"
+            app:layout_constraintBottom_toTopOf="@+id/partyPeopleRecyclerView"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/partyPeopleRecyclerView"
-            android:layout_width="match_parent"
-            android:layout_height="670dp"
+            android:layout_width="412dp"
+            android:layout_height="494dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="20dp"
             android:paddingLeft="15dp"
             android:paddingTop="15dp"
             android:paddingRight="15dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/headerPartyPeopleTextView" />
 
@@ -38,9 +44,12 @@
             android:id="@+id/partyPeopleHeaderDivider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
+            android:layout_marginTop="8dp"
             android:background="@color/divider"
-            app:layout_constraintTop_toTopOf="@+id/headerPartyPeopleTextView"
-            tools:layout_editor_absoluteX="0dp" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

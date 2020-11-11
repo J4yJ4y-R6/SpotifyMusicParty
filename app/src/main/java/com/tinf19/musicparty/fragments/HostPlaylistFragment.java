@@ -16,12 +16,9 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
-import com.tinf19.musicparty.util.ClientPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.util.HostPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.ItemMoveCallback;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
