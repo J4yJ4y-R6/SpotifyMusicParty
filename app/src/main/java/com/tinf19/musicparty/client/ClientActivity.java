@@ -39,15 +39,26 @@ public class ClientActivity extends AppCompatActivity {
 
         qrScan = new IntentIntegrator(this);
 
-        scanQRCodeImageButton = binding.loginViaQRCodeImageButton;
-        if(scanQRCodeImageButton != null) {
-            scanQRCodeImageButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    qrScan.initiateScan();
-                }
-            });
+        if(getIntent().getData() != null) {
+            String password = getIntent().getData().getQueryParameter(Constants.PASSWORD);
+            String ip = getIntent().getData().getQueryParameter(Constants.ADDRESS);
+
+            Log.d("ClientActivitiy", "data: " + password);
+            Log.d("ClientActivitiy", "ip: " + ip);
+
+            if (password != null && ip != null) {
+                ipAddressEditText.setText(ip);
+                passwordEditText.setText(password);
+            }
         }
+
+        scanQRCodeImageButton = binding.loginViaQRCodeImageButton;
+        scanQRCodeImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                qrScan.initiateScan();
+            }
+        });
     }
 
     public void nextPage(View view) {

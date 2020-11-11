@@ -14,11 +14,8 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.tinf19.musicparty.client.PartyActivity;
 import com.tinf19.musicparty.fragments.HostClosePartyFragment;
 import com.tinf19.musicparty.fragments.HostPlaylistFragment;
 import com.tinf19.musicparty.fragments.PartyPeopleFragment;
@@ -26,7 +23,6 @@ import com.tinf19.musicparty.fragments.SearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.fragments.SettingsHostFragment;
 import com.tinf19.musicparty.fragments.ShowSongHostFragment;
-import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.Commands;
@@ -42,7 +38,6 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import org.json.JSONException;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
@@ -55,7 +50,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private static final String TAG = HostActivity.class.getName();
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
     private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
-    private static final String PASSWORD = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
+    private String password;
+    private static HostActivity hostActivity;
 
     private Channel channel;
     private WifiP2pManager manager;
@@ -78,6 +74,12 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         void afterConnection(SpotifyAppRemote appRemote);
     }
 
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            stopService();
+        }
+    };
 
 //    methods and objects for ServerService-Connection
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -86,7 +88,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             connect(appRemote -> {
                 Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
                 serviceIntent.putExtra(Constants.TOKEN, token);
-                serviceIntent.putExtra(Constants.PASSWORD, PASSWORD);
+                serviceIntent.putExtra(Constants.PASSWORD, generatePassword());
                 serviceIntent.putExtra(Constants.PARTYNAME, getString(R.string.text_partyName));
                 startService(serviceIntent);
             });
@@ -155,12 +157,18 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     public void stopService() {
         if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null) {
+            Log.d(TAG, "stopService: Pausing music");
             mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
             SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         }
         doUnbindService();
         stopService(new Intent(this, ServerService.class));
         startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+    }
+
+    private String generatePassword() {
+        if(password == null) password = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
+        return password;
     }
 
 
@@ -171,6 +179,9 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_host_party);
+        hostActivity = this;
+
+        registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
 
         //Que.getInstance().add(new com.example.musicparty.music.Track("3cfOd4CMv2snFaKAnMdnvK"));
         //Que.getInstance().add(new com.example.musicparty.music.Track("76nqCfJOcFFWBJN32PAksn"));
@@ -308,8 +319,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void lastTrack() {
-        if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null)
+        if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null) {
+            mBoundService.addItemToTrackList(mBoundService.getNowPlaying());
             mBoundService.getmSpotifyAppRemote().getPlayerApi().skipPrevious();
+        }
     }
 
     @Override
@@ -447,7 +460,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public String getPassword() {
-        return PASSWORD;
+        return generatePassword();
     }
 
     @Override

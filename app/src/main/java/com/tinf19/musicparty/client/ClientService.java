@@ -10,6 +10,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.tinf19.musicparty.util.ActionReceiver;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.R;
@@ -75,12 +76,15 @@ public class ClientService extends Service {
         Intent notificationIntent = new Intent(this, PartyActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
+        Intent intentAction = new Intent(this, ActionReceiver.class);
+        PendingIntent pendingIntentButton = PendingIntent.getBroadcast(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_name))
                 .setContentText(getString(R.string.service_clientMsg))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
+                .addAction(R.drawable.ic_exit_button, getString(R.string.text_leave),pendingIntentButton)
                 .build();
         startForeground(1, notification);
     }

@@ -3,9 +3,11 @@ package com.tinf19.musicparty.client;
 import androidx.appcompat.app.AppCompatActivity;
 
 
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -64,6 +66,21 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         }
     };
 
+    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            new Thread(() -> {
+                try {
+                    if(mBoundService != null)
+                        mBoundService.getClientThread().sendMessage(Commands.QUIT, "User left the channel");
+                } catch (IOException e) {
+                    Log.e(NAME, e.getMessage(), e);
+                }
+            }).start();
+            exitService(getString(R.string.service_serverDisconnected));
+        }
+    };
+
     void doBindService() {
         if (bindService(new Intent(this, ClientService.class),
                 mConnection, Context.BIND_AUTO_CREATE)) {
@@ -99,6 +116,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         token = getIntent().getStringExtra(Constants.TOKEN);
         binding = ActivityClientPartyBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
+        registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
         showSongFragment = new ShowSongFragment(this);
         clientPlaylistFragment = new ClientPlaylistFragment();
