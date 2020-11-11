@@ -3,6 +3,8 @@ package com.tinf19.musicparty.server;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
@@ -11,6 +13,7 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 
 import com.tinf19.musicparty.music.PartyPeople;
+import com.tinf19.musicparty.util.ActionReceiver;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
@@ -100,12 +103,16 @@ public class ServerService extends Service {
         Intent notificationIntent = new Intent(this, HostActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
+        Intent intentAction = new Intent(this, ActionReceiver.class);
+        PendingIntent pendingIntentButton = PendingIntent.getBroadcast(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
+
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_name))
                 .setContentText(getString(R.string.service_serverMsg))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
+                .addAction(R.drawable.ic_exit_button, getString(R.string.text_end),pendingIntentButton)
                 .build();
         startForeground(1, notification);
 
@@ -439,15 +446,9 @@ public class ServerService extends Service {
                                 Log.e(NAME, e.getMessage(), e);
                             }
                         }).start();
-                        Track toRemove = null;
-                        for (Track x : tracks) {
-                            if(x.getURI().equals(nowPlaying.uri)) {
-                                toRemove = x;
-                                break;
-                            }
+                        if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
+                            tracks.remove(0);
                         }
-                        if(toRemove != null)
-                            tracks.remove(toRemove);
                     }
                     pause = playerState.isPaused;
                     if (track != null && spotifyPlayerCallback != null) {

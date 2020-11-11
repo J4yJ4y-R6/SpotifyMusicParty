@@ -19,26 +19,37 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicParty">
+        <receiver android:name="com.tinf19.musicparty.util.ActionReceiver" />
+
         <service
             android:name="com.tinf19.musicparty.client.ClientService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true" />
         <service
             android:name="com.tinf19.musicparty.server.ServerService"
             android:enabled="true"
             android:exported="true" />
 
         <activity android:name="com.tinf19.musicparty.client.PartyActivity" />
-        <activity android:name="com.tinf19.musicparty.client.ClientActivity" />
+        <activity android:name="com.tinf19.musicparty.client.ClientActivity" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <!-- Accepts URIs that begin with "example://gizmos” -->
+                <data android:scheme="http"
+                    android:host="musicparty.join" />
+            </intent-filter>
+        </activity>
         <activity
             android:name="com.spotify.sdk.android.auth.LoginActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-        <activity android:name="com.tinf19.musicparty.server.HostActivity" />
+        <activity android:name="com.tinf19.musicparty.server.HostActivity"/>
+<!--            android:configChanges="orientation|screenSize"/>-->
 <!--        <activity android:name="com.tinf19.musicparty.server.HostPartyActivity" />-->
         <activity android:name="com.tinf19.musicparty.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

@@ -104,7 +104,7 @@ public class SettingsHostFragment extends Fragment {
                 public void onClick(View v) {
                     Intent sendIntent = new Intent();
                     sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, "*Verbindung zu " + partyName + ":* \n" + ipAddressTextView.getText() + "\n" + passwordTextView.getText());
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, "*Verbindung zu " + partyName + ":* \n" + ipAddressTextView.getText() + "\n" + passwordTextView.getText() + "\n" + getURI());
                     sendIntent.setType("text/plain");
 
                     Intent shareIntent = Intent.createChooser(sendIntent, null);
@@ -150,4 +150,10 @@ public class SettingsHostFragment extends Fragment {
         return view;
     }
 
+
+    public String getURI() {
+        return "http://musicparty.join?" +
+                Constants.ADDRESS + "=" + getServerSettings.getIpAddress() + "&" +
+                Constants.PASSWORD + "=" + getServerSettings.getPassword();
+    }
 }

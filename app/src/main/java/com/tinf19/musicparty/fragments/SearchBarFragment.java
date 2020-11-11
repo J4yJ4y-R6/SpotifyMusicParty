@@ -42,7 +42,8 @@ public class SearchBarFragment extends Fragment {
     private int limit = 10;
     private String type = "track";
     private String token;
-    EditText searchText;
+    private EditText searchText;
+    private ImageButton searchButton;
 
     public interface SearchForSongs {
         void searchForSongs(List<Track> tracks);
@@ -69,16 +70,19 @@ public class SearchBarFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_search_bar, container, false);
         //token = savedInstanceState.getBundle();
         searchText = view.findViewById(R.id.searchEditText);
-        ImageButton searchButton = view.findViewById(R.id.searchButton);
+        searchButton = view.findViewById(R.id.searchButton);
         if(searchButton != null) {
             searchButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    searchButton.setEnabled(false);
                     if  (searchText != null && !searchText.getText().toString().trim().equals("")) {
                         searchText.clearFocus();
                         InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
                         search(searchText.getText().toString().trim());
+                    } else {
+                        searchButton.setEnabled(true);
                     }
                 }
             });
@@ -113,6 +117,8 @@ public class SearchBarFragment extends Fragment {
             @Override
             public void onFailure(Call call, IOException e) {
                 // Do something when request failed
+                if(searchButton != null)
+                    getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
                 e.printStackTrace();
                 Log.d(NAME, "Request Failed.");
             }
@@ -120,11 +126,14 @@ public class SearchBarFragment extends Fragment {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
+                    if(searchButton != null)
+                        getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
                     throw new IOException("Error : " + response);
                 }else {
                     Log.d(NAME,"Request Successful.");
                 }
                 final String data = response.body().string();
+                response.close();
 
                 // Read data in the worker thread
                 extractSongs(data);
@@ -162,6 +171,8 @@ public class SearchBarFragment extends Fragment {
                 Log.d(NAME, tracks.get(i).toString());
             }
             searchForSongs.searchForSongs(tracks);
+            if(searchButton != null)
+                getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
         } catch (JSONException e) {
             e.printStackTrace();
         }
