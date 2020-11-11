@@ -1,6 +1,7 @@
 package com.tinf19.musicparty.server;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -61,6 +62,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private String token;
     private boolean mShouldUnbind;
 
+    private FragmentTransaction fragmentTransaction;
     private ShowSongHostFragment showSongFragment;
     private SearchBarFragment searchBarFragment;
     private SearchSongsOutputFragment searchSongsOutputFragment;
@@ -231,8 +233,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void onBackPressed() {
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongFragment").commitAllowingStateLoss();
+        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_out_down, R.anim.fragment_slide_in_down);
+        fragmentTransaction.replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongFragment");
+        fragmentTransaction.commitAllowingStateLoss();
     }
 
 
@@ -241,33 +245,43 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void searchForSongs(List<Track> tracks) {
         Log.d("ShowSongFragment", "back to show");
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, searchSongsOutputFragment, "ShowSongFragment").commitAllowingStateLoss();
+        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_up, R.anim.fragment_slide_out_up);
+        fragmentTransaction.replace(R.id.showSongHostFragmentFrame, searchSongsOutputFragment, "ShowSongFragment");
+        fragmentTransaction.commitAllowingStateLoss();
         this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));
     }
 
     @Override
     public void openSettingsFragment() {
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, settingsHostFragment, "SettingsHostFragment").commitAllowingStateLoss();
+        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_up, R.anim.fragment_slide_out_up);
+        fragmentTransaction.replace(R.id.showSongHostFragmentFrame, settingsHostFragment, "SettingsHostFragment");
+        fragmentTransaction.commitAllowingStateLoss();
     }
 
     @Override
     public void openPeopleFragment() {
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, partyPeopleFragment, "PartyPeopleFragment").commitAllowingStateLoss();
+        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_up, R.anim.fragment_slide_out_up);
+        fragmentTransaction.replace(R.id.showSongHostFragmentFrame, partyPeopleFragment, "PartyPeopleFragment");
+        fragmentTransaction.commitAllowingStateLoss();
     }
 
     @Override
     public void openPlaylistFragment() {
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, hostPlaylistFragment, "HostPlaylistFragment").commitAllowingStateLoss();
+        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_up, R.anim.fragment_slide_out_up);
+        fragmentTransaction.replace(R.id.showSongHostFragmentFrame, hostPlaylistFragment, "HostPlaylistFragment");
+        fragmentTransaction.commitAllowingStateLoss();
     }
 
     @Override
     public void openExitFragment() {
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, hostClosePartyFragment, "HostClosePartyFragment").commitAllowingStateLoss();
+        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_up, R.anim.fragment_slide_out_up);
+        fragmentTransaction.replace(R.id.showSongHostFragmentFrame, hostClosePartyFragment, "HostClosePartyFragment");
+        fragmentTransaction.commitAllowingStateLoss();
     }
 
 

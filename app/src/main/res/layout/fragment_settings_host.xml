@@ -1,14 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".fragments.SettingsHostFragment">
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
+    tools:context=".fragments.SettingsHostFragment"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -26,6 +23,7 @@
                 android:inputType="textPersonName"
                 android:textColor="#FFFFFF"
                 android:textColorHint="#FFFFFF"
+                android:autofillHints="partyName"
                 app:layout_constraintEnd_toStartOf="@+id/savePartyNameButton"
                 app:layout_constraintHorizontal_bias="0.052"
                 app:layout_constraintStart_toStartOf="parent"
@@ -74,46 +72,52 @@
                 android:layout_width="60dp"
                 android:layout_height="40dp"
                 android:layout_marginTop="20dp"
+                android:layout_marginEnd="10dp"
                 android:background="@drawable/rounded_button"
+                android:contentDescription="@string/text_shareAddress_ContentD"
                 android:src="@drawable/ic_share_button"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/passwordSettingsTextView" />
+                app:layout_constraintStart_toEndOf="@+id/shareIPAddressTextView"
+                app:layout_constraintTop_toBottomOf="@+id/qrConnectionSettingsImageView" />
 
             <ImageButton
                 android:id="@+id/shareQRButtonSettingsImageButton"
                 android:layout_width="60dp"
                 android:layout_height="40dp"
                 android:layout_marginTop="20dp"
+                android:layout_marginEnd="10dp"
                 android:background="@drawable/rounded_button"
+                android:contentDescription="@string/text_shareQR_ContentD"
                 android:src="@drawable/ic_share_button"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/qrConnectionSettingsImageView" />
+                app:layout_constraintStart_toEndOf="@+id/shareIPAddressTextView"
+                app:layout_constraintTop_toBottomOf="@+id/shareIPAddressTextView" />
 
             <ImageView
                 android:id="@+id/qrConnectionSettingsImageView"
                 android:layout_width="200dp"
                 android:layout_height="200dp"
-                android:layout_marginTop="50dp"
+                android:layout_marginTop="20dp"
                 android:background="@color/button_green"
+                android:contentDescription="@string/text_qrSettings_ContentD"
                 android:src="@drawable/ic_qr_code_image"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/shareButtonSettingsImageButton" />
+                app:layout_constraintTop_toBottomOf="@+id/passwordSettingsTextView" />
 
             <TextView
                 android:id="@+id/changePartyTypeTextView"
                 android:layout_width="350dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="50dp"
+                android:layout_marginTop="40dp"
                 android:text="@string/text_partyType"
                 android:textAlignment="center"
                 android:textColor="#FDFDFD"
                 android:textSize="24sp"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.508"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/shareQRButtonSettingsImageButton" />
+                app:layout_constraintTop_toBottomOf="@+id/shareLinkTextView" />
 
             <RadioGroup
                 android:id="@+id/partyTypeSettingsRadioGroup"
@@ -171,7 +175,55 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
+            <TextView
+                android:id="@+id/shareIPAddressTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="20dp"
+                android:text="@string/text_shareIP_Descrition"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/qrConnectionSettingsImageView" />
+
+            <TextView
+                android:id="@+id/shareQRTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="20dp"
+                android:shadowColor="#FFFFFF"
+                android:text="@string/text_shareQR_Description"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/shareIPAddressTextView" />
+
+            <TextView
+                android:id="@+id/shareLinkTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="20dp"
+                android:text="@string/text_shareLink_Description"
+                android:textColor="#FFFEFE"
+                android:textSize="18sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/shareQRTextView" />
+
+            <ImageButton
+                android:id="@+id/shareLinkButtonSettingsImageButton"
+                android:layout_width="60dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="20dp"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/rounded_button"
+                android:src="@drawable/ic_share_button"
+                android:contentDescription="@string/text_linkSettings_ContentD"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/shareIPAddressTextView"
+                app:layout_constraintTop_toBottomOf="@+id/shareQRTextView" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
-
-</FrameLayout>
