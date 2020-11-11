@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -43,6 +44,34 @@ public class ClientActivity extends AppCompatActivity {
         passwordEditText = binding.etPassword;
 
         qrScan = new IntentIntegrator(this);
+
+        ImageButton infoUsernameToolboxImageButton = binding.infoUsernameSymbolImageButton;
+        TextView usernameDesciptionTextView = binding.usernameDescriptionTextView;
+        if(infoUsernameToolboxImageButton != null && usernameDesciptionTextView != null) {
+            infoUsernameToolboxImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(usernameDesciptionTextView.getVisibility() == View.INVISIBLE)
+                        usernameDesciptionTextView.setVisibility(View.VISIBLE);
+                    else
+                        usernameDesciptionTextView.setVisibility(View.INVISIBLE);
+                }
+            });
+        }
+
+        ImageButton infoIpToolboxImageButton = binding.infoIpSymbolImageButton;
+        TextView loginDescriptionTextView = binding.loginDescriptionTextView;
+        if(infoIpToolboxImageButton != null && loginDescriptionTextView != null) {
+            infoIpToolboxImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(loginDescriptionTextView.getVisibility() == View.INVISIBLE)
+                        loginDescriptionTextView.setVisibility(View.VISIBLE);
+                    else
+                        loginDescriptionTextView.setVisibility(View.INVISIBLE);
+                }
+            });
+        }
 
         scanQRCodeImageButton = binding.loginViaQRCodeImageButton;
         if(scanQRCodeImageButton != null) {
