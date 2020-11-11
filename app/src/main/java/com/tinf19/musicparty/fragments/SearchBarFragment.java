@@ -10,8 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Artist;
@@ -43,7 +43,7 @@ public class SearchBarFragment extends Fragment {
     private String type = "track";
     private String token;
     private EditText searchText;
-    private Button searchButton;
+    private ImageButton searchButton;
 
     public interface SearchForSongs {
         void searchForSongs(List<Track> tracks);

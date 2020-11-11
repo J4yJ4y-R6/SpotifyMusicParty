@@ -60,5 +60,13 @@
     <string name="text_infobox_connecttion">Du kannst hier die IP-Adresse und das Passwort eingeben oder den QR-Code der Party scannen.</string>
     <string name="text_qrButtonHint">QR Code scannen</string>
     <string name="text_infobox">Infobox</string>
+    <string name="text_searchButton_ContentD">Spotify Songs durchsuchen</string>
+    <string name="text_qrSettings_ContentD">QR-Code zur Verbidndung mit dem Server</string>
+    <string name="text_linkSettings_ContentD">Buttom zum teilen des Beitrittslinks</string>
+    <string name="text_shareQR_ContentD">Teile deinen QR-Code</string>
+    <string name="text_shareAddress_ContentD">Teile deine IP-Addresse und dein Passwort</string>
+    <string name="text_shareIP_Descrition">IP Addresse und Passwort teilen</string>
+    <string name="text_shareQR_Description">QR-Code teilen</string>
+    <string name="text_shareLink_Description">Link zum beitreten teilen</string>
 
 </resources>

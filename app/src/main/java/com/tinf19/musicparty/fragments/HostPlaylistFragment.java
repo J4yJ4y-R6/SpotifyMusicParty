@@ -16,12 +16,9 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
-import com.tinf19.musicparty.util.ClientPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.util.HostPlaylistRecycAdapter;
-import com.tinf19.musicparty.util.ItemMoveCallback;
-
-import org.w3c.dom.Text;
+import com.tinf19.musicparty.util.HostPlaylistItemMoveCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,7 +76,7 @@ public class HostPlaylistFragment extends Fragment {
         if(recyclerView != null) {
             hostPlaylistRecycAdapter = new HostPlaylistRecycAdapter(new ArrayList<Track>(), hostPlaylistAdapterCallback);
             ItemTouchHelper.Callback callback =
-                    new ItemMoveCallback(hostPlaylistRecycAdapter);
+                    new HostPlaylistItemMoveCallback(hostPlaylistRecycAdapter);
             ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
             touchHelper.attachToRecyclerView(recyclerView);
             recyclerView.setAdapter(hostPlaylistRecycAdapter);

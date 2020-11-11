@@ -17,7 +17,6 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.ClientPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.DownloadImageTask;
-import com.tinf19.musicparty.util.PartyAcRecycAdapter;
 
 import java.util.ArrayList;
 import java.util.List;

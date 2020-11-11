@@ -9,6 +9,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.zxing.integration.android.IntentIntegrator;
@@ -19,6 +20,8 @@ import com.tinf19.musicparty.databinding.ActivityClientBinding;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Random;
+
 public class ClientActivity extends AppCompatActivity {
 
     ActivityClientBinding binding;
@@ -27,6 +30,9 @@ public class ClientActivity extends AppCompatActivity {
     private IntentIntegrator qrScan;
     private EditText ipAddressEditText;
     private EditText passwordEditText;
+    final String lexicon = "ABCDEFGHIJKLMNOPQRSTUVWXYZ12345674890";
+    final Random rand = new Random();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +57,43 @@ public class ClientActivity extends AppCompatActivity {
                 passwordEditText.setText(password);
             }
         }
+        ImageButton infoUsernameToolboxImageButton = binding.infoUsernameSymbolImageButton;
+        TextView usernameDesciptionTextView = binding.usernameDescriptionTextView;
+        if(infoUsernameToolboxImageButton != null && usernameDesciptionTextView != null) {
+            infoUsernameToolboxImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(usernameDesciptionTextView.getVisibility() == View.INVISIBLE)
+                        usernameDesciptionTextView.setVisibility(View.VISIBLE);
+                    else
+                        usernameDesciptionTextView.setVisibility(View.INVISIBLE);
+                }
+            });
+        }
+
+        ImageButton infoIpToolboxImageButton = binding.infoIpSymbolImageButton;
+        TextView loginDescriptionTextView = binding.loginDescriptionTextView;
+        if(infoIpToolboxImageButton != null && loginDescriptionTextView != null) {
+            infoIpToolboxImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(loginDescriptionTextView.getVisibility() == View.INVISIBLE)
+                        loginDescriptionTextView.setVisibility(View.VISIBLE);
+                    else
+                        loginDescriptionTextView.setVisibility(View.INVISIBLE);
+                }
+            });
+        }
+
+        scanQRCodeImageButton = binding.loginViaQRCodeImageButton;
+        if(scanQRCodeImageButton != null) {
+            scanQRCodeImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    qrScan.initiateScan();
+                }
+            });
+        }
 
         scanQRCodeImageButton = binding.loginViaQRCodeImageButton;
         scanQRCodeImageButton.setOnClickListener(new View.OnClickListener() {
@@ -66,8 +109,12 @@ public class ClientActivity extends AppCompatActivity {
         intent.putExtra(Constants.TOKEN, getIntent().getStringExtra("token"));
         intent.putExtra(Constants.PASSWORD, binding.etPassword.getText().toString());
         intent.putExtra(Constants.ADDRESS, binding.etAddress.getText().toString());
-        intent.putExtra(Constants.USERNAME, binding.usernameEditText.getText().toString());
-        startActivity(intent);
+        if (binding.usernameEditText.getText().toString() == "")
+            intent.putExtra(Constants.USERNAME, binding.usernameEditText.getText().toString());
+        else {
+            intent.putExtra(Constants.USERNAME, randomIdentifier());
+        }
+        view.getContext().startActivity(intent);
     }
 
     @Override
@@ -82,7 +129,6 @@ public class ClientActivity extends AppCompatActivity {
                     Log.d(TAG, "onActivityResult: " + obj.getString("ipaddress"));
                     Log.d(TAG, "onActivityResult: " + obj.getString("password"));
                     if(ipAddressEditText != null) {
-                        //TODO: connect after scan or setText()
                         ipAddressEditText.setText(obj.getString("ipaddress"));
                         passwordEditText.setText(obj.getString("password"));
                     }
@@ -94,6 +140,18 @@ public class ClientActivity extends AppCompatActivity {
         } else {
             super.onActivityResult(requestCode, resultCode, data);
         }
+    }
+
+    public String randomIdentifier() {
+        StringBuilder builder = new StringBuilder();
+        while(builder.toString().length() == 0) {
+            int length = rand.nextInt(5)+5;
+            for(int i = 0; i < length; i++) {
+                builder.append(lexicon.charAt(rand.nextInt(lexicon.length())));
+            }
+        }
+        Log.d(TAG, "randomIdentifier: " + builder.toString());
+        return builder.toString();
     }
 
 
