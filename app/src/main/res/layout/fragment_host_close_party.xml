@@ -64,12 +64,13 @@
             android:layout_marginTop="60dp"
             android:paddingLeft="20dp"
             android:paddingRight="20dp"
-            android:text="Möchtest du die Playlist speichern?"
+            android:text="@string/text_closePartySavePlaylist"
             android:textColor="#FFFFFF"
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/closePartyTextView" />
+            app:layout_constraintTop_toBottomOf="@+id/closePartyTextView"
+            tools:ignore="UseSwitchCompatOrMaterialXml" />
 
         <EditText
             android:id="@+id/savePlaylistNameEditText"

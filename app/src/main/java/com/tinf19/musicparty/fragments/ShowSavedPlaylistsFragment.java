@@ -43,7 +43,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     private View view;
 
     public interface FavoritePlaylistsCallback{
-        void reloadFavoritePlaylistsFragment();
+        void reloadFavoritePlaylistsFragment(String id);
         void playFavoritePlaylist(String id, ArrayList<String> idList);
         void changePlaylistName(String name, String id);
     }
@@ -144,7 +144,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                         public void onClick(View v) {
                                 new AlertDialog.Builder(getContext())
                                         .setTitle(name)
-                                        .setMessage("Möchtest du die Playlist löschen, abspielen oder umbenenen?")
+                                        .setMessage(getString(R.string.text_favoritePlaylistsDialogWindow))
                                         .setPositiveButton("", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
@@ -196,8 +196,9 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                                                         counter++;
                                                     }
                                                 }
-                                                Toast.makeText(getContext(), "Die " + name + " wurde erfolgreich aus deinen Favoriten gelöscht", Toast.LENGTH_SHORT).show();
-                                                favoritePlaylistsCallback.reloadFavoritePlaylistsFragment();
+                                                String toastMessage = name + getString(R.string.text_toastPlaylistDeleted);
+                                                Toast.makeText(getContext(), toastMessage, Toast.LENGTH_SHORT).show();
+                                                favoritePlaylistsCallback.reloadFavoritePlaylistsFragment(id);
                                             }
                                         })
                                         .setNegativeButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_trash_can_button))

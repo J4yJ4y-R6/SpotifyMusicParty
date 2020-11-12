@@ -69,4 +69,13 @@
     <string name="text_shareQR_Description">QR-Code teilen</string>
     <string name="text_shareLink_Description">Link zum beitreten teilen</string>
 
+    <string name="text_toastPlaylistNotSaved">Playlist konnte nicht gespeichert werden. Prüfe ob du schon neun Playlisten gespeichert hast.</string>
+    <string name="text_toastPlaylistNameNeeded">Playlist konnte nicht gespeichert werden. Du musst einen Namen Hinzufügen</string>
+    <string name="text_favoritePlaylistsDialogWindow">Möchtest du die Playlist löschen, abspielen oder umbenenen?</string>
+    <string name="text_toastPlaylistDeleted"> wurde erfolgreich aus deinen Favoriten gelöscht</string>
+    <string name="text_closePartySavePlaylist">Möchtest du die Playlist speichern?</string>
+    <string name="text_editName">Neuer Name</string>
+    <string name="text_playlistCover">playlistCover</string>
+    <string name="text_favoritePlaylistsHeader">Deine gespeicherten Playlisten: Drücke zum abspielen, bearbeiten und löschen</string>
+
 </resources>

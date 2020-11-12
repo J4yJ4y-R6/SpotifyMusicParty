@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
+import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.databinding.ActivityClientBinding;
 
@@ -45,6 +46,9 @@ public class ClientActivity extends AppCompatActivity {
         passwordEditText = binding.etPassword;
 
         qrScan = new IntentIntegrator(this);
+        qrScan.setOrientationLocked(false);
+        qrScan.setPrompt(getResources().getString(R.string.text_qrButtonHint));
+        qrScan.setBeepEnabled(false);
 
         if(getIntent().getData() != null) {
             String password = getIntent().getData().getQueryParameter(Constants.PASSWORD);

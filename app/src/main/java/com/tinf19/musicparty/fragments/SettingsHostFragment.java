@@ -2,9 +2,11 @@ package com.tinf19.musicparty.fragments;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.provider.MediaStore;
@@ -29,6 +31,10 @@ import com.tinf19.musicparty.util.Constants;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import static android.graphics.Color.GRAY;
+import static android.graphics.Color.GREEN;
+import static android.graphics.Color.WHITE;
 
 public class SettingsHostFragment extends Fragment {
 
@@ -89,8 +95,21 @@ public class SettingsHostFragment extends Fragment {
             json.put("password", getServerSettings.getPassword());
             MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
             BitMatrix bitMatrix = multiFormatWriter.encode(json.toString(), BarcodeFormat.QR_CODE, 200, 200);
+
+            int width = bitMatrix.getWidth();
+            int height = bitMatrix.getHeight();
+            int[] pixels = new int[width * height];
+
+            for(int y = 0; y < height; y++) {
+                int offset = y * width;
+                for (int x = 0; x < width; x++) {
+                    pixels[offset + x] = bitMatrix.get(x,y) ? ContextCompat.getColor(getContext(), R.color.button_green) : WHITE;
+                }
+            }
+
             BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
             bitmap = barcodeEncoder.createBitmap(bitMatrix);
+            bitmap.setPixels(pixels, 0, width, 0, 0, width, height);
             if(qrCodeImageView != null) qrCodeImageView.setImageBitmap(bitmap);
         } catch (JSONException | WriterException e) {
             e.printStackTrace();

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.tinf19.musicparty">
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -30,6 +31,11 @@
             android:enabled="true"
             android:exported="true" />
 
+
+        <activity
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation" />
         <activity android:name="com.tinf19.musicparty.client.PartyActivity" />
         <activity android:name="com.tinf19.musicparty.client.ClientActivity" >
             <intent-filter>

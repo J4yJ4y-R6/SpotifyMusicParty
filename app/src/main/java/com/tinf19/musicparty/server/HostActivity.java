@@ -312,13 +312,15 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void reloadFavoritePlaylistsFragment() {
+    public void reloadFavoritePlaylistsFragment(String id) {
         Fragment frg = null;
         frg = getSupportFragmentManager().findFragmentByTag("ShowSavedPlaylistFragment");
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.detach(frg);
         ft.attach(frg);
         ft.commit();
+        if(mBoundService != null)
+            mBoundService.deletePlaylist(id);
     }
 
 //    Methods for ShowSongFragment
@@ -462,6 +464,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public boolean savePlaylistInSharedPreferences(String name) {
         SharedPreferences savePlaylistMemory = this.getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
+        if(!savePlaylistMemory.getString("9", "").equals(""))
+            return false;
         SharedPreferences.Editor editor = savePlaylistMemory.edit();
         JSONObject playlist = new JSONObject();
         try {
@@ -472,9 +476,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 playlist.put("id", id);
                 mBoundService.updatePlaylistName(name, id);
             }
-            else
-                //TODO: Was nimmt man hier
-                return false;
         } catch (JSONException e) {
             e.printStackTrace();
         }

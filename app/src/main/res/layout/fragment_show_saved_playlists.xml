@@ -37,7 +37,6 @@
                         android:id="@+id/gridZeroZeroHeaderTextView"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:text="Heading"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
@@ -45,10 +44,11 @@
                         android:id="@+id/gridZeroZeroHeaderEditText"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:hint="Neuer Name"
-                        android:text="Test"
+                        android:hint="@string/text_editName"
                         android:textAlignment="center"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:autofillHints="playlistName"
+                        android:inputType="textShortMessage" />
                 </ViewSwitcher>
 
                 <ImageButton
@@ -66,7 +66,8 @@
                     app:layout_column="0"
                     app:layout_columnWeight="1"
                     app:layout_row="1"
-                    app:layout_rowWeight="5" />
+                    app:layout_rowWeight="5"
+                    android:contentDescription="@string/text_playlistCover" />
 
                 <ViewSwitcher
                     android:id="@+id/gridZeroOneSwitcher"
@@ -82,7 +83,6 @@
                         android:id="@+id/gridZeroOneTextView"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:text="Heading"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
@@ -90,9 +90,11 @@
                         android:id="@+id/gridZeroOneHeaderEditText"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:hint="Neuer Name"
+                        android:hint="@string/text_editName"
                         android:textAlignment="center"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:autofillHints="playlistName"
+                        android:inputType="textShortMessage"/>
 
                 </ViewSwitcher>
 
@@ -108,6 +110,7 @@
                     android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
                     android:visibility="invisible"
+                    android:contentDescription="@string/text_playlistCover"
                     app:layout_column="1"
                     app:layout_columnWeight="1"
                     app:layout_row="1"
@@ -127,7 +130,6 @@
                         android:id="@+id/gridZeroTwoTextView"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:text="Heading"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
@@ -135,9 +137,11 @@
                         android:id="@+id/gridZeroTwoHeaderEditText"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:hint="Neuer Name"
+                        android:hint="@string/text_editName"
+                        android:autofillHints="playlistName"
                         android:textAlignment="center"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:inputType="textShortMessage"/>
 
                 </ViewSwitcher>
 
@@ -153,6 +157,7 @@
                     android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
                     android:visibility="invisible"
+                    android:contentDescription="@string/text_playlistCover"
                     app:layout_column="2"
                     app:layout_columnWeight="1"
                     app:layout_row="1"
@@ -172,7 +177,6 @@
                         android:id="@+id/gridOneZeroTextView"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:text="Heading"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
@@ -180,9 +184,11 @@
                         android:id="@+id/gridOneZeroHeaderEditText"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:hint="Neuer Name"
+                        android:hint="@string/text_editName"
+                        android:autofillHints="playlistName"
                         android:textAlignment="center"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:inputType="textShortMessage"/>
 
                 </ViewSwitcher>
 
@@ -198,6 +204,7 @@
                     android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
                     android:visibility="invisible"
+                    android:contentDescription="@string/text_playlistCover"
                     app:layout_column="0"
                     app:layout_columnWeight="1"
                     app:layout_row="3"
@@ -217,7 +224,6 @@
                         android:id="@+id/gridOneOneTextView"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:text="Heading"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
@@ -225,9 +231,11 @@
                         android:id="@+id/gridOneOneHeaderEditText"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:hint="Neuer Name"
+                        android:hint="@string/text_editName"
                         android:textAlignment="center"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:autofillHints="playlistName"
+                        android:inputType="textShortMessage"/>
 
                 </ViewSwitcher>
 
@@ -242,6 +250,7 @@
                     android:background="@drawable/rounded_border_gray_button"
                     android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
+                    android:contentDescription="@string/text_playlistCover"
                     android:visibility="invisible"
                     app:layout_column="1"
                     app:layout_columnWeight="1"
@@ -263,7 +272,6 @@
                         android:id="@+id/gridOneTwoTextView"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:text="Heading"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
@@ -271,9 +279,11 @@
                         android:id="@+id/gridOneTwoHeaderEditText"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:hint="Neuer Name"
+                        android:hint="@string/text_editName"
                         android:textAlignment="center"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:autofillHints="playlistName"
+                        android:inputType="textShortMessage"/>
 
                 </ViewSwitcher>
 
@@ -288,6 +298,7 @@
                     android:background="@drawable/rounded_border_gray_button"
                     android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
+                    android:contentDescription="@string/text_playlistCover"
                     android:visibility="invisible"
                     app:layout_column="2"
                     app:layout_columnWeight="1"
@@ -308,7 +319,6 @@
                         android:id="@+id/gridTwoZeroTextView"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:text="Heading"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
@@ -316,9 +326,11 @@
                         android:id="@+id/gridTwoZeroHeaderEditText"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:hint="Neuer Name"
+                        android:hint="@string/text_editName"
                         android:textAlignment="center"
-                        android:textSize="18sp" />
+                        android:textSize="18sp"
+                        android:autofillHints="playlistName"
+                        android:inputType="textShortMessage"/>
 
                 </ViewSwitcher>
 
@@ -334,6 +346,7 @@
                     android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
                     android:visibility="invisible"
+                    android:contentDescription="@string/text_playlistCover"
                     app:layout_column="0"
                     app:layout_columnWeight="1"
                     app:layout_row="5"
@@ -353,7 +366,6 @@
                         android:id="@+id/gridTwoOneTextView"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:text="Heading"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
@@ -361,7 +373,9 @@
                         android:id="@+id/gridTwoOneHeaderEditText"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:hint="Neuer Name"
+                        android:hint="@string/text_editName"
+                        android:autofillHints="playlistName"
+                        android:inputType="textShortMessage"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
@@ -379,6 +393,7 @@
                     android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
                     android:visibility="invisible"
+                    android:contentDescription="@string/text_playlistCover"
                     app:layout_column="1"
                     app:layout_columnWeight="1"
                     app:layout_row="5"
@@ -398,7 +413,6 @@
                         android:id="@+id/gridTwoTwoTextView"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:text="Heading"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
@@ -406,7 +420,9 @@
                         android:id="@+id/gridTwoTwoHeaderEditText"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
-                        android:hint="Neuer Name"
+                        android:hint="@string/text_editName"
+                        android:autofillHints="playlistName"
+                        android:inputType="textShortMessage"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
@@ -424,6 +440,7 @@
                     android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
                     android:visibility="invisible"
+                    android:contentDescription="@string/text_playlistCover"
                     app:layout_column="2"
                     app:layout_columnWeight="1"
                     app:layout_row="5"
@@ -440,7 +457,7 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="10dp"
                 android:layout_marginBottom="20dp"
-                android:text="Gespeicherte Playlisten: Drücke um sie abzuspielen"
+                android:text="@string/text_favoritePlaylistsHeader"
                 android:textAlignment="center"
                 android:textSize="30sp"
                 android:textStyle="bold"

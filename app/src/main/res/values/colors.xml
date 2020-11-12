@@ -10,4 +10,7 @@
     <color name="button_green">#073709</color>
     <color name="transparent">#00000000</color>
     <color name="divider">#39593A</color>
+
+
+    <color name="zxing_viewfinder_laser">@color/button_green</color>
 </resources>
