@@ -334,6 +334,11 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
+    public void setPlayImage(boolean pause) {
+        showSongFragment.setPlayTrackButtonImage(pause);
+    }
+
+    @Override
     public int getPartyPeopleSize() {
         if (mBoundService != null) return mBoundService.getClientListSize();
         else return 0;
@@ -360,10 +365,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void playTrack() {
-        if (mBoundService != null && mBoundService.getPause() && mBoundService.getmSpotifyAppRemote() != null)
-            mBoundService.getmSpotifyAppRemote().getPlayerApi().resume();
-        else if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
-            mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
+        if(mBoundService != null)
+            mBoundService.togglePlayback();
     }
 
     @Override
@@ -388,7 +391,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 Log.d(TAG, "Trying to send message to server");
                 if (mBoundService != null) {
                     mBoundService.addItem(track.getURI(), track.getName());
-                    mBoundService.addItemToTrackList(track);
+                    mBoundService.addItemToPlaylist(track);
                 }
             } catch (JSONException e) {
                 Log.e(TAG, e.getMessage(), e);
@@ -427,6 +430,17 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 mBoundService.moveItem(from, to);
             } catch (JSONException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
+    public void removeItem(Track toRemove, int position, ServerService.AfterDeleteCallback callback) {
+        if(mBoundService != null) {
+            try {
+                mBoundService.deleteItem(toRemove.getURI(), toRemove.getName(), position, () -> runOnUiThread(callback::deleteFromDataset));
+            } catch (JSONException e) {
+                Log.d(TAG, e.getMessage(), e);
             }
         }
     }

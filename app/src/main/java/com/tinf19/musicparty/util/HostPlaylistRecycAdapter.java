@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.server.ServerService;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -29,6 +30,7 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
 
     public interface HostPlaylistAdapterCallback {
         void swapPlaylistItems(int from, int to);
+        void removeItem(Track toRemove, int position, ServerService.AfterDeleteCallback callback);
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
@@ -96,6 +98,14 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
     @Override
     public void onRowClear(MyViewHolder myViewHolder) {
         myViewHolder.rowView.setBackgroundColor(Color.TRANSPARENT);
+    }
+
+    @Override
+    public void onRowDeleted(int position) {
+        Log.d(TAG, mdataset.get(position).toString());
+        Log.d(TAG, "onRowDeleted: " + position);
+        //mdataset.remove(toDelete);
+        hostPlaylistAdapterCallback.removeItem(mdataset.get(position), position, this::notifyDataSetChanged);
     }
 
 
