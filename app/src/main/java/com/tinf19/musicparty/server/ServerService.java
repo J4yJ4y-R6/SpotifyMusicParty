@@ -132,7 +132,7 @@ public class ServerService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.d(ServerService.class.getName(), "I have been destroyed " + clientThreads.size());
-        deletePlaylist();
+//        deletePlaylist(playlistID);
         new Thread(() -> {
             try {
                 serverSocket.close();
@@ -172,6 +172,8 @@ public class ServerService extends Service {
     public String getPlaylistID() {
         return playlistID;
     }
+
+    public void setPlaylistID(String id) { this.playlistID = id; }
 
     public String getPartyName() {
         return partyName;
@@ -333,14 +335,14 @@ public class ServerService extends Service {
 
     }
 
-    private void deletePlaylist() {
+    public void deletePlaylist(String id) {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
                 .host(HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
-                .addPathSegment(playlistID)
+                .addPathSegment(id)
                 .addPathSegment("followers")
                 .build();
         Log.d(NAME, "Making request to " + completeURL.toString());
@@ -532,14 +534,14 @@ public class ServerService extends Service {
         });
     }
 
-    public void updatePlaylistName(String name) throws JSONException {
+    public void updatePlaylistName(String name, String id) throws JSONException {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
                 .host(HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
-                .addPathSegment(playlistID)
+                .addPathSegment(id)
                 .build();
         Log.d(NAME, "Making request to " + completeURL.toString());
         JSONObject sampleObject = new JSONObject()

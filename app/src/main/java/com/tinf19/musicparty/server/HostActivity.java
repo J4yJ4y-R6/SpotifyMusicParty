@@ -454,7 +454,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void acceptEndParty() {
+    public void acceptEndParty(boolean save) {
+        if(!save && mBoundService != null) mBoundService.deletePlaylist(mBoundService.getPlaylistID());
         stopService();
     }
 
@@ -465,8 +466,11 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         JSONObject playlist = new JSONObject();
         try {
             playlist.put("name", name);
-            if(mBoundService != null)
-                playlist.put("id", mBoundService.getPlaylistID());
+            if(mBoundService != null) {
+                String id = mBoundService.getPlaylistID();
+                playlist.put("id", id);
+                mBoundService.updatePlaylistName(name, id);
+            }
             else
                 //TODO: Was nimmt man hier
                 return false;
@@ -499,9 +503,27 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void playFavoritePlaylist(String id) {
-        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
+        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)  {
             mBoundService.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:"+id);
+            mBoundService.deletePlaylist(id);
+        }
         //TODO: Spotify App geschlossen -> neue Verbindung
+    }
+
+    @Override
+    public void changePlaylistName(String name, String id) {
+        if(mBoundService != null) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mBoundService.updatePlaylistName(name, id);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+        }
     }
 
 

@@ -27,7 +27,7 @@ public class HostClosePartyFragment extends Fragment {
 
     public interface ClosePartyCallback {
         void denyEndParty();
-        void acceptEndParty();
+        void acceptEndParty(boolean save);
         boolean savePlaylistInSharedPreferences(String name);
     }
 
@@ -71,12 +71,12 @@ public class HostClosePartyFragment extends Fragment {
                             if(!closePartyCallback.savePlaylistInSharedPreferences(playlistName))
                                 Toast.makeText(getContext(), "Playlist konnte nicht gespeichert werden", Toast.LENGTH_SHORT).show();
                             else
-                                closePartyCallback.acceptEndParty();
+                                closePartyCallback.acceptEndParty(true);
                         } else {
                             if(savePlaylist) {
                                 Toast.makeText(getContext(), "Playlist konnte nicht gespeichert werden", Toast.LENGTH_SHORT).show();
                             } else {
-                                closePartyCallback.acceptEndParty();
+                                closePartyCallback.acceptEndParty(false);
                             }
                         }
                     }

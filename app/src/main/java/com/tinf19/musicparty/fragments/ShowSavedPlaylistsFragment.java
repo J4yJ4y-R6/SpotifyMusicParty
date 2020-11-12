@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
+import com.google.gson.JsonObject;
 import com.tinf19.musicparty.R;
 
 import org.json.JSONException;
@@ -43,6 +44,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     public interface FavoritePlaylistsCallback{
         void reloadFavoritePlaylistsFragment();
         void playFavoritePlaylist(String id);
+        void changePlaylistName(String name, String id);
     }
 
     public ShowSavedPlaylistsFragment(FavoritePlaylistsCallback favoritePlaylistsCallback) {
@@ -119,18 +121,18 @@ public class ShowSavedPlaylistsFragment extends Fragment {
             String response =  savePlaylistMemory.getString("" + key, "");
             if(!response.equals("")) {
                 JSONObject element = new JSONObject(response);
+                String id = element.getString("name");
+                String name = element.getString("id");
                 Log.d(TAG, "setPlaylists: " + key + ": " + element.toString());
                 if(changeName != null && viewSwitcher != null && header != null && button != null) {
-                    Log.d(TAG, "setPlaylists: " + element.toString());
-                    header.setText(element.getString("name"));
+                    header.setText(name);
                     viewSwitcher.setVisibility(View.VISIBLE);
                     button.setVisibility(View.VISIBLE);
                     button.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            try {
                                 new AlertDialog.Builder(getContext())
-                                        .setTitle(element.getString("name"))
+                                        .setTitle(name)
                                         .setMessage("Möchtest du die Playlist löschen, abspielen oder umbenenen?")
                                         .setPositiveButton("", new DialogInterface.OnClickListener() {
                                             @Override
@@ -138,7 +140,18 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                                                 if(viewSwitcher.getCurrentView() instanceof EditText && changeName != null) {
                                                     String newName = changeName.getText().toString();
                                                     if(!newName.equals("")) {
+                                                        JSONObject playlist = new JSONObject();
+                                                        try {
+                                                            playlist.put("name", newName);
+                                                            playlist.put("id", id);
+                                                        } catch (JSONException e) {
+                                                            e.printStackTrace();
+                                                        }
+                                                        SharedPreferences.Editor editor = savePlaylistMemory.edit();
+                                                        editor.putString("" + key, playlist.toString());
+                                                        editor.apply();
                                                         Log.d(TAG, "onClick: new name is: " + newName);
+                                                        favoritePlaylistsCallback.changePlaylistName(newName, id);
                                                         header.setText(newName);
                                                     }
                                                 }
@@ -149,28 +162,21 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                                         .setNeutralButton("", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
-                                                Log.d(TAG, "onClick: play");
-                                                try {
-                                                    Log.d(TAG, "onClick: PlaylistID: " + element.getString("id") + "\n Playlist soll hier abgespielt werden");
-                                                    favoritePlaylistsCallback.playFavoritePlaylist(element.getString("id"));
-                                                } catch (JSONException e) {
-                                                    e.printStackTrace();
-                                                }
+                                                favoritePlaylistsCallback.playFavoritePlaylist(id);
                                             }
                                         })
                                         .setNeutralButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_play_track_button))
                                         .setNegativeButton("", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
-                                                Log.d(TAG, "onClick: delete");
                                                 SharedPreferences.Editor editor = savePlaylistMemory.edit();
                                                 editor.remove("" + key);
                                                 editor.apply();
                                                 if(key < 8) {
                                                     int counter = key;
-                                                    while(counter <= 8) {
+                                                    while (counter <= 8) {
                                                         String nextPlaylist = savePlaylistMemory.getString("" + (counter + 1), "");
-                                                        if(!nextPlaylist.equals(""))
+                                                        if (!nextPlaylist.equals(""))
                                                             editor.putString("" + counter, nextPlaylist);
                                                         else {
                                                             editor.remove("" + counter);
@@ -179,19 +185,12 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                                                         counter++;
                                                     }
                                                 }
-                                                try {
-                                                    Toast.makeText(getContext(), "Die " + element.getString("name") + " wurde erfolgreich aus deinen Favoriten gelöscht", Toast.LENGTH_SHORT).show();
-                                                } catch (JSONException e) {
-                                                    e.printStackTrace();
-                                                }
+                                                Toast.makeText(getContext(), "Die " + name + " wurde erfolgreich aus deinen Favoriten gelöscht", Toast.LENGTH_SHORT).show();
                                                 favoritePlaylistsCallback.reloadFavoritePlaylistsFragment();
                                             }
                                         })
                                         .setNegativeButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_trash_can_button))
                                         .show();
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
                         }
                     });
                 }
