@@ -178,7 +178,7 @@ public class ShowSongHostFragment extends Fragment {
         return view;
     }
 
-    private void setPlayTrackButtonImage(boolean pause) {
+    public void setPlayTrackButtonImage(boolean pause) {
         if(playTrackImageButton != null) {
             if(pause) playTrackImageButton.setImageResource(R.drawable.ic_play_track_button);
             else playTrackImageButton.setImageResource(R.drawable.ic_pause_button);

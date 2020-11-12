@@ -1,11 +1,16 @@
 package com.tinf19.musicparty.util;
 
 import android.content.ClipData;
+import android.graphics.Canvas;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.tinf19.musicparty.server.HostActivity;
 
 public class HostPlaylistItemMoveCallback extends ItemTouchHelper.Callback {
 
@@ -15,6 +20,7 @@ public class HostPlaylistItemMoveCallback extends ItemTouchHelper.Callback {
         void onRowMoved(int fromPosition, int toPosition);
         void onRowSelected(HostPlaylistRecycAdapter.MyViewHolder myViewHolder);
         void onRowClear(HostPlaylistRecycAdapter.MyViewHolder myViewHolder);
+        void onRowDeleted(int position);
     }
 
     public HostPlaylistItemMoveCallback(ItemTouchHelperContract adapter) {
@@ -28,13 +34,14 @@ public class HostPlaylistItemMoveCallback extends ItemTouchHelper.Callback {
 
     @Override
     public boolean isItemViewSwipeEnabled() {
-        return false;
+        return true;
     }
 
     @Override
     public int getMovementFlags(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
         int dragFlags = ItemTouchHelper.UP | ItemTouchHelper.DOWN;
-        return makeMovementFlags(dragFlags, 0);
+        int swipeFlags = ItemTouchHelper.LEFT;
+        return makeMovementFlags(dragFlags, swipeFlags);
     }
 
     @Override
@@ -67,6 +74,7 @@ public class HostPlaylistItemMoveCallback extends ItemTouchHelper.Callback {
 
     @Override
     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-        //empty
+        Log.d(HostActivity.class.getName(), "Swiped " + direction);
+        mAdapter.onRowDeleted(viewHolder.getAdapterPosition());
     }
 }

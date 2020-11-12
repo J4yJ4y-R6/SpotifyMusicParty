@@ -12,6 +12,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.ActionReceiver;
 import com.tinf19.musicparty.util.Commands;
@@ -20,6 +21,7 @@ import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -64,16 +66,23 @@ public class ServerService extends Service {
     private boolean first = true;
     private String partyName;
     private List<Track> tracks = new ArrayList<>();
+    private List<Track> playlist = new ArrayList<>();
     private ServerService mBoundService;
     private SpotifyAppRemote mSpotifyAppRemote;
-    private boolean pause;
+    private boolean pause = true;
     private SpotifyPlayerCallback spotifyPlayerCallback;
     private  com.spotify.protocol.types.Track nowPlaying;
-    private String lastSongTitle;
+    private com.spotify.protocol.types.Track lastSongTitle;
+    private boolean stopped;
 
     public interface SpotifyPlayerCallback {
         void setNowPlaying(Track nowPlaying);
         void setPeopleCount(int count);
+        void setPlayImage(boolean pause);
+    }
+
+    public interface AfterDeleteCallback {
+        void deleteFromDataset();
     }
 
     public class LocalBinder extends Binder {
@@ -264,6 +273,7 @@ public class ServerService extends Service {
                 playlistID = uri[uri.length-1];
                 Log.d(NAME, playlistID);
                 try {
+                    playlist.add(new Track("600HVBpzF1WfBdaRwbEvLz", "Frozen", new Artist[]{new Artist("tsads", "Disney")}, "test", 0, "Disner"));
                     addItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen");
                     //addItem("spotify:track:76nqCfJOcFFWBJN32PAksn", "Kings and Queens");
                 } catch (JSONException e) {
@@ -272,6 +282,51 @@ public class ServerService extends Service {
                 response.close();
             }
         });
+    }
+
+    private void repeatMode(String state) {
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(HOST)
+                .addPathSegment("v1")
+                .addPathSegment("me")
+                .addPathSegment("player")
+                .addPathSegment("repeat")
+                .addQueryParameter("state", state)
+                .build();
+        Log.d(NAME, "Making request to " + completeURL.toString());
+        RequestBody body = RequestBody.create(new byte[]{}, null);
+        Request request = new Request.Builder()
+                .url(completeURL)
+                .put(body)
+                .addHeader("Authorization", "Bearer " + token)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        Log.d(NAME, request.headers().toString());
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Do something when request failed
+                e.printStackTrace();
+                Log.d(NAME, "Request Failed.");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if(!response.isSuccessful()){
+                    Log.d(NAME, response.body().string());
+                    throw new IOException("Error : " + response);
+                }else {
+                    Log.d(NAME,"Request Successful. Repeat mode has set to " + state);
+                }
+                response.close();
+            }
+        });
+    }
+
+    private void getQueFromPlaylist() {
+
     }
 
     private void deletePlaylist() {
@@ -322,9 +377,9 @@ public class ServerService extends Service {
                 .addPathSegment("tracks")
                 .addQueryParameter("uris", uri)
                 .build();
-        String [] uris = {uri};
-        JSONObject sampleObject = new JSONObject()
-                .put("uris", uris);
+        //String [] uris = {uri};
+        //JSONObject sampleObject = new JSONObject()
+        //        .put("uris", uris);
         //RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
         RequestBody body = RequestBody.create(new byte[]{}, null);
         Log.d(NAME, "Making request to " + completeURL.toString());
@@ -350,7 +405,76 @@ public class ServerService extends Service {
                 }else {
                     Log.d(NAME,"Request Successful. Track " + name + " has been added.");
                     size++;
-                    if (size == 1) mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:" + playlistID);
+//                    try {
+//                        deleteItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen", 0);
+//                    } catch (JSONException e) {
+//                        e.printStackTrace();
+//                    }
+                    if (size == 1) {
+                        mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:" + playlistID);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                while(pause);
+                                repeatMode("context");
+                            }
+                        }).start();
+                    }
+                }
+                response.close();
+            }
+        });
+    }
+
+    public void deleteItem(String uri, String name, int position, AfterDeleteCallback callback) throws JSONException {
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(HOST)
+                .addPathSegment("v1")
+                .addPathSegment("playlists")
+                .addPathSegment(playlistID)
+                .addPathSegment("tracks")
+                .build();
+        int index = size - tracks.size() + position;
+        if(index < 0 || index >= size)
+            return;
+        JSONObject uris = new JSONObject()
+                .put("uri", uri)
+                .put("positions", new JSONArray().put(index));
+        ;
+        JSONObject sampleObject = new JSONObject()
+               .put("tracks", new JSONArray().put(uris));
+        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
+        //RequestBody body = RequestBody.create(new byte[]{}, null);
+        Log.d(NAME, "Try to delete track " + name);
+        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(NAME, "JSON Body: " +  sampleObject.toString());
+        Request request = new Request.Builder()
+                .url(completeURL)
+                .delete(body)
+                .addHeader("Authorization", "Bearer " + token)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Do something when request failed
+                e.printStackTrace();
+                Log.d(NAME, "Request Failed.");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if(!response.isSuccessful()){
+                    Log.d(NAME, response.body().string());
+                    throw new IOException("Error : " + response);
+                }else {
+                    Log.d(NAME,"Request Successful. Track " + name + " has been deleted.");
+                    callback.deleteFromDataset();
+                    playlist.remove(index);
+                    tracks.remove(position);
+                    size--;
                 }
                 response.close();
             }
@@ -404,8 +528,70 @@ public class ServerService extends Service {
         });
     }
 
+    public void updatePlaylistName(String name) throws JSONException {
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(HOST)
+                .addPathSegment("v1")
+                .addPathSegment("playlists")
+                .addPathSegment(playlistID)
+                .build();
+        Log.d(NAME, "Making request to " + completeURL.toString());
+        JSONObject sampleObject = new JSONObject()
+                .put("name", name);
+        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
+        Request request = new Request.Builder()
+                .url(completeURL)
+                .put(body)
+                .addHeader("Authorization", "Bearer " + token)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Do something when request failed
+                e.printStackTrace();
+                Log.d(NAME, "Request Failed.");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if(!response.isSuccessful()){
+                    Log.d(NAME, response.body().string());
+                    throw new IOException("Error : " + response);
+                }else {
+                    Log.d(NAME,"Request Successful. Playlist name changed.");
+                }
+                response.close();
+            }
+        });
+    }
+
+    public void addItemToPlaylist(Track track) {
+        playlist.add(track);
+        tracks.add(track);
+    }
+
     public void addItemToTrackList(Track track) {
         tracks.add(track);
+    }
+
+    public void togglePlayback() {
+        if (pause && getmSpotifyAppRemote() != null) {
+            Log.d(NAME, "Size: " + tracks.size() + " Playlist size: " + playlist.size());
+            if(stopped && tracks.size() == 0) {
+                lastSongTitle = null;
+                getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:" + playlistID);
+                tracks = new ArrayList<>(playlist);
+            } else if(stopped) {
+                getmSpotifyAppRemote().getPlayerApi().skipNext();
+            } else {
+                getmSpotifyAppRemote().getPlayerApi().resume();
+            }
+        }
+        else if (getmSpotifyAppRemote() != null)
+            getmSpotifyAppRemote().getPlayerApi().pause();
     }
 
     private void stopAll() throws IOException {
@@ -429,19 +615,28 @@ public class ServerService extends Service {
                 .setEventCallback(playerState -> {
                     final com.spotify.protocol.types.Track track = playerState.track;
                     nowPlaying = track;
-                    if((nowPlaying != null && !nowPlaying.name.equals(lastSongTitle)) || lastSongTitle == null) {
-                        lastSongTitle = nowPlaying.name;
+                    if(lastSongTitle == null || (nowPlaying != null && !nowPlaying.name.equals(lastSongTitle.name))) {
+                        if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
+                            stopped = true;
+                            Log.d(NAME, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
+                            mSpotifyAppRemote.getPlayerApi().skipPrevious();
+                            mSpotifyAppRemote.getPlayerApi().pause();
+                            pause = true;
+//                            long postion = lastSongTitle.duration - 10000;
+//                            Log.d(NAME, "SEEK TO: " + postion);
+//                            mSpotifyAppRemote.getPlayerApi().seekTo(postion);
+                            if(spotifyPlayerCallback != null)
+                                spotifyPlayerCallback.setPlayImage(true);
+                            return;
+                        } else if(tracks.size() == 0 && lastSongTitle != null) {
+                            return;
+                        }
+                        lastSongTitle = nowPlaying;
                         Log.d(NAME, "New song has been started " + track.uri.split(":")[2]);
+                        stopped = false;
                         new Thread(()->{
                             try {
-                                sendToAll(Commands.PLAYING, new Track(
-                                        track.uri.split(":")[2],
-                                        track.name,
-                                        track.artists,
-                                        track.imageUri.raw.split(":")[2],
-                                        track.duration,
-                                        track.album.name
-                                ).serialize());
+                                sendToAll(Commands.PLAYING, getNowPlaying().serialize());
                             } catch (IOException | JSONException e) {
                                 Log.e(NAME, e.getMessage(), e);
                             }
@@ -574,7 +769,7 @@ public class ServerService extends Service {
                                     Log.d(NAME, "Added " + attribute + " to the queue");
                                     if(this.login) {
                                         Track track = new Track(attribute);
-                                        tracks.add(track);
+                                        addItemToPlaylist(track);
                                         addItem(track.getURI(), track.getName());
                                         //sendToAll(Commands.QUEUE, track.serialize());
                                     }

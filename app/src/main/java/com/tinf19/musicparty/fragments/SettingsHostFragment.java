@@ -25,6 +25,7 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.util.Constants;
 
 import org.json.JSONException;
 import org.json.JSONObject;
