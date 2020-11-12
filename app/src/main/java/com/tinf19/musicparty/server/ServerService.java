@@ -160,6 +160,10 @@ public class ServerService extends Service {
         return clientThreads.size();
     }
 
+    public String getPlaylistID() {
+        return playlistID;
+    }
+
     public String getPartyName() {
         return partyName;
     }

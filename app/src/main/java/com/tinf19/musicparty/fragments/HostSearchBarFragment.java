@@ -21,6 +21,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,10 +35,12 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static android.os.ParcelFileDescriptor.MODE_APPEND;
+
 public class HostSearchBarFragment extends Fragment {
 
     private static final String TAG = SearchBarFragment.class.getName();
-    public SearchForSongs searchForSongs;
+    public HostSearchForSongs searchForSongs;
     private static final String HOST = "api.spotify.com";
     private List<Track> tracks = new ArrayList<>();
     private int limit = 10;
@@ -44,7 +49,7 @@ public class HostSearchBarFragment extends Fragment {
     private EditText searchText;
     private ImageButton searchButton;
 
-    public interface SearchForSongs {
+    public interface HostSearchForSongs {
         void searchForSongs(List<Track> tracks);
         void openSavedPlaylistsFragment();
     }
@@ -53,7 +58,7 @@ public class HostSearchBarFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public HostSearchBarFragment(SearchForSongs searchForSongs, String token) {
+    public HostSearchBarFragment(HostSearchForSongs searchForSongs, String token) {
         this.searchForSongs = searchForSongs;
         this.token = token;
     }
@@ -71,8 +76,8 @@ public class HostSearchBarFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_host_search_bar, container, false);
         //token = savedInstanceState.getBundle();
-        searchText = view.findViewById(R.id.searchEditText);
-        searchButton = view.findViewById(R.id.searchButton);
+        searchText = view.findViewById(R.id.hostSearchEditText);
+        searchButton = view.findViewById(R.id.hostSearchImageButton);
         if(searchButton != null) {
             searchButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -146,6 +151,11 @@ public class HostSearchBarFragment extends Fragment {
                 extractSongs(data);
             }
         });
+    }
+
+    public void clearSearch() {
+        if(searchText != null)
+            searchText.getText().clear();
     }
 
     public void extractSongs(String data) {

@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
@@ -40,6 +41,7 @@ import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -49,7 +51,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings, HostPlaylistRecycAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.SearchForSongs {
+public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings, HostPlaylistRecycAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, ShowSavedPlaylistsFragment.FavoritePlaylistsCallback {
 
     private static final String TAG = HostActivity.class.getName();
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
@@ -75,6 +77,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private HostPlaylistFragment hostPlaylistFragment;
     private PartyPeopleFragment partyPeopleFragment;
     private ShowSavedPlaylistsFragment showSavedPlaylistsFragment;
+
 
     public interface ConnectionCallback {
         void afterConnection(SpotifyAppRemote appRemote);
@@ -212,7 +215,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         settingsHostFragment = new SettingsHostFragment(this);
         hostPlaylistFragment = new HostPlaylistFragment(this, this);
         partyPeopleFragment = new PartyPeopleFragment(this);
-        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment();
+        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this);
 
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
@@ -254,7 +257,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void onBackPressed() {
-        animateFragmentChange(false, showSongFragment, "ShowSongFragment");
+        if(showSongFragment.isVisible()) {
+            animateFragmentChange(true, hostClosePartyFragment, "ExitConnectionFragment");
+        }
+        else {
+            hostSearchBarFragment.clearSearch();
+            animateFragmentChange(false, showSongFragment, "ShowSongFragment");
+        }
     }
 
 
@@ -285,7 +294,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void openSettingsFragment() {
         animateFragmentChange(true, settingsHostFragment, "SettingsHostFragment");
-//        animateFragmentChange(true, settingsHostFragment, "SettingsHostFragment");
     }
 
     @Override
@@ -303,8 +311,15 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         animateFragmentChange(true, hostClosePartyFragment, "HostClosePartyFragment");
     }
 
-
-
+    @Override
+    public void reloadFavoritePlaylistsFragment() {
+        Fragment frg = null;
+        frg = getSupportFragmentManager().findFragmentByTag("ShowSavedPlaylistFragment");
+        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.detach(frg);
+        ft.attach(frg);
+        ft.commit();
+    }
 
 //    Methods for ShowSongFragment
 
@@ -429,6 +444,32 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         stopService();
     }
 
+    @Override
+    public boolean savePlaylistInSharedPreferences(String name) {
+        SharedPreferences savePlaylistMemory = this.getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = savePlaylistMemory.edit();
+        JSONObject playlist = new JSONObject();
+        try {
+            playlist.put("name", name);
+            if(mBoundService != null)
+                playlist.put("id", mBoundService.getPlaylistID());
+            else
+                //TODO: Was nimmt man hier
+                return false;
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for(int i = 0; i < 9; i++) {
+            if(savePlaylistMemory.getString("" + i, null) == null) {
+                editor.putString("" + i, playlist.toString());
+                break;
+            }
+        }
+        editor.apply();
+        return true;
+    }
+
 
 //    Methods for PartyPeople
 
@@ -436,6 +477,17 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     public ArrayList<PartyPeople> getPartyPeopleList() {
         if (mBoundService != null) return (ArrayList<PartyPeople>) mBoundService.getPeopleList();
         else return new ArrayList<>();
+    }
+
+
+
+//    Methods for ShowSavedPlaylistFragment
+
+    @Override
+    public void playFavoritePlaylist(String id) {
+        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
+            mBoundService.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:"+id);
+        //TODO: Spotify App geschlossen -> neue Verbindung
     }
 
 

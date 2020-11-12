@@ -23,244 +23,407 @@
                 app:layout_constraintTop_toBottomOf="@+id/textView12"
                 app:rowCount="6">
 
-                <TextView
-                    android:id="@+id/gridZeroZeroHeaderTextView"
+                <ViewSwitcher
+                    android:id="@+id/gridZeroZeroSwitcher"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Heading"
-                    android:textAlignment="center"
-                    android:textSize="18sp"
+                    android:layout_height="40dp"
+                    android:visibility="invisible"
                     app:layout_column="0"
                     app:layout_columnWeight="1"
                     app:layout_row="0"
-                    app:layout_rowWeight="1" />
+                    app:layout_rowWeight="1">
+
+                    <TextView
+                        android:id="@+id/gridZeroZeroHeaderTextView"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="Heading"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/gridZeroZeroHeaderEditText"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:hint="Neuer Name"
+                        android:text="Test"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+                </ViewSwitcher>
 
                 <ImageButton
                     android:id="@+id/gridZeroZeroImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="5dp"
                     android:layout_marginRight="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="35dp"
                     android:background="@drawable/rounded_border_gray_button"
+                    android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
+                    android:visibility="invisible"
                     app:layout_column="0"
                     app:layout_columnWeight="1"
                     app:layout_row="1"
                     app:layout_rowWeight="5" />
 
-                <TextView
-                    android:id="@+id/gridZeroOneTextView"
+                <ViewSwitcher
+                    android:id="@+id/gridZeroOneSwitcher"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Heading"
-                    android:textAlignment="center"
-                    android:textSize="18sp"
+                    android:layout_height="40dp"
+                    android:visibility="invisible"
                     app:layout_column="1"
                     app:layout_columnWeight="1"
                     app:layout_row="0"
-                    app:layout_rowWeight="1" />
+                    app:layout_rowWeight="1">
+
+                    <TextView
+                        android:id="@+id/gridZeroOneTextView"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="Heading"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/gridZeroOneHeaderEditText"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:hint="Neuer Name"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                </ViewSwitcher>
 
                 <ImageButton
-                    android:id="@+id/gridZeroOneImageView"
+                    android:id="@+id/gridZeroOneImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="5dp"
                     android:layout_marginRight="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="35dp"
                     android:background="@drawable/rounded_border_gray_button"
+                    android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
+                    android:visibility="invisible"
                     app:layout_column="1"
                     app:layout_columnWeight="1"
                     app:layout_row="1"
                     app:layout_rowWeight="5" />
 
-                <TextView
-                    android:id="@+id/gridZeroTwoTextView"
+                <ViewSwitcher
+                    android:id="@+id/gridZeroTwoSwitcher"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Heading"
-                    android:textAlignment="center"
-                    android:textSize="18sp"
+                    android:layout_height="40dp"
+                    android:visibility="invisible"
                     app:layout_column="2"
                     app:layout_columnWeight="1"
                     app:layout_row="0"
-                    app:layout_rowWeight="1" />
+                    app:layout_rowWeight="1">
+
+                    <TextView
+                        android:id="@+id/gridZeroTwoTextView"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="Heading"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/gridZeroTwoHeaderEditText"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:hint="Neuer Name"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                </ViewSwitcher>
 
                 <ImageButton
-                    android:id="@+id/imageButton8"
+                    android:id="@+id/gridZeroTwoImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="5dp"
                     android:layout_marginRight="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="35dp"
                     android:background="@drawable/rounded_border_gray_button"
+                    android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
+                    android:visibility="invisible"
                     app:layout_column="2"
                     app:layout_columnWeight="1"
                     app:layout_row="1"
                     app:layout_rowWeight="5" />
 
-                <TextView
-                    android:id="@+id/textView8"
+                <ViewSwitcher
+                    android:id="@+id/gridOneZeroSwitcher"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Heading"
-                    android:textAlignment="center"
-                    android:textSize="18sp"
+                    android:layout_height="40dp"
+                    android:visibility="invisible"
                     app:layout_column="0"
                     app:layout_columnWeight="1"
                     app:layout_row="2"
-                    app:layout_rowWeight="1" />
+                    app:layout_rowWeight="1">
+
+                    <TextView
+                        android:id="@+id/gridOneZeroTextView"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="Heading"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/gridOneZeroHeaderEditText"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:hint="Neuer Name"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                </ViewSwitcher>
 
                 <ImageButton
-                    android:id="@+id/imageButton7"
+                    android:id="@+id/gridOneZeroImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="5dp"
                     android:layout_marginRight="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="35dp"
                     android:background="@drawable/rounded_border_gray_button"
+                    android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
+                    android:visibility="invisible"
                     app:layout_column="0"
                     app:layout_columnWeight="1"
                     app:layout_row="3"
                     app:layout_rowWeight="5" />
 
-                <TextView
-                    android:id="@+id/textView7"
+                <ViewSwitcher
+                    android:id="@+id/gridOneOneSwitcher"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Heading"
-                    android:textAlignment="center"
-                    android:textSize="18sp"
+                    android:layout_height="40dp"
+                    android:visibility="invisible"
                     app:layout_column="1"
                     app:layout_columnWeight="1"
                     app:layout_row="2"
-                    app:layout_rowWeight="1" />
+                    app:layout_rowWeight="1">
+
+                    <TextView
+                        android:id="@+id/gridOneOneTextView"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="Heading"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/gridOneOneHeaderEditText"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:hint="Neuer Name"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                </ViewSwitcher>
 
                 <ImageButton
-                    android:id="@+id/imageButton6"
+                    android:id="@+id/gridOneOneImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="5dp"
                     android:layout_marginRight="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="35dp"
                     android:background="@drawable/rounded_border_gray_button"
+                    android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
+                    android:visibility="invisible"
                     app:layout_column="1"
                     app:layout_columnWeight="1"
                     app:layout_row="3"
                     app:layout_rowWeight="5" />
 
-                <TextView
-                    android:id="@+id/textView6"
+
+                <ViewSwitcher
+                    android:id="@+id/gridOneTwoSwitcher"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Heading"
-                    android:textAlignment="center"
-                    android:textSize="18sp"
+                    android:layout_height="40dp"
+                    android:visibility="invisible"
                     app:layout_column="2"
                     app:layout_columnWeight="1"
                     app:layout_row="2"
-                    app:layout_rowWeight="1" />
+                    app:layout_rowWeight="1">
+
+                    <TextView
+                        android:id="@+id/gridOneTwoTextView"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="Heading"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/gridOneTwoHeaderEditText"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:hint="Neuer Name"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                </ViewSwitcher>
 
                 <ImageButton
-                    android:id="@+id/imageButton5"
+                    android:id="@+id/gridOneTwoImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="5dp"
                     android:layout_marginRight="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="35dp"
                     android:background="@drawable/rounded_border_gray_button"
+                    android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
+                    android:visibility="invisible"
                     app:layout_column="2"
                     app:layout_columnWeight="1"
                     app:layout_row="3"
                     app:layout_rowWeight="5" />
 
-                <TextView
-                    android:id="@+id/textView5"
+                <ViewSwitcher
+                    android:id="@+id/gridTwoZeroSwitcher"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Heading"
-                    android:textAlignment="center"
-                    android:textSize="18sp"
+                    android:layout_height="40dp"
+                    android:visibility="invisible"
                     app:layout_column="0"
                     app:layout_columnWeight="1"
                     app:layout_row="4"
-                    app:layout_rowWeight="1" />
+                    app:layout_rowWeight="1">
+
+                    <TextView
+                        android:id="@+id/gridTwoZeroTextView"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="Heading"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/gridTwoZeroHeaderEditText"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:hint="Neuer Name"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                </ViewSwitcher>
 
                 <ImageButton
-                    android:id="@+id/imageButton4"
+                    android:id="@+id/gridTwoZeroImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="5dp"
                     android:layout_marginRight="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="35dp"
                     android:background="@drawable/rounded_border_gray_button"
+                    android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
+                    android:visibility="invisible"
                     app:layout_column="0"
                     app:layout_columnWeight="1"
                     app:layout_row="5"
                     app:layout_rowWeight="5" />
 
-                <TextView
-                    android:id="@+id/textView4"
+                <ViewSwitcher
+                    android:id="@+id/gridTwoOneSwitcher"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Heading"
-                    android:textAlignment="center"
-                    android:textSize="18sp"
+                    android:layout_height="40dp"
+                    android:visibility="invisible"
                     app:layout_column="1"
                     app:layout_columnWeight="1"
                     app:layout_row="4"
-                    app:layout_rowWeight="1" />
+                    app:layout_rowWeight="1">
+
+                    <TextView
+                        android:id="@+id/gridTwoOneTextView"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="Heading"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/gridTwoOneHeaderEditText"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:hint="Neuer Name"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                </ViewSwitcher>
 
                 <ImageButton
-                    android:id="@+id/imageButton3"
+                    android:id="@+id/gridTwoOneImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="5dp"
                     android:layout_marginRight="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="35dp"
                     android:background="@drawable/rounded_border_gray_button"
+                    android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
+                    android:visibility="invisible"
                     app:layout_column="1"
                     app:layout_columnWeight="1"
                     app:layout_row="5"
                     app:layout_rowWeight="5" />
 
-                <TextView
-                    android:id="@+id/textView3"
+                <ViewSwitcher
+                    android:id="@+id/gridTwoTwoSwitcher"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Heading"
-                    android:textAlignment="center"
-                    android:textSize="18sp"
+                    android:layout_height="40dp"
+                    android:visibility="invisible"
                     app:layout_column="2"
                     app:layout_columnWeight="1"
                     app:layout_row="4"
-                    app:layout_rowWeight="1" />
+                    app:layout_rowWeight="1">
+
+                    <TextView
+                        android:id="@+id/gridTwoTwoTextView"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:text="Heading"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/gridTwoTwoHeaderEditText"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:hint="Neuer Name"
+                        android:textAlignment="center"
+                        android:textSize="18sp" />
+
+                </ViewSwitcher>
 
                 <ImageButton
-                    android:id="@+id/imageButton2"
+                    android:id="@+id/gridTwoTwoImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="10dp"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="5dp"
                     android:layout_marginRight="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="35dp"
                     android:background="@drawable/rounded_border_gray_button"
+                    android:longClickable="true"
                     android:src="@drawable/ic_favorite_songs_button"
+                    android:visibility="invisible"
                     app:layout_column="2"
                     app:layout_columnWeight="1"
                     app:layout_row="5"

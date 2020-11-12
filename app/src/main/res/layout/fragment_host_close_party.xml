@@ -15,14 +15,13 @@
             android:id="@+id/closePartyTextView"
             android:layout_width="275dp"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="300dp"
+            android:layout_marginTop="50dp"
             android:lineSpacingExtra="18sp"
             android:text="@string/text_endParty"
             android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             android:textColor="#FFFFFF"
             android:textSize="30sp"
-            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -37,7 +36,7 @@
             android:text="@string/text_end"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/denyEndPartyButton"
-            app:layout_constraintTop_toBottomOf="@+id/closePartyTextView" />
+            app:layout_constraintTop_toBottomOf="@+id/savePlaylistNameEditText" />
 
         <Button
             android:id="@+id/denyEndPartyButton"
@@ -47,7 +46,7 @@
             android:layout_marginTop="50dp"
             android:text="@string/text_cancel"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/closePartyTextView" />
+            app:layout_constraintTop_toBottomOf="@+id/savePlaylistNameEditText" />
 
         <View
             android:id="@+id/closePartyDivider"
@@ -57,6 +56,40 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <Switch
+            android:id="@+id/savePlaylistSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="60dp"
+            android:paddingLeft="20dp"
+            android:paddingRight="20dp"
+            android:text="Möchtest du die Playlist speichern?"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/closePartyTextView" />
+
+        <EditText
+            android:id="@+id/savePlaylistNameEditText"
+            android:layout_width="0dp"
+            android:layout_height="44dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="20dp"
+            android:autofillHints="playlistName"
+            android:ems="10"
+            android:enabled="false"
+            android:hint="Gibt hier den Playlistnamen ein"
+            android:inputType="textPersonName"
+            android:textColor="#FFFFFF"
+            android:textColorHighlight="#FFFFFF"
+            android:textColorHint="#FFFFFF"
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/savePlaylistSwitch" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>
