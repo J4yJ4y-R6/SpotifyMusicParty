@@ -1,6 +1,8 @@
 package com.tinf19.musicparty.client;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 
 import android.content.BroadcastReceiver;
@@ -39,14 +41,17 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
 
     ActivityClientPartyBinding binding;
+    private FragmentTransaction fragmentTransaction;
     private static final String NAME = PartyActivity.class.getName();
     private static String token;
     private boolean mShouldUnbind;
     private ClientService mBoundService;
+
     private SearchSongsOutputFragment searchSongsOutputFragment;
     private ShowSongFragment showSongFragment;
     private ClientPlaylistFragment clientPlaylistFragment;
     private SearchBarFragment searchBarFragment;
+    private ExitConnectionFragment exitConnectionFragment;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -121,6 +126,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         showSongFragment = new ShowSongFragment(this);
         clientPlaylistFragment = new ClientPlaylistFragment();
         searchBarFragment = new SearchBarFragment(this, token);
+        exitConnectionFragment = new ExitConnectionFragment(this);
 
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongFragmentFrame, new LoadingFragment(), "LoadingFragment").commitAllowingStateLoss();
@@ -144,8 +150,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void exitConnection() {
-        getSupportFragmentManager().beginTransaction().
-               replace(R.id.showSongFragmentFrame, new ExitConnectionFragment(this), "ExitConnectionFragment").commitAllowingStateLoss();
+        animateFragmentChange(true, exitConnectionFragment, "ExitConnectionFragment");
     }
 
     @Override
@@ -157,8 +162,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                 Log.e(NAME, e.getMessage(), e);
             }
         }
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongFragmentFrame, clientPlaylistFragment, "ClientPlaylistFragment").commitAllowingStateLoss();
+        animateFragmentChange(true, clientPlaylistFragment, "ClientPlaylistFragment");
     }
 
 
@@ -192,14 +196,12 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     @Override
     public void searchForSongs(List<Track> tracks) {
         Log.d("ShowSongFragment", "back to show");
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongFragmentFrame, searchSongsOutputFragment, "ShowSongFragment").commitAllowingStateLoss();
+        animateFragmentChange(true, searchSongsOutputFragment, "SearchSongOutputFragment");
         this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));
     }
 
     private void showShowSongFragment() {
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
+        animateFragmentChange(false, showSongFragment, "ShowSongFragment");
         new Thread(()->{
             while(!showSongFragment.getStarted() || mBoundService == null || mBoundService.getClientThread().getPartyName() == null);
             if(mBoundService != null) {
@@ -211,11 +213,21 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         }).start();
     }
 
+    public void animateFragmentChange(boolean direction, Fragment fragment, String tag) {
+        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        if(direction)
+            fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_up, R.anim.fragment_slide_out_up);
+        else
+            fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_out_down, R.anim.fragment_slide_in_down);
+        fragmentTransaction.replace(R.id.showSongFragmentFrame, fragment, tag);
+        fragmentTransaction.commitAllowingStateLoss();
+    }
+
     @Override
     public void onBackPressed() {
-        if(showSongFragment.isVisible())
-            getSupportFragmentManager().beginTransaction().
-                    replace(R.id.showSongFragmentFrame, new ExitConnectionFragment(this), "ExitConnectionFragment").commitAllowingStateLoss();
+        if(showSongFragment.isVisible()) {
+            animateFragmentChange(true, exitConnectionFragment, "ExitConnectionFragment");
+        }
         else {
             searchBarFragment.clearSearch();
             showShowSongFragment();

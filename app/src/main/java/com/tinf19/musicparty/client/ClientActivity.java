@@ -1,6 +1,7 @@
 package com.tinf19.musicparty.client;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentTransaction;
 
 import android.app.Activity;
 import android.content.Intent;

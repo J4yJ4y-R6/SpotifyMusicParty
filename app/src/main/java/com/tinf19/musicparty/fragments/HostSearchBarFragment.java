@@ -32,10 +32,9 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class SearchBarFragment extends Fragment {
+public class HostSearchBarFragment extends Fragment {
 
-    //ActivityPartyBinding binding;
-    private static final String NAME = SearchBarFragment.class.getName();
+    private static final String TAG = SearchBarFragment.class.getName();
     public SearchForSongs searchForSongs;
     private static final String HOST = "api.spotify.com";
     private List<Track> tracks = new ArrayList<>();
@@ -47,27 +46,30 @@ public class SearchBarFragment extends Fragment {
 
     public interface SearchForSongs {
         void searchForSongs(List<Track> tracks);
+        void openSavedPlaylistsFragment();
     }
 
-    public SearchBarFragment() {
+    public HostSearchBarFragment() {
+        // Required empty public constructor
     }
 
-    public SearchBarFragment(SearchForSongs searchForSongs, String token) {
+    public HostSearchBarFragment(SearchForSongs searchForSongs, String token) {
         this.searchForSongs = searchForSongs;
         this.token = token;
     }
 
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_client_search_bar, container, false);
+        View view = inflater.inflate(R.layout.fragment_host_search_bar, container, false);
         //token = savedInstanceState.getBundle();
         searchText = view.findViewById(R.id.searchEditText);
         searchButton = view.findViewById(R.id.searchButton);
@@ -87,13 +89,18 @@ public class SearchBarFragment extends Fragment {
                 }
             });
         }
+        ImageButton favoriteSavedPlaylistsImageButton = view.findViewById(R.id.hostSavedPlaylistsImageButton);
+        if (favoriteSavedPlaylistsImageButton != null) {
+            favoriteSavedPlaylistsImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.d(TAG, "onClick: show saved playlists");
+                    searchForSongs.openSavedPlaylistsFragment();
+                }
+            });
+        }
 
         return view;
-    }
-
-    public void clearSearch() {
-        if(searchText != null)
-            searchText.getText().clear();
     }
 
     public void search(String query) {
@@ -107,12 +114,12 @@ public class SearchBarFragment extends Fragment {
                 .addQueryParameter("type", type)
                 .addQueryParameter("limit", String.valueOf(limit))
                 .build();
-        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .addHeader("Authorization", "Bearer " + token)
                 .build();
-        Log.d(NAME, request.headers().toString());
+        Log.d(TAG, request.headers().toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -120,7 +127,7 @@ public class SearchBarFragment extends Fragment {
                 if(searchButton != null)
                     getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
@@ -130,7 +137,7 @@ public class SearchBarFragment extends Fragment {
                         getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(NAME,"Request Successful.");
+                    Log.d(TAG,"Request Successful.");
                 }
                 final String data = response.body().string();
                 response.close();
@@ -168,7 +175,7 @@ public class SearchBarFragment extends Fragment {
                                 image,
                                 track.getInt("duration_ms"),
                                 track.getJSONObject("album").getString("name")));
-                Log.d(NAME, tracks.get(i).toString());
+                Log.d(TAG, tracks.get(i).toString());
             }
             searchForSongs.searchForSongs(tracks);
             if(searchButton != null)
@@ -177,4 +184,5 @@ public class SearchBarFragment extends Fragment {
             e.printStackTrace();
         }
     }
+
 }

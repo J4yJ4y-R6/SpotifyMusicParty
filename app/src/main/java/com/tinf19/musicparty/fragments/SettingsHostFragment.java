@@ -25,6 +25,7 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.util.Constants;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -97,16 +98,16 @@ public class SettingsHostFragment extends Fragment {
 
         ipAddressTextView = view.findViewById(R.id.ipAddressSettingsTextView);
         passwordTextView = view.findViewById(R.id.passwordSettingsTextView);
-        ImageButton shareButton = view.findViewById(R.id.shareButtonSettingsImageButton);
-        if(shareButton != null) {
-            shareButton.setOnClickListener(new View.OnClickListener() {
+
+        ImageButton shareAddressButton = view.findViewById(R.id.shareButtonSettingsImageButton);
+        if(shareAddressButton != null) {
+            shareAddressButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     Intent sendIntent = new Intent();
                     sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, "*Verbindung zu " + partyName + ":* \n" + ipAddressTextView.getText() + "\n" + passwordTextView.getText() + "\n" + getURI());
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, "*Verbindung zu " + partyName + ":* \n" + ipAddressTextView.getText() + "\n" + passwordTextView.getText());
                     sendIntent.setType("text/plain");
-
                     Intent shareIntent = Intent.createChooser(sendIntent, null);
                     startActivity(shareIntent);
                 }
@@ -126,6 +127,21 @@ public class SettingsHostFragment extends Fragment {
                     sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                     sendIntent.setType("image/png");
                     Intent shareIntent = Intent.createChooser(sendIntent, "Share");
+                    startActivity(shareIntent);
+                }
+            });
+        }
+
+        ImageButton shareLinkButton = view.findViewById(R.id.shareLinkButtonSettingsImageButton);
+        if(shareLinkButton != null) {
+            shareLinkButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent sendIntent = new Intent();
+                    sendIntent.setAction(Intent.ACTION_SEND);
+                    sendIntent.putExtra(Intent.EXTRA_TEXT, "*Verbindung zu " + partyName + ":* \n"  + getURI());
+                    sendIntent.setType("text/plain");
+                    Intent shareIntent = Intent.createChooser(sendIntent, null);
                     startActivity(shareIntent);
                 }
             });
