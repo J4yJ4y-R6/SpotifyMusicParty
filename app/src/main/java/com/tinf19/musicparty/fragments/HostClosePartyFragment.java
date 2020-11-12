@@ -67,6 +67,7 @@ public class HostClosePartyFragment extends Fragment {
                 public void onClick(View v) {
                     if(savePlaylistNameEditText != null) {
                         String playlistName = savePlaylistNameEditText.getText().toString();
+                        Log.d(TAG, "onClick: " + playlistName);
                         if(!playlistName.equals("")) {
                             if(!closePartyCallback.savePlaylistInSharedPreferences(playlistName))
                                 Toast.makeText(getContext(), "Playlist konnte nicht gespeichert werden", Toast.LENGTH_SHORT).show();

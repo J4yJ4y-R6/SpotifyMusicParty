@@ -38,12 +38,13 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     private ArrayList<TextView> headers = new ArrayList<>(9);;
     private ArrayList<ViewSwitcher> viewSwitchers = new ArrayList<>(9);
     private ArrayList<EditText> changeNames = new ArrayList<>(9);
+    private ArrayList<String> idList;
     private FavoritePlaylistsCallback favoritePlaylistsCallback;
     private View view;
 
     public interface FavoritePlaylistsCallback{
         void reloadFavoritePlaylistsFragment();
-        void playFavoritePlaylist(String id);
+        void playFavoritePlaylist(String id, ArrayList<String> idList);
         void changePlaylistName(String name, String id);
     }
 
@@ -64,6 +65,16 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     public void onStart() {
         super.onStart();
         savePlaylistMemory = getContext().getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
+        idList = new ArrayList<>();
+        for(int i = 0; i < headers.size(); i++) {
+            try {
+                JSONObject playlist = new JSONObject(savePlaylistMemory.getString("" + i, ""));
+                String id = playlist.getString("id");
+                idList.add(id);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
         for(int i = 0; i < headers.size(); i++) {
             setPlaylists(headers.get(i), buttons.get(i), viewSwitchers.get(i), changeNames.get(i), i);
         }
@@ -121,8 +132,8 @@ public class ShowSavedPlaylistsFragment extends Fragment {
             String response =  savePlaylistMemory.getString("" + key, "");
             if(!response.equals("")) {
                 JSONObject element = new JSONObject(response);
-                String id = element.getString("name");
-                String name = element.getString("id");
+                String name = element.getString("name");
+                String id = element.getString("id");
                 Log.d(TAG, "setPlaylists: " + key + ": " + element.toString());
                 if(changeName != null && viewSwitcher != null && header != null && button != null) {
                     header.setText(name);
@@ -162,7 +173,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                                         .setNeutralButton("", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
-                                                favoritePlaylistsCallback.playFavoritePlaylist(id);
+                                                favoritePlaylistsCallback.playFavoritePlaylist(id, idList);
                                             }
                                         })
                                         .setNeutralButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_play_track_button))

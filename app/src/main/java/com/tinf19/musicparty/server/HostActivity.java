@@ -465,6 +465,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         SharedPreferences.Editor editor = savePlaylistMemory.edit();
         JSONObject playlist = new JSONObject();
         try {
+            Log.d(TAG, "savePlaylistInSharedPreferences: " + name);
             playlist.put("name", name);
             if(mBoundService != null) {
                 String id = mBoundService.getPlaylistID();
@@ -502,10 +503,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 //    Methods for ShowSavedPlaylistFragment
 
     @Override
-    public void playFavoritePlaylist(String id) {
+    public void playFavoritePlaylist(String id, ArrayList<String> idList) {
         if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)  {
+            String playlistID = mBoundService.getPlaylistID();
+            if(!idList.contains(playlistID))
+                mBoundService.deletePlaylist(playlistID);
             mBoundService.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:"+id);
-            mBoundService.deletePlaylist(id);
+            mBoundService.setPlaylistID(id);
         }
         //TODO: Spotify App geschlossen -> neue Verbindung
     }
