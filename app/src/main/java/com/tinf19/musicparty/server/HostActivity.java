@@ -215,7 +215,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         settingsHostFragment = new SettingsHostFragment(this);
         hostPlaylistFragment = new HostPlaylistFragment(this, this);
         partyPeopleFragment = new PartyPeopleFragment(this);
-        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this);
+        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this, token);
 
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();

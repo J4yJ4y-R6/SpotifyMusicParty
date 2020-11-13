@@ -3,6 +3,7 @@ package com.tinf19.musicparty.fragments;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AlertDialog;
@@ -16,31 +17,46 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
 import com.google.gson.JsonObject;
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.util.DownloadImageTask;
 
+import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 
 public class ShowSavedPlaylistsFragment extends Fragment {
 
+    private static final String HOST = "api.spotify.com";
+
     private static final String TAG = ShowSavedPlaylistsFragment.class.getName();
     private SharedPreferences savePlaylistMemory;
-    private ArrayList<ImageButton> buttons = new ArrayList<>(9);;
+    private ArrayList<ImageView> buttons = new ArrayList<>(9);;
     private ArrayList<TextView> headers = new ArrayList<>(9);;
     private ArrayList<ViewSwitcher> viewSwitchers = new ArrayList<>(9);
     private ArrayList<EditText> changeNames = new ArrayList<>(9);
     private ArrayList<String> idList;
     private FavoritePlaylistsCallback favoritePlaylistsCallback;
     private View view;
+    private String token;
 
     public interface FavoritePlaylistsCallback{
         void reloadFavoritePlaylistsFragment(String id);
@@ -48,8 +64,9 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         void changePlaylistName(String name, String id);
     }
 
-    public ShowSavedPlaylistsFragment(FavoritePlaylistsCallback favoritePlaylistsCallback) {
+    public ShowSavedPlaylistsFragment(FavoritePlaylistsCallback favoritePlaylistsCallback, String token) {
         this.favoritePlaylistsCallback = favoritePlaylistsCallback;
+        this.token = token;
     }
 
     public ShowSavedPlaylistsFragment() {
@@ -66,7 +83,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         super.onStart();
         savePlaylistMemory = getContext().getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
         idList = new ArrayList<>();
-        for(int i = 0; i < headers.size(); i++) {
+        for(int i = 0; i < 1; i++) {
             try {
                 JSONObject playlist = new JSONObject(savePlaylistMemory.getString("" + i, ""));
                 String id = playlist.getString("id");
@@ -127,13 +144,60 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         return view;
     }
 
-    private void setPlaylists(TextView header, ImageButton button, ViewSwitcher viewSwitcher, EditText changeName, int key) {
+    private void getPlaylistCoverUrl(String id, ImageView button) {
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(HOST)
+                .addPathSegment("v1")
+                .addPathSegment("playlists")
+                .addPathSegment(id)
+                .addPathSegment("images")
+                .build();
+        Log.d(TAG, "Search for autofill in " + completeURL.toString());
+        Request request = new Request.Builder()
+                .url(completeURL)
+                .addHeader("Authorization", "Bearer " + token)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                e.printStackTrace();
+                Log.d(TAG, "onFailure: failed to get autofillHints");
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    Log.d(TAG, "onResponse: " + response.body().string());
+                    throw new IOException("Error : " + response);
+                } else {
+                    try {
+                        Log.d(TAG, "onResponse: got autofill hints");
+                        final String data = response.body().string();
+                        response.close();
+                        JSONArray jsonArray = new JSONArray(data);
+                        JSONObject jsonObject = jsonArray.getJSONObject(0);
+                        String url = jsonObject.getString("url");
+                        new DownloadImageTask(button).execute(url);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+    }
+
+    private void setPlaylists(TextView header, ImageView button, ViewSwitcher viewSwitcher, EditText changeName, int key) {
         try {
             String response =  savePlaylistMemory.getString("" + key, "");
             if(!response.equals("")) {
                 JSONObject element = new JSONObject(response);
                 String name = element.getString("name");
                 String id = element.getString("id");
+
+                getPlaylistCoverUrl(id, button);
+
                 Log.d(TAG, "setPlaylists: " + key + ": " + element.toString());
                 if(changeName != null && viewSwitcher != null && header != null && button != null) {
                     header.setText(name);

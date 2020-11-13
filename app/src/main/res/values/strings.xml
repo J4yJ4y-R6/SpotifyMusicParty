@@ -76,6 +76,7 @@
     <string name="text_closePartySavePlaylist">Möchtest du die Playlist speichern?</string>
     <string name="text_editName">Neuer Name</string>
     <string name="text_playlistCover">playlistCover</string>
-    <string name="text_favoritePlaylistsHeader">Deine gespeicherten Playlisten: Drücke zum abspielen, bearbeiten und löschen</string>
+    <string name="text_favoritePlaylistsHeader">Deine gespeicherten Playlisten:</string>
+    <string name="text_showSavedPlaylists_description">Drücke zum abspielen, bearbeiten und löschen</string>
 
 </resources>

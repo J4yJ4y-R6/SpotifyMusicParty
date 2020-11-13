@@ -1,15 +1,20 @@
 package com.tinf19.musicparty.fragments;
 
 import android.content.Context;
+import android.graphics.Point;
 import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
@@ -23,6 +28,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import okhttp3.Call;
@@ -35,15 +41,14 @@ import okhttp3.Response;
 public class SearchBarFragment extends Fragment {
 
     //ActivityPartyBinding binding;
-    private static final String NAME = SearchBarFragment.class.getName();
+    private static final String TAG = SearchBarFragment.class.getName();
     public SearchForSongs searchForSongs;
     private static final String HOST = "api.spotify.com";
     private List<Track> tracks = new ArrayList<>();
-    private int limit = 10;
-    private String type = "track";
     private String token;
-    private EditText searchText;
+    private AutoCompleteTextView searchText;
     private ImageButton searchButton;
+    private ArrayAdapter<String> adapter;
 
     public interface SearchForSongs {
         void searchForSongs(List<Track> tracks);
@@ -70,6 +75,30 @@ public class SearchBarFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_client_search_bar, container, false);
         //token = savedInstanceState.getBundle();
         searchText = view.findViewById(R.id.searchEditText);
+        Point displaySize = new Point();
+        getActivity().getWindowManager().getDefaultDisplay().getRealSize(displaySize);
+        searchText.setDropDownWidth(displaySize.x);
+        searchText.setDropDownHeight(displaySize.y / 3);
+        searchText.setDropDownVerticalOffset(10);
+        if(searchText != null) {
+            searchText.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    //
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    if(!searchText.getText().toString().equals(""))
+                        search(s.toString(), false, "artist,track", "5");
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    //
+                }
+            });
+        }
         searchButton = view.findViewById(R.id.searchButton);
         if(searchButton != null) {
             searchButton.setOnClickListener(new View.OnClickListener() {
@@ -80,7 +109,7 @@ public class SearchBarFragment extends Fragment {
                         searchText.clearFocus();
                         InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                        search(searchText.getText().toString().trim());
+                        search(searchText.getText().toString().trim(), true, "track", "15");
                     } else {
                         searchButton.setEnabled(true);
                     }
@@ -91,12 +120,7 @@ public class SearchBarFragment extends Fragment {
         return view;
     }
 
-    public void clearSearch() {
-        if(searchText != null)
-            searchText.getText().clear();
-    }
-
-    public void search(String query) {
+    public void search(String query, boolean usage, String type, String limit) {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
@@ -105,22 +129,21 @@ public class SearchBarFragment extends Fragment {
                 .addPathSegment("search")
                 .addQueryParameter("q", query)
                 .addQueryParameter("type", type)
-                .addQueryParameter("limit", String.valueOf(limit))
+                .addQueryParameter("limit", limit )
                 .build();
-        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .addHeader("Authorization", "Bearer " + token)
                 .build();
-        Log.d(NAME, request.headers().toString());
+        Log.d(TAG, request.headers().toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                if(searchButton != null)
+                if(searchButton != null && usage)
                     getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
@@ -130,15 +153,50 @@ public class SearchBarFragment extends Fragment {
                         getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(NAME,"Request Successful.");
+                    Log.d(TAG,"Request Successful.");
                 }
                 final String data = response.body().string();
                 response.close();
 
                 // Read data in the worker thread
-                extractSongs(data);
+                if(usage)
+                    extractSongs(data);
+                else
+                    showAutofills(data);
             }
         });
+    }
+
+    public void showAutofills(String data) {
+        try {
+            ArrayList<String> titles = new ArrayList<>();
+            JSONObject jsonObject = new JSONObject(data);
+            Iterator<String> keys = jsonObject.keys();
+            while(keys.hasNext()) {
+                String key = keys.next();
+                if(jsonObject.get(key) instanceof JSONObject) {
+                    JSONObject keysObject = jsonObject.getJSONObject(key);
+                    JSONArray jsonArray = keysObject.getJSONArray("items");
+                    for(int i = 0; i < jsonArray.length(); i++) {
+                        JSONObject track = jsonArray.getJSONObject(i);
+                        titles.add(track.getString("name"));
+                    }
+                }
+            }
+            if(searchText != null) {
+                adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, titles);
+                getActivity().runOnUiThread( () -> searchText.setAdapter(adapter));
+            } else {
+                Log.d(TAG, "showAutofills: response couldnt reach searchText");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void clearSearch() {
+        if(searchText != null)
+            searchText.getText().clear();
     }
 
     public void extractSongs(String data) {
@@ -168,7 +226,7 @@ public class SearchBarFragment extends Fragment {
                                 image,
                                 track.getInt("duration_ms"),
                                 track.getJSONObject("album").getString("name")));
-                Log.d(NAME, tracks.get(i).toString());
+                Log.d(TAG, tracks.get(i).toString());
             }
             searchForSongs.searchForSongs(tracks);
             if(searchButton != null)
