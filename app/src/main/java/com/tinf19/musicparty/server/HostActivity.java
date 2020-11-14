@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
@@ -526,6 +527,18 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                }
+            }).start();
+        }
+    }
+
+    @Override
+    public void changePlaylistCover(String id, Bitmap image) {
+        if(mBoundService != null) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    mBoundService.updatePlaylistCover(id, image);
                 }
             }).start();
         }

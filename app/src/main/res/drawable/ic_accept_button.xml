@@ -1,4 +1,4 @@
 <vector android:height="35dp" android:viewportHeight="24"
     android:viewportWidth="24" android:width="35dp" xmlns:android="http://schemas.android.com/apk/res/android">
-    <path android:fillColor="#000" android:name="check-mark-2" android:pathData="m9 21.035 -9 -8.638 2.791 -2.87 6.157 5.874 12.21 -12.437 2.843 2.817 -15 15.253z"/>
+    <path android:fillColor="#FFF" android:name="check-mark-2" android:pathData="m9 21.035 -9 -8.638 2.791 -2.87 6.157 5.874 12.21 -12.437 2.843 2.817 -15 15.253z"/>
 </vector>

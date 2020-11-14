@@ -2,14 +2,19 @@ package com.tinf19.musicparty.fragments;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import android.provider.MediaStore;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -24,6 +29,7 @@ import android.widget.ViewSwitcher;
 
 import com.google.gson.JsonObject;
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DownloadImageTask;
 
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +37,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 
@@ -42,11 +50,13 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static android.app.Activity.RESULT_OK;
+
 
 public class ShowSavedPlaylistsFragment extends Fragment {
 
     private static final String HOST = "api.spotify.com";
-
+    public static final int RESULT_LOAD_IMAGE = 1;
     private static final String TAG = ShowSavedPlaylistsFragment.class.getName();
     private SharedPreferences savePlaylistMemory;
     private ArrayList<ImageView> buttons = new ArrayList<>(9);;
@@ -56,12 +66,14 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     private ArrayList<String> idList;
     private FavoritePlaylistsCallback favoritePlaylistsCallback;
     private View view;
+    private String playlistID;
     private String token;
 
     public interface FavoritePlaylistsCallback{
         void reloadFavoritePlaylistsFragment(String id);
         void playFavoritePlaylist(String id, ArrayList<String> idList);
         void changePlaylistName(String name, String id);
+        void changePlaylistCover(String id, Bitmap image);
     }
 
     public ShowSavedPlaylistsFragment(FavoritePlaylistsCallback favoritePlaylistsCallback, String token) {
@@ -206,31 +218,36 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                     button.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+                            if (!(viewSwitcher.getCurrentView() instanceof EditText) && changeName != null) {
                                 new AlertDialog.Builder(getContext())
                                         .setTitle(name)
                                         .setMessage(getString(R.string.text_favoritePlaylistsDialogWindow))
                                         .setPositiveButton("", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
-                                                if(viewSwitcher.getCurrentView() instanceof EditText && changeName != null) {
-                                                    String newName = changeName.getText().toString();
-                                                    if(!newName.equals("")) {
-                                                        JSONObject playlist = new JSONObject();
-                                                        try {
-                                                            playlist.put("name", newName);
-                                                            playlist.put("id", id);
-                                                        } catch (JSONException e) {
-                                                            e.printStackTrace();
-                                                        }
-                                                        SharedPreferences.Editor editor = savePlaylistMemory.edit();
-                                                        editor.putString("" + key, playlist.toString());
-                                                        editor.apply();
-                                                        Log.d(TAG, "onClick: new name is: " + newName);
-                                                        favoritePlaylistsCallback.changePlaylistName(newName, id);
-                                                        header.setText(newName);
-                                                    }
-                                                }
-                                                viewSwitcher.showNext();
+                                                new AlertDialog.Builder(getContext())
+                                                        .setTitle("Playlist beartbeiten")
+                                                        .setMessage("Möchtest du ein neues Cover hochladen oder den Namen der Playlist ändern")
+                                                        .setPositiveButton("", new DialogInterface.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                viewSwitcher.showNext();
+                                                            }
+                                                        })
+                                                        .setPositiveButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_edit_button))
+                                                        .setNegativeButton("", new DialogInterface.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                Log.d(TAG, "onClick: edit cover");
+                                                                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+                                                                //TODO wie kann man das mit dem Intent übergeben
+                                                                playlistID = id;
+                                                                photoPickerIntent.setType("image/*");
+                                                                startActivityForResult(photoPickerIntent, RESULT_LOAD_IMAGE);
+                                                            }
+                                                        })
+                                                        .setNegativeButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_edit_playlistname_button))
+                                                        .show();
                                             }
                                         })
                                         .setPositiveButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_edit_button))
@@ -244,29 +261,76 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                                         .setNegativeButton("", new DialogInterface.OnClickListener() {
                                             @Override
                                             public void onClick(DialogInterface dialog, int which) {
-                                                SharedPreferences.Editor editor = savePlaylistMemory.edit();
-                                                editor.remove("" + key);
-                                                editor.apply();
-                                                if(key < 8) {
-                                                    int counter = key;
-                                                    while (counter <= 8) {
-                                                        String nextPlaylist = savePlaylistMemory.getString("" + (counter + 1), "");
-                                                        if (!nextPlaylist.equals(""))
-                                                            editor.putString("" + counter, nextPlaylist);
-                                                        else {
-                                                            editor.remove("" + counter);
-                                                        }
-                                                        editor.apply();
-                                                        counter++;
-                                                    }
-                                                }
-                                                String toastMessage = name + getString(R.string.text_toastPlaylistDeleted);
-                                                Toast.makeText(getContext(), toastMessage, Toast.LENGTH_SHORT).show();
-                                                favoritePlaylistsCallback.reloadFavoritePlaylistsFragment(id);
+
+                                                new AlertDialog.Builder(getContext())
+                                                        .setTitle("Löschen")
+                                                        .setMessage("Möchtest du die Playlist wirklich aus deinen Favoriten löschen?")
+                                                        .setPositiveButton("", new DialogInterface.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                //window is closing
+                                                            }
+                                                        })
+                                                        .setPositiveButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_deny_button))
+                                                        .setNegativeButton("", new DialogInterface.OnClickListener() {
+                                                            @Override
+                                                            public void onClick(DialogInterface dialog, int which) {
+                                                                SharedPreferences.Editor editor = savePlaylistMemory.edit();
+                                                                editor.remove("" + key);
+                                                                editor.apply();
+                                                                if (key < 8) {
+                                                                    int counter = key;
+                                                                    while (counter <= 8) {
+                                                                        String nextPlaylist = savePlaylistMemory.getString("" + (counter + 1), "");
+                                                                        if (!nextPlaylist.equals(""))
+                                                                            editor.putString("" + counter, nextPlaylist);
+                                                                        else {
+                                                                            editor.remove("" + counter);
+                                                                        }
+                                                                        editor.apply();
+                                                                        counter++;
+                                                                    }
+                                                                }
+                                                                String toastMessage = name + getString(R.string.text_toastPlaylistDeleted);
+                                                                Toast.makeText(getContext(), toastMessage, Toast.LENGTH_SHORT).show();
+                                                                favoritePlaylistsCallback.reloadFavoritePlaylistsFragment(id);
+                                                            }
+                                                        })
+                                                        .setNegativeButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_accept_button))
+                                                        .show();
                                             }
                                         })
                                         .setNegativeButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_trash_can_button))
                                         .show();
+                            } else {
+                                new AlertDialog.Builder(getContext())
+                                        .setTitle("Playlist beartbeiten")
+                                        .setMessage("Bestätige das verändern des Playlistnamens")
+                                        .setPositiveButton("", new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                String newName = changeName.getText().toString();
+                                                if (!newName.equals("")) {
+                                                    JSONObject playlist = new JSONObject();
+                                                    try {
+                                                        playlist.put("name", newName);
+                                                        playlist.put("id", id);
+                                                    } catch (JSONException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                    SharedPreferences.Editor editor = savePlaylistMemory.edit();
+                                                    editor.putString("" + key, playlist.toString());
+                                                    editor.apply();
+                                                    Log.d(TAG, "onClick: new name is: " + newName);
+                                                    favoritePlaylistsCallback.changePlaylistName(newName, id);
+                                                    header.setText(newName);
+                                                }
+                                                viewSwitcher.showNext();
+                                            }
+                                        })
+                                        .setPositiveButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_edit_button))
+                                        .show();
+                            }
                         }
                     });
                 }
@@ -277,6 +341,36 @@ public class ShowSavedPlaylistsFragment extends Fragment {
             }
         } catch (JSONException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+
+        if(resultCode == RESULT_OK) {
+            try {
+                final Uri imageUri = data.getData();
+                final InputStream imageStream = getContext().getContentResolver().openInputStream(imageUri);
+                final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+
+                // TODO check size
+                Log.d(TAG, "onActivityResult: " + selectedImage.getByteCount());
+                if(selectedImage.getByteCount() > 250000) {
+                    Toast.makeText(getActivity(), "Dein Bild ist zu groß. Die Maximalgröße für Playlist-Cover ist 250KB", Toast.LENGTH_LONG).show();
+                } else {
+                    if(playlistID != null)
+                        favoritePlaylistsCallback.changePlaylistCover(playlistID, selectedImage);
+                    else
+                        Log.d(TAG, "onActivityResult: error");
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_LONG).show();
+            }
+        } else {
+            Toast.makeText(getActivity(), "You have picked Image", Toast.LENGTH_LONG).show();
         }
     }
 }
