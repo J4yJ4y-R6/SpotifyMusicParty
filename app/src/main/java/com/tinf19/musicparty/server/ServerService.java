@@ -13,6 +13,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.ActionReceiver;
@@ -538,7 +539,7 @@ public class ServerService extends Service {
         });
     }
 
-    public void updatePlaylistCover(String id, Bitmap image) {
+    public void updatePlaylistCover(String id, Bitmap image, ShowSavedPlaylistsFragment.FavoritePlaylistsCallback callback) {
         OkHttpClient client = new OkHttpClient();
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
@@ -546,8 +547,7 @@ public class ServerService extends Service {
 
         image.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
         byte[] byteArray = byteArrayOutputStream.toByteArray();
-        String encoded = Base64.encodeToString(byteArray, Base64.DEFAULT);
-        Log.d(TAG, "updatePlaylistCover: " + encoded.getBytes().length);
+        byte[] encoded = Base64.encode(byteArray, Base64.NO_WRAP);
         HttpUrl completeUrl = new HttpUrl.Builder()
                 .scheme("https")
                 .host(HOST)
@@ -558,15 +558,11 @@ public class ServerService extends Service {
                 .addPathSegment(id)
                 .addPathSegment("images")
                 .build();
-        Log.d(TAG, "updatePlaylistCover: " + completeUrl.toString());
-        Log.d(TAG, "updatePlaylistCover: " + encoded);
-        Log.d(TAG, "updatePlaylistCover: " + encoded.length());
-        RequestBody body = RequestBody.create(Base64.encode(byteArray, Base64.NO_WRAP));
-        Log.d(TAG, "updatePlaylistCover: " + body.toString());
+        RequestBody body = RequestBody.create(encoded);
         Request request = new Request.Builder()
                 .url(completeUrl)
                 .put(body)
-                .addHeader("Authorization", "Bearer " + "BQBNShxswstZfkBg6fgbusf9b1BeHfZPl15YgoLLeP3gpABU8uPAk68w3KhGZ_gZN79n1D1r2Xp9W5n6KTJmVrYrR7nBnWJFLa3wSn85nahKkvDz099jVeKW69vK17EkNnNApTSS3sqnNqkdiVp-EaPQnqXOZXx9Kafdcuis-rOGg3dBApLCYV64zv4Xe7lFq-7d8wP76m4m")
+                .addHeader("Authorization", "Bearer " + token)
                 .addHeader("Content-Type", "image/jpeg")
                 .build();
         client.newCall(request).enqueue(new Callback() {
@@ -584,6 +580,7 @@ public class ServerService extends Service {
                     throw new IOException("Error : " + response);
                 }else {
                     Log.d(TAG,"Request Successful. Playlist name changed.");
+                    callback.reloadFavoritePlaylistsFragment();
                 }
                 response.close();
             }

@@ -313,18 +313,22 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void reloadFavoritePlaylistsFragment(String id) {
+    public void reloadFavoritePlaylistsFragment() {
         Fragment frg = null;
         frg = getSupportFragmentManager().findFragmentByTag("ShowSavedPlaylistFragment");
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.detach(frg);
         ft.attach(frg);
         ft.commit();
+    }
+
+    @Override
+    public void deletePlaylist(String id) {
         if(mBoundService != null)
             mBoundService.deletePlaylist(id);
     }
 
-//    Methods for ShowSongFragment
+    //    Methods for ShowSongFragment
 
     @Override
     public void setNowPlaying(Track nowPlaying) {
@@ -538,7 +542,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    mBoundService.updatePlaylistCover(id, image);
+                    mBoundService.updatePlaylistCover(id, image, HostActivity.this);
                 }
             }).start();
         }

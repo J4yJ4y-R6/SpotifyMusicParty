@@ -78,5 +78,11 @@
     <string name="text_playlistCover">playlistCover</string>
     <string name="text_favoritePlaylistsHeader">Deine gespeicherten Playlisten:</string>
     <string name="text_showSavedPlaylists_description">Drücke zum abspielen, bearbeiten und löschen</string>
+    <string name="text_editPlaylist_dialog">Playlist beartbeiten</string>
+    <string name="text_chooseEditOption_dialog">Möchtest du ein neues Cover hochladen oder den Namen der Playlist ändern</string>
+    <string name="text_acceptEditOption_dialog">Bestätige das verändern des Playlistnamens</string>
+    <string name="text_delete">Löschen</string>
+    <string name="text_chooseDeleteOption_dialog">Möchtest du die Playlist wirklich aus deinen Favoriten löschen?</string>
+
 
 </resources>
