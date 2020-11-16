@@ -48,6 +48,7 @@ import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import static com.tinf19.musicparty.App.CHANNEL_ID;
 
@@ -90,6 +91,10 @@ public class ServerService extends Service {
         void deleteFromDataset();
     }
 
+    public interface AfterExtractCallback {
+        void useTracks(List<Track> tracks, int size);
+    }
+
     public class LocalBinder extends Binder {
         ServerService getService() {
             return ServerService.this;
@@ -99,6 +104,7 @@ public class ServerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.d(NAME, "Stopped: " + stopped + " Lastsong: " + (lastSongTitle != null ? lastSongTitle.name : "Nichts"));
         startServer();
     }
 
@@ -137,6 +143,9 @@ public class ServerService extends Service {
     public void onDestroy() {
         super.onDestroy();
         Log.d(ServerService.class.getName(), "I have been destroyed " + clientThreads.size());
+        lastSongTitle = null;
+        nowPlaying = null;
+        stopped = false;
 //        deletePlaylist(playlistID);
         new Thread(() -> {
             try {
@@ -336,8 +345,80 @@ public class ServerService extends Service {
         });
     }
 
-    private void getQueFromPlaylist() {
+    private void getQueFromPlaylist(String id, AfterExtractCallback afterExtractCallback) {
+        getQueFromPlaylist(id, 0, afterExtractCallback);
+    }
 
+    private void getQueFromPlaylist(String id, int page, AfterExtractCallback afterExtractCallback) {
+        List<Track> tempTracks = new ArrayList<>();
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(HOST)
+                .addPathSegment("v1")
+                .addPathSegment("playlists")
+                .addPathSegment(id)
+                .addPathSegment("tracks")
+                .addQueryParameter("offset", String.valueOf(100 * page))
+                .build();
+        Log.d(NAME, "Making request to " + completeURL.toString());
+        Request request = new Request.Builder()
+                .url(completeURL)
+                .get()
+                .addHeader("Authorization", "Bearer " + token)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        Log.d(NAME, request.headers().toString());
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Do something when request failed
+                e.printStackTrace();
+                Log.d(NAME, "Request Failed.");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if(!response.isSuccessful()){
+                    Log.d(NAME, response.body().string());
+                    throw new IOException("Error : " + response);
+                }else {
+                    try {
+                        JSONObject body = new JSONObject(response.body().string());
+                        JSONArray items = body.getJSONArray("items");
+                        int count = body.getInt("toatal");
+
+                        for(int i = 0; i < items.length(); i++) {
+                            JSONObject track = items.getJSONObject(i).getJSONObject("track");
+                            JSONArray artists = track.getJSONArray("artists");
+                            Artist[] array = new Artist[artists.length()];
+                            for(int j = 0; j < array.length; j++) {
+                                JSONObject artist = artists.getJSONObject(j);
+                                array[j] = new Artist(artist.getString("id"), artist.getString("name"));
+                            }
+                            String image = track
+                                    .getJSONObject("album")
+                                    .getJSONArray("images")
+                                    .getJSONObject(2)
+                                    .getString("url");
+                            tempTracks.add(
+                                    new Track(
+                                            track.getString("id"),
+                                            track.getString("name"),
+                                            array,
+                                            image,
+                                            track.getInt("duration_ms"),
+                                            track.getJSONObject("album").getString("name")));
+                            Log.d(NAME, tempTracks.get(i).toString());
+                        }
+                        afterExtractCallback.useTracks(tempTracks, count);
+                    } catch (JSONException e) {
+                        Log.e(NAME, e.getMessage(), e);
+                    }
+                }
+                response.close();
+            }
+        });
     }
 
     public void deletePlaylist(String id) {
@@ -674,43 +755,47 @@ public class ServerService extends Service {
                 .subscribeToPlayerState()
                 .setEventCallback(playerState -> {
                     final com.spotify.protocol.types.Track track = playerState.track;
-                    nowPlaying = track;
-                    if(lastSongTitle == null || (nowPlaying != null && !nowPlaying.name.equals(lastSongTitle.name))) {
-                        if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
-                            stopped = true;
-                            Log.d(TAG, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
-                            mSpotifyAppRemote.getPlayerApi().skipPrevious();
-                            mSpotifyAppRemote.getPlayerApi().pause();
-                            pause = true;
+                    if(playlistID != null) {
+                        nowPlaying = track;
+                        if(lastSongTitle == null || (nowPlaying != null && !nowPlaying.name.equals(lastSongTitle.name))) {
+                            if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
+                                stopped = true;
+                                Log.d(NAME, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
+                                mSpotifyAppRemote.getPlayerApi().skipPrevious();
+                                mSpotifyAppRemote.getPlayerApi().pause();
+                                pause = true;
 //                            long postion = lastSongTitle.duration - 10000;
 //                            Log.d(NAME, "SEEK TO: " + postion);
 //                            mSpotifyAppRemote.getPlayerApi().seekTo(postion);
-                            if(spotifyPlayerCallback != null)
-                                spotifyPlayerCallback.setPlayImage(true);
-                            return;
-                        } else if(tracks.size() == 0 && lastSongTitle != null) {
-                            return;
-                        }
-                        lastSongTitle = nowPlaying;
-                        Log.d(TAG, "New song has been started " + track.uri.split(":")[2]);
-                        stopped = false;
-                        new Thread(()->{
-                            try {
-                                sendToAll(Commands.PLAYING, getNowPlaying().serialize());
-                            } catch (IOException | JSONException e) {
-                                Log.e(TAG, e.getMessage(), e);
+                                if(spotifyPlayerCallback != null)
+                                    spotifyPlayerCallback.setPlayImage(true);
+                                return;
+                            } else if(tracks.size() == 0 && lastSongTitle != null) {
+                                return;
                             }
-                        }).start();
-                        if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
-                            tracks.remove(0);
+                            lastSongTitle = nowPlaying;
+                            Log.d(NAME, "New song has been started " + track.uri.split(":")[2]);
+                            stopped = false;
+                            new Thread(()->{
+                                try {
+                                    sendToAll(Commands.PLAYING, getNowPlaying().serialize());
+                                } catch (IOException | JSONException e) {
+                                    Log.e(NAME, e.getMessage(), e);
+                                }
+                            }).start();
+                            if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
+                                tracks.remove(0);
+                            }
                         }
-                    }
-                    pause = playerState.isPaused;
-                    if (track != null && spotifyPlayerCallback != null) {
-                        //Log.d(NAME, track.name + " by " + track.artist.name);
-                        //if (playerState.playbackPosition == 0)
-                        //nextSong();
-                        spotifyPlayerCallback.setNowPlaying(getNowPlaying());
+                        pause = playerState.isPaused;
+                        if (track != null && spotifyPlayerCallback != null) {
+                            //Log.d(NAME, track.name + " by " + track.artist.name);
+                            //if (playerState.playbackPosition == 0)
+                            //nextSong();
+                            spotifyPlayerCallback.setNowPlaying(getNowPlaying());
+                        }
+
+                        if(spotifyPlayerCallback != null) spotifyPlayerCallback.setPlayImage(pause);
                     }
                 });
     }
