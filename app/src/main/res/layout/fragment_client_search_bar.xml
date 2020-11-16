@@ -25,7 +25,7 @@
             app:layout_constraintStart_toEndOf="@+id/searchEditText"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <EditText
+        <AutoCompleteTextView
             android:id="@+id/searchEditText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

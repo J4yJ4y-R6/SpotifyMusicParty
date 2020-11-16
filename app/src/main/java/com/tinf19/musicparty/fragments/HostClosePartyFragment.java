@@ -22,7 +22,6 @@ public class HostClosePartyFragment extends Fragment {
     private ClosePartyCallback closePartyCallback;
     private static final String TAG = HostClosePartyFragment.class.getName();
     private EditText savePlaylistNameEditText;
-    private Switch savePlaylistSwitch;
     private boolean savePlaylist;
 
     public interface ClosePartyCallback {
@@ -67,14 +66,15 @@ public class HostClosePartyFragment extends Fragment {
                 public void onClick(View v) {
                     if(savePlaylistNameEditText != null) {
                         String playlistName = savePlaylistNameEditText.getText().toString();
+                        Log.d(TAG, "onClick: " + playlistName);
                         if(!playlistName.equals("")) {
                             if(!closePartyCallback.savePlaylistInSharedPreferences(playlistName))
-                                Toast.makeText(getContext(), "Playlist konnte nicht gespeichert werden", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getContext(), getString(R.string.text_toastPlaylistNotSaved), Toast.LENGTH_SHORT).show();
                             else
                                 closePartyCallback.acceptEndParty(true);
                         } else {
                             if(savePlaylist) {
-                                Toast.makeText(getContext(), "Playlist konnte nicht gespeichert werden", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(getContext(), getString(R.string.text_toastPlaylistNameNeeded), Toast.LENGTH_SHORT).show();
                             } else {
                                 closePartyCallback.acceptEndParty(false);
                             }
@@ -85,7 +85,7 @@ public class HostClosePartyFragment extends Fragment {
             });
         }
 
-        savePlaylistSwitch = view.findViewById(R.id.savePlaylistSwitch);
+        Switch savePlaylistSwitch = view.findViewById(R.id.savePlaylistSwitch);
         savePlaylistNameEditText = view.findViewById(R.id.savePlaylistNameEditText);
         if(savePlaylistSwitch != null) {
             savePlaylistSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

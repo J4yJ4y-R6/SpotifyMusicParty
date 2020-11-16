@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
@@ -215,7 +216,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         settingsHostFragment = new SettingsHostFragment(this);
         hostPlaylistFragment = new HostPlaylistFragment(this, this);
         partyPeopleFragment = new PartyPeopleFragment(this);
-        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this);
+        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this, token);
 
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
@@ -321,7 +322,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         ft.commit();
     }
 
-//    Methods for ShowSongFragment
+    @Override
+    public void deletePlaylist(String id) {
+        if(mBoundService != null)
+            mBoundService.deletePlaylist(id);
+    }
+
+    //    Methods for ShowSongFragment
 
     @Override
     public void setNowPlaying(Track nowPlaying) {
@@ -462,18 +469,18 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public boolean savePlaylistInSharedPreferences(String name) {
         SharedPreferences savePlaylistMemory = this.getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
+        if(!savePlaylistMemory.getString("9", "").equals(""))
+            return false;
         SharedPreferences.Editor editor = savePlaylistMemory.edit();
         JSONObject playlist = new JSONObject();
         try {
+            Log.d(TAG, "savePlaylistInSharedPreferences: " + name);
             playlist.put("name", name);
             if(mBoundService != null) {
                 String id = mBoundService.getPlaylistID();
                 playlist.put("id", id);
                 mBoundService.updatePlaylistName(name, id);
             }
-            else
-                //TODO: Was nimmt man hier
-                return false;
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -502,10 +509,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 //    Methods for ShowSavedPlaylistFragment
 
     @Override
-    public void playFavoritePlaylist(String id) {
+    public void playFavoritePlaylist(String id, ArrayList<String> idList) {
         if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)  {
+            String playlistID = mBoundService.getPlaylistID();
+            if(!idList.contains(playlistID))
+                mBoundService.deletePlaylist(playlistID);
             mBoundService.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:"+id);
-            mBoundService.deletePlaylist(id);
+            mBoundService.setPlaylistID(id);
         }
         //TODO: Spotify App geschlossen -> neue Verbindung
     }
@@ -521,6 +531,18 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
+                }
+            }).start();
+        }
+    }
+
+    @Override
+    public void changePlaylistCover(String id, Bitmap image) {
+        if(mBoundService != null) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    mBoundService.updatePlaylistCover(id, image, HostActivity.this);
                 }
             }).start();
         }

@@ -3,15 +3,17 @@ package com.tinf19.musicparty.server;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Binder;
+import android.service.voice.AlwaysOnHotwordDetector;
+import android.util.Base64;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.ActionReceiver;
@@ -26,6 +28,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -33,6 +36,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import okhttp3.Call;
@@ -40,6 +44,7 @@ import okhttp3.Callback;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -49,7 +54,7 @@ import static com.tinf19.musicparty.App.CHANNEL_ID;
 
 public class ServerService extends Service {
 
-    private static final String NAME = ServerService.class.getName();
+    private static final String TAG = ServerService.class.getName();
     private static final int PORT = 1403;
     private static final String HOST = "api.spotify.com";
     public static final MediaType JSON
@@ -109,7 +114,7 @@ public class ServerService extends Service {
         token = intent.getStringExtra(Constants.TOKEN);
         password = intent.getStringExtra(Constants.PASSWORD);
         partyName = intent.getStringExtra(Constants.PARTYNAME);
-        Log.d(NAME, "partyName: " + partyName);
+        Log.d(TAG, "partyName: " + partyName);
         if (first) {
             getUserID();
             first = false;
@@ -200,7 +205,7 @@ public class ServerService extends Service {
                 .addPathSegment("v1")
                 .addPathSegment("me")
                 .build();
-        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .addHeader("Authorization", "Bearer " + token)
@@ -210,26 +215,26 @@ public class ServerService extends Service {
             public void onFailure(Call call, IOException e) {
                 // Do something when request failed
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(NAME, response.body().string());
+                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(NAME,"Request Successful. Got the username of the user.");
+                    Log.d(TAG,"Request Successful. Got the username of the user.");
                 }
 
                 // Read data in the worker thread
                 final String data = response.body().string();
                 try {
                     userID = new JSONObject(data).getString("id");
-                    Log.d(NAME, "UserID: " + userID);
+                    Log.d(TAG, "UserID: " + userID);
                     createPlaylist("MusicParty");
                 } catch (JSONException e) {
-                    Log.e(NAME, e.getMessage(), e);
+                    Log.e(TAG, e.getMessage(), e);
                 }
                 response.close();
             }
@@ -260,39 +265,39 @@ public class ServerService extends Service {
                 .put("public", false)
                 .put("description", getString(R.string.service_playlistDescription));
         RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
-        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .post(body)
                 .addHeader("Authorization", "Bearer " + token)
                 .addHeader("Content-Type", "application/json")
                 .build();
-        Log.d(NAME, request.headers().toString());
+        Log.d(TAG, request.headers().toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 // Do something when request failed
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(NAME, response.body().string());
+                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(NAME,"Request Successful. New playlist has been created.");
+                    Log.d(TAG,"Request Successful. New playlist has been created.");
                 }
                 String [] uri = response.header("Location").split("/");
                 playlistID = uri[uri.length-1];
-                Log.d(NAME, playlistID);
+                Log.d(TAG, playlistID);
                 try {
                     playlist.add(new Track("600HVBpzF1WfBdaRwbEvLz", "Frozen", new Artist[]{new Artist("tsads", "Disney")}, "test", 0, "Disner"));
                     addItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen");
                     //addItem("spotify:track:76nqCfJOcFFWBJN32PAksn", "Kings and Queens");
                 } catch (JSONException e) {
-                    Log.e(NAME, e.getMessage(), e);
+                    Log.e(TAG, e.getMessage(), e);
                 }
                 response.close();
             }
@@ -310,7 +315,7 @@ public class ServerService extends Service {
                 .addPathSegment("repeat")
                 .addQueryParameter("state", state)
                 .build();
-        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(TAG, "Making request to " + completeURL.toString());
         RequestBody body = RequestBody.create(new byte[]{}, null);
         Request request = new Request.Builder()
                 .url(completeURL)
@@ -318,22 +323,22 @@ public class ServerService extends Service {
                 .addHeader("Authorization", "Bearer " + token)
                 .addHeader("Content-Type", "application/json")
                 .build();
-        Log.d(NAME, request.headers().toString());
+        Log.d(TAG, request.headers().toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 // Do something when request failed
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(NAME, response.body().string());
+                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(NAME,"Request Successful. Repeat mode has set to " + state);
+                    Log.d(TAG,"Request Successful. Repeat mode has set to " + state);
                 }
                 response.close();
             }
@@ -426,7 +431,7 @@ public class ServerService extends Service {
                 .addPathSegment(id)
                 .addPathSegment("followers")
                 .build();
-        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .delete()
@@ -437,16 +442,16 @@ public class ServerService extends Service {
             public void onFailure(Call call, IOException e) {
                 // Do something when request failed
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(NAME, response.body().string());
+                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(NAME,"Request Successful. Playlist has been deleted.");
+                    Log.d(TAG,"Request Successful. Playlist has been deleted.");
                 }
                 response.close();
             }
@@ -469,7 +474,7 @@ public class ServerService extends Service {
         //        .put("uris", uris);
         //RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
         RequestBody body = RequestBody.create(new byte[]{}, null);
-        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .post(body)
@@ -481,16 +486,16 @@ public class ServerService extends Service {
             public void onFailure(Call call, IOException e) {
                 // Do something when request failed
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(NAME, response.body().string());
+                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(NAME,"Request Successful. Track " + name + " has been added.");
+                    Log.d(TAG,"Request Successful. Track " + name + " has been added.");
                     size++;
 //                    try {
 //                        deleteItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen", 0);
@@ -534,9 +539,9 @@ public class ServerService extends Service {
                .put("tracks", new JSONArray().put(uris));
         RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
         //RequestBody body = RequestBody.create(new byte[]{}, null);
-        Log.d(NAME, "Try to delete track " + name);
-        Log.d(NAME, "Making request to " + completeURL.toString());
-        Log.d(NAME, "JSON Body: " +  sampleObject.toString());
+        Log.d(TAG, "Try to delete track " + name);
+        Log.d(TAG, "Making request to " + completeURL.toString());
+        Log.d(TAG, "JSON Body: " +  sampleObject.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .delete(body)
@@ -548,16 +553,16 @@ public class ServerService extends Service {
             public void onFailure(Call call, IOException e) {
                 // Do something when request failed
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(NAME, response.body().string());
+                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(NAME,"Request Successful. Track " + name + " has been deleted.");
+                    Log.d(TAG,"Request Successful. Track " + name + " has been deleted.");
                     callback.deleteFromDataset();
                     playlist.remove(index);
                     tracks.remove(position);
@@ -570,7 +575,7 @@ public class ServerService extends Service {
 
     public void moveItem(int from, int to) throws JSONException {
         int position = size - tracks.size();
-        Log.d(NAME, "moveItem: From " + from + " To: " + to + " Position: " + position);
+        Log.d(TAG, "moveItem: From " + from + " To: " + to + " Position: " + position);
         from = from + position;
         to = to + position;
         if (from < to) to++;
@@ -583,7 +588,7 @@ public class ServerService extends Service {
                 .addPathSegment(playlistID)
                 .addPathSegment("tracks")
                 .build();
-        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(TAG, "Making request to " + completeURL.toString());
         JSONObject sampleObject = new JSONObject()
                 .put("range_start", from)
                 .put("insert_before", to);
@@ -599,20 +604,69 @@ public class ServerService extends Service {
             public void onFailure(Call call, IOException e) {
                 // Do something when request failed
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(NAME, response.body().string());
+                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(NAME,"Request Successful. Track moved.");
+                    Log.d(TAG,"Request Successful. Track moved.");
                 }
                 response.close();
             }
         });
+    }
+
+    public void updatePlaylistCover(String id, Bitmap image, ShowSavedPlaylistsFragment.FavoritePlaylistsCallback callback) {
+        OkHttpClient client = new OkHttpClient();
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+
+        //TODO Bild irgendwie verkleinern (möglich?)
+
+        image.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        byte[] encoded = Base64.encode(byteArray, Base64.NO_WRAP);
+        HttpUrl completeUrl = new HttpUrl.Builder()
+                .scheme("https")
+                .host(HOST)
+                .addPathSegment("v1")
+                .addPathSegment("users")
+                .addPathSegment(userID)
+                .addPathSegment("playlists")
+                .addPathSegment(id)
+                .addPathSegment("images")
+                .build();
+        RequestBody body = RequestBody.create(encoded);
+        Request request = new Request.Builder()
+                .url(completeUrl)
+                .put(body)
+                .addHeader("Authorization", "Bearer " + token)
+                .addHeader("Content-Type", "image/jpeg")
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                // Do something when request failed
+                e.printStackTrace();
+                Log.d(TAG, "Request Failed.");
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if(!response.isSuccessful()){
+                    Log.d(TAG, response.body().string());
+                    throw new IOException("Error : " + response);
+                }else {
+                    Log.d(TAG,"Request Successful. Playlist name changed.");
+                    callback.reloadFavoritePlaylistsFragment();
+                }
+                response.close();
+            }
+        });
+
     }
 
     public void updatePlaylistName(String name, String id) throws JSONException {
@@ -624,7 +678,7 @@ public class ServerService extends Service {
                 .addPathSegment("playlists")
                 .addPathSegment(id)
                 .build();
-        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(TAG, "Making request to " + completeURL.toString());
         JSONObject sampleObject = new JSONObject()
                 .put("name", name);
         RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
@@ -639,16 +693,16 @@ public class ServerService extends Service {
             public void onFailure(Call call, IOException e) {
                 // Do something when request failed
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(NAME, response.body().string());
+                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(NAME,"Request Successful. Playlist name changed.");
+                    Log.d(TAG,"Request Successful. Playlist name changed.");
                 }
                 response.close();
             }
@@ -666,7 +720,7 @@ public class ServerService extends Service {
 
     public void togglePlayback() {
         if (pause && getmSpotifyAppRemote() != null) {
-            Log.d(NAME, "Size: " + tracks.size() + " Playlist size: " + playlist.size());
+            Log.d(TAG, "Size: " + tracks.size() + " Playlist size: " + playlist.size());
             if(stopped && tracks.size() == 0) {
                 lastSongTitle = null;
                 getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:" + playlistID);
@@ -682,7 +736,7 @@ public class ServerService extends Service {
     }
 
     private void stopAll() throws IOException {
-        Log.d(NAME, "Stopping server");
+        Log.d(TAG, "Stopping server");
         for(CommunicationThread client : clientThreads) {
             client.sendMessage(Commands.QUIT, "Session has been closed");
             client.close();
@@ -751,7 +805,7 @@ public class ServerService extends Service {
     }
 
     private void startServer(){
-        Log.d(NAME, "Try to start server");
+        Log.d(TAG, "Try to start server");
         this.serverThread = new Thread(new ServerThread());
         this.serverThread.start();
     }
@@ -773,9 +827,9 @@ public class ServerService extends Service {
         public void run() {
             try {
                 serverSocket = new ServerSocket(PORT);
-                Log.d(NAME, "Server Started on port " + PORT);
+                Log.d(TAG, "Server Started on port " + PORT);
             } catch (IOException e) {
-                Log.e(NAME, e.getMessage(), e);
+                Log.e(TAG, e.getMessage(), e);
             }
             if(null != serverSocket){
                 while(!Thread.currentThread().isInterrupted()) {
@@ -783,7 +837,7 @@ public class ServerService extends Service {
                         clientThreads.add(new CommunicationThread(serverSocket.accept()));
                         clientThreads.get(clientThreads.size()-1).start();
                     } catch (IOException e) {
-                        Log.e(NAME, e.getMessage(), e);
+                        Log.e(TAG, e.getMessage(), e);
                     }
                 }
             }
@@ -800,13 +854,13 @@ public class ServerService extends Service {
         private final long createdTime;
 
         public CommunicationThread(Socket socket) {
-            Log.d(NAME, "New client request");
+            Log.d(TAG, "New client request");
             this.clientSocket = socket;
             this.createdTime = System.currentTimeMillis();
         }
 
         public void sendMessage(Commands command, String message) throws IOException {
-            Log.d(NAME, "~" + command.toString() + "~" + message);
+            Log.d(TAG, "~" + command.toString() + "~" + message);
             out.writeBytes("~" + command.toString() + "~" + message + "\n\r");
             out.flush();
         }
@@ -817,7 +871,7 @@ public class ServerService extends Service {
                 input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.ISO_8859_1));
                 out = new DataOutputStream(clientSocket.getOutputStream());
             } catch (IOException e) {
-                Log.e(NAME, e.getMessage(), e);
+                Log.e(TAG, e.getMessage(), e);
                 return;
             }
             String line;
@@ -835,13 +889,13 @@ public class ServerService extends Service {
                                 case QUIT:
                                     clientThreads.remove(this);
                                     if(spotifyPlayerCallback!= null) spotifyPlayerCallback.setPeopleCount(clientThreads.size());
-                                    Log.d(NAME, "User " + username + " has left the party");
+                                    Log.d(TAG, "User " + username + " has left the party");
                                     close();
                                     return;
                                 case LOGIN:
                                     if (parts.length > 3) {
                                         String pass = parts[3];
-                                        Log.d(NAME, "New login attempt from user " + attribute +" with password: " + pass);
+                                        Log.d(TAG, "New login attempt from user " + attribute +" with password: " + pass);
                                         if (login(pass)) {
                                             username = attribute;
                                             if (nowPlaying == null)
@@ -857,7 +911,7 @@ public class ServerService extends Service {
                                     }
                                     break;
                                 case QUEUE:
-                                    Log.d(NAME, "Added " + attribute + " to the queue");
+                                    Log.d(TAG, "Added " + attribute + " to the queue");
                                     if(this.login) {
                                         Track track = new Track(attribute);
                                         addItemToPlaylist(track);
@@ -871,7 +925,7 @@ public class ServerService extends Service {
                                     }
                                     break;
                                 case PLAYLIST:
-                                    Log.d(NAME, "Show Playlist for user " + username);
+                                    Log.d(TAG, "Show Playlist for user " + username);
                                     StringBuilder response = new StringBuilder();
                                     if(nowPlaying != null) {
                                         response.append("~");
@@ -884,12 +938,12 @@ public class ServerService extends Service {
                                     sendMessage(Commands.PLAYLIST, response.toString());
                                     break;
                                 default:
-                                    Log.d(NAME, "No such command: " + command);
+                                    Log.d(TAG, "No such command: " + command);
                             }
                         }
                     }
                 } catch (IOException | JSONException e) {
-                    Log.e(NAME, e.getMessage(), e);
+                    Log.e(TAG, e.getMessage(), e);
                     return;
                 }
             }
