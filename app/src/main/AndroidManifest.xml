@@ -33,14 +33,9 @@
 
 
         <activity
-            android:name="com.journeyapps.barcodescanner.CaptureActivity"
-            android:screenOrientation="portrait"
-            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout"
-            tools:replace="screenOrientation" />
-        <activity android:name="com.tinf19.musicparty.client.PartyActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout"/>
-        <activity android:name="com.tinf19.musicparty.client.ClientActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout">
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"/>
+        <activity android:name="com.tinf19.musicparty.client.PartyActivity"/>
+        <activity android:name="com.tinf19.musicparty.client.ClientActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -52,13 +47,9 @@
         </activity>
         <activity
             android:name="com.spotify.sdk.android.auth.LoginActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout"/>
-        <activity android:name="com.tinf19.musicparty.server.HostActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout"/>
-<!--        <activity android:name="com.tinf19.musicparty.server.HostPartyActivity" />-->
-        <activity android:name="com.tinf19.musicparty.MainActivity"
-            android:configChanges="orientation|keyboardHidden|screenSize|screenLayout">
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+        <activity android:name="com.tinf19.musicparty.server.HostActivity"/>
+        <activity android:name="com.tinf19.musicparty.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

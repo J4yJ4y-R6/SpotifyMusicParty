@@ -1,7 +1,9 @@
 package com.tinf19.musicparty.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 
@@ -17,10 +19,13 @@ import android.widget.Toast;
 
 import com.tinf19.musicparty.R;
 
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+
 public class HostClosePartyFragment extends Fragment {
 
-    private ClosePartyCallback closePartyCallback;
     private static final String TAG = HostClosePartyFragment.class.getName();
+    private int mCounter;
+    private ClosePartyCallback closePartyCallback;
     private EditText savePlaylistNameEditText;
     private boolean savePlaylist;
 
@@ -39,9 +44,22 @@ public class HostClosePartyFragment extends Fragment {
     }
 
     @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCounter);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if(context instanceof  ClosePartyCallback)
+            closePartyCallback = (ClosePartyCallback) context;
     }
 
     @Override
@@ -49,6 +67,8 @@ public class HostClosePartyFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.fragment_host_close_party, container, false);
+        if(savedInstanceState!= null)
+            mCounter = savedInstanceState.getInt(STATE_COUNTER);
 
         Button denyEndPartyButton = view.findViewById(R.id.denyEndPartyButton);
         if(denyEndPartyButton != null) {

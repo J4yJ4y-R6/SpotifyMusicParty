@@ -1,11 +1,16 @@
 package com.tinf19.musicparty.fragments;
 
+import android.app.Activity;
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -19,8 +24,11 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.DownloadImageTask;
 
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+
 public class ShowSongHostFragment extends Fragment {
 
+    private int mCounter;
     private static final String TAG = ShowSongHostFragment.class.getName();
     private OpenHostFragments openHostFragments;
     private String partyName;
@@ -30,7 +38,6 @@ public class ShowSongHostFragment extends Fragment {
     private TextView currentPlayingAlbumTextView;
     private TextView currentPlayingArtistTextView;
     private ImageView currentPlayingCoverTextView;
-
     private TextView partyNameTextView;
 
 
@@ -55,6 +62,13 @@ public class ShowSongHostFragment extends Fragment {
 
     public ShowSongHostFragment() {
         // Required empty public constructor
+    }
+
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCounter);
     }
 
     @Override
@@ -85,7 +99,12 @@ public class ShowSongHostFragment extends Fragment {
         super.onCreate(savedInstanceState);
     }
 
-
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if(context instanceof OpenHostFragments)
+            openHostFragments = (OpenHostFragments) context;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -93,9 +112,11 @@ public class ShowSongHostFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_show_song_host, container, false);
 
-        nowPlaying = openHostFragments.setShowNowPlaying();
-//        Log.d(TAG, "onCreateView: " + nowPlaying.getName());
+        if(savedInstanceState != null) {
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
+        }
 
+        nowPlaying = openHostFragments.setShowNowPlaying();
         partyNameTextView = view.findViewById(R.id.partyOverviewTextView);
 
         currentPlayingTitleTextView = view.findViewById(R.id.songtitleHostTextView);

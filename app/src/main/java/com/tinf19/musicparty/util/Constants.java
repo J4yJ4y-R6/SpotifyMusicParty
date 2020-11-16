@@ -6,6 +6,7 @@ public class Constants {
     public static final String ADDRESS = "address";
     public static final String USERNAME = "username";
     public static final String PARTYNAME = "partyname";
+    public static final String STATE_COUNTER = "counter";
 
 
     public static final String ID = "id";

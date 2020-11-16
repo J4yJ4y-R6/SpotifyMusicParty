@@ -1,8 +1,10 @@
 package com.tinf19.musicparty.fragments;
 
+import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.text.Spannable;
@@ -17,11 +19,14 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+
 public class ExitConnectionFragment extends Fragment {
 
-    public ConfirmExit confirmExit;
-    private TextView partyNameTextView;
     private static final String NAME = ExitConnectionFragment.class.getName();
+    public ConfirmExit confirmExit;
+    private int mCounter;
+    private TextView partyNameTextView;
 
     public interface ConfirmExit {
         void denyExit();
@@ -49,10 +54,19 @@ public class ExitConnectionFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if(context instanceof ConfirmExit)
+            confirmExit = (ConfirmExit) context;
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_exit_connection, container, false);
-        //binding = ActivityPartyBinding.inflate(getLayoutInflater());
+
+        if(savedInstanceState != null)
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
 
         partyNameTextView = view.findViewById(R.id.leavePartyNameTextView);
         Button denyButton = view.findViewById(R.id.denyLeavePartyButton);

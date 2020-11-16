@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
@@ -27,6 +28,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
+import com.google.gson.FieldAttributes;
 import com.google.gson.JsonObject;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
@@ -51,6 +53,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import static android.app.Activity.RESULT_OK;
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+import static com.tinf19.musicparty.util.Constants.TOKEN;
 
 
 public class ShowSavedPlaylistsFragment extends Fragment {
@@ -58,6 +62,8 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     private static final String HOST = "api.spotify.com";
     public static final int RESULT_LOAD_IMAGE = 1;
     private static final String TAG = ShowSavedPlaylistsFragment.class.getName();
+    private int mCounter;
+    private String token;
     private SharedPreferences savePlaylistMemory;
     private ArrayList<ImageView> buttons = new ArrayList<>(9);;
     private ArrayList<TextView> headers = new ArrayList<>(9);;
@@ -67,7 +73,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     private FavoritePlaylistsCallback favoritePlaylistsCallback;
     private View view;
     private String playlistID;
-    private String token;
+
 
     public interface FavoritePlaylistsCallback{
         void reloadFavoritePlaylistsFragment();
@@ -84,6 +90,13 @@ public class ShowSavedPlaylistsFragment extends Fragment {
 
     public ShowSavedPlaylistsFragment() {
         // Required empty public constructor
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCounter);
+        outState.putString(TOKEN, token);
     }
 
     @Override
@@ -110,12 +123,23 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if(context instanceof  FavoritePlaylistsCallback)
+            favoritePlaylistsCallback = (FavoritePlaylistsCallback) context;
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_show_saved_playlists, container, false);
+
+        if(savedInstanceState != null) {
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
+            token = savedInstanceState.getString(TOKEN, "");
+        }
 
         headers.add(0, view.findViewById(R.id.gridZeroZeroHeaderTextView));
         buttons.add(0, view.findViewById(R.id.gridZeroZeroImageButton));

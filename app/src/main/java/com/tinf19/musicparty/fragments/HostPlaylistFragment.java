@@ -1,7 +1,9 @@
 package com.tinf19.musicparty.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -23,9 +25,12 @@ import com.tinf19.musicparty.util.HostPlaylistItemMoveCallback;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+
 public class HostPlaylistFragment extends Fragment {
 
     private static final String TAG = HostPlaylistRecycAdapter.class.getName();
+    private int mCounter;
     private RecyclerView recyclerView;
     private TextView currentSongTitleTextView;
     private TextView currentSongArtistTextView;
@@ -62,8 +67,23 @@ public class HostPlaylistFragment extends Fragment {
     }
 
     @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCounter);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if(context instanceof PlaylistCallback || context instanceof HostPlaylistRecycAdapter.HostPlaylistAdapterCallback) {
+            hostPlaylistAdapterCallback = (HostPlaylistRecycAdapter.HostPlaylistAdapterCallback) context;
+            playlistCallback = (PlaylistCallback) context;
+        }
     }
 
     @Override
@@ -71,6 +91,9 @@ public class HostPlaylistFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.fragment_host_playlist, container, false);
+
+        if(savedInstanceState != null)
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
 
         recyclerView = view.findViewById(R.id.hostPlaylistRecyclerView);
         if(recyclerView != null) {

@@ -1,5 +1,6 @@
 package com.tinf19.musicparty.client;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
@@ -21,6 +22,7 @@ import android.widget.Toast;
 import com.tinf19.musicparty.databinding.ActivityClientPartyBinding;
 import com.tinf19.musicparty.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.fragments.LoadingFragment;
+import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.fragments.ExitConnectionFragment;
@@ -36,13 +38,18 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.List;
 
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+import static com.tinf19.musicparty.util.Constants.TOKEN;
+
 
 public class PartyActivity extends AppCompatActivity implements ShowSongFragment.PartyButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, SearchSongsOutputFragment.AddSongCallback, ClientService.PartyCallback {
 
-
+    private static final String TAG = PartyActivity.class.getName();
+    private static final String STATE_TAG = "tag";
     ActivityClientPartyBinding binding;
     private FragmentTransaction fragmentTransaction;
     private static final String NAME = PartyActivity.class.getName();
+    private int mCounter;
     private static String token;
     private boolean mShouldUnbind;
     private ClientService mBoundService;
@@ -116,6 +123,22 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     }
 
     @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCounter);
+        String tag = "";
+        if(searchSongsOutputFragment != null && searchSongsOutputFragment.isVisible())
+            tag = searchSongsOutputFragment.getTag();
+        if(showSongFragment != null && showSongFragment.isVisible())
+            tag = showSongFragment.getTag();
+        if(clientPlaylistFragment != null && clientPlaylistFragment.isVisible())
+            tag = clientPlaylistFragment.getTag();
+        if(exitConnectionFragment != null && exitConnectionFragment.isVisible())
+            tag = exitConnectionFragment.getTag();
+        outState.putString(STATE_TAG, tag);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         token = getIntent().getStringExtra(Constants.TOKEN);
@@ -128,17 +151,30 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         searchBarFragment = new SearchBarFragment(this, token);
         exitConnectionFragment = new ExitConnectionFragment(this);
 
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongFragmentFrame, new LoadingFragment(), "LoadingFragment").commitAllowingStateLoss();
+        if(savedInstanceState != null){
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
+            String currentFragmentTag = savedInstanceState.getString(STATE_TAG, "ShowSongFragment");
+            if(!currentFragmentTag.equals("")) {
+                Log.d(TAG, "onCreate: " + currentFragmentTag);
+                Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
+                Log.d(TAG, "onCreate: " + currentFragment.toString());
+                getSupportFragmentManager().beginTransaction().
+                        replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
+            }
+        } else {
+            getSupportFragmentManager().beginTransaction().
+                    replace(R.id.showSongFragmentFrame, new LoadingFragment(), "LoadingFragment").commitAllowingStateLoss();
 
-      
-        Intent serviceIntent = new Intent(this, ClientService.class);
-        serviceIntent.putExtra(Constants.TOKEN, token);
-        serviceIntent.putExtra(Constants.ADDRESS, getIntent().getStringExtra(Constants.ADDRESS));
-        serviceIntent.putExtra(Constants.PASSWORD, getIntent().getStringExtra(Constants.PASSWORD));
-        serviceIntent.putExtra(Constants.USERNAME, getIntent().getStringExtra(Constants.USERNAME));
-        startService(serviceIntent);
-        doBindService();
+
+            Intent serviceIntent = new Intent(this, ClientService.class);
+            serviceIntent.putExtra(Constants.TOKEN, token);
+            serviceIntent.putExtra(Constants.ADDRESS, getIntent().getStringExtra(Constants.ADDRESS));
+            serviceIntent.putExtra(Constants.PASSWORD, getIntent().getStringExtra(Constants.PASSWORD));
+            serviceIntent.putExtra(Constants.USERNAME, getIntent().getStringExtra(Constants.USERNAME));
+            startService(serviceIntent);
+            doBindService();
+
+        }
 
     }
 
