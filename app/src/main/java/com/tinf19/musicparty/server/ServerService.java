@@ -104,7 +104,7 @@ public class ServerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(NAME, "Stopped: " + stopped + " Lastsong: " + (lastSongTitle != null ? lastSongTitle.name : "Nichts"));
+        Log.d(TAG, "Stopped: " + stopped + " Lastsong: " + (lastSongTitle != null ? lastSongTitle.name : "Nichts"));
         startServer();
     }
 
@@ -361,26 +361,26 @@ public class ServerService extends Service {
                 .addPathSegment("tracks")
                 .addQueryParameter("offset", String.valueOf(100 * page))
                 .build();
-        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .get()
                 .addHeader("Authorization", "Bearer " + token)
                 .addHeader("Content-Type", "application/json")
                 .build();
-        Log.d(NAME, request.headers().toString());
+        Log.d(TAG, request.headers().toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 // Do something when request failed
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(NAME, response.body().string());
+                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
                     try {
@@ -409,11 +409,11 @@ public class ServerService extends Service {
                                             image,
                                             track.getInt("duration_ms"),
                                             track.getJSONObject("album").getString("name")));
-                            Log.d(NAME, tempTracks.get(i).toString());
+                            Log.d(TAG, tempTracks.get(i).toString());
                         }
                         afterExtractCallback.useTracks(tempTracks, count);
                     } catch (JSONException e) {
-                        Log.e(NAME, e.getMessage(), e);
+                        Log.e(TAG, e.getMessage(), e);
                     }
                 }
                 response.close();
@@ -760,7 +760,7 @@ public class ServerService extends Service {
                         if(lastSongTitle == null || (nowPlaying != null && !nowPlaying.name.equals(lastSongTitle.name))) {
                             if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
                                 stopped = true;
-                                Log.d(NAME, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
+                                Log.d(TAG, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
                                 mSpotifyAppRemote.getPlayerApi().skipPrevious();
                                 mSpotifyAppRemote.getPlayerApi().pause();
                                 pause = true;
@@ -774,13 +774,13 @@ public class ServerService extends Service {
                                 return;
                             }
                             lastSongTitle = nowPlaying;
-                            Log.d(NAME, "New song has been started " + track.uri.split(":")[2]);
+                            Log.d(TAG, "New song has been started " + track.uri.split(":")[2]);
                             stopped = false;
                             new Thread(()->{
                                 try {
                                     sendToAll(Commands.PLAYING, getNowPlaying().serialize());
                                 } catch (IOException | JSONException e) {
-                                    Log.e(NAME, e.getMessage(), e);
+                                    Log.e(TAG, e.getMessage(), e);
                                 }
                             }).start();
                             if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
