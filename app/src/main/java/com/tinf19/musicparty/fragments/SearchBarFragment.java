@@ -22,6 +22,7 @@ import android.widget.ImageButton;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.util.ForAllCallback;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,16 +55,15 @@ public class SearchBarFragment extends Fragment {
     private ImageButton searchButton;
     private ArrayAdapter<String> adapter;
 
-    public interface SearchForSongs {
+    public interface SearchForSongs extends ForAllCallback {
         void searchForSongs(List<Track> tracks);
     }
 
     public SearchBarFragment() {
     }
 
-    public SearchBarFragment(SearchForSongs searchForSongs, String token) {
+    public SearchBarFragment(SearchForSongs searchForSongs) {
         this.searchForSongs = searchForSongs;
-        this.token = token;
     }
 
     @Override
@@ -144,6 +144,8 @@ public class SearchBarFragment extends Fragment {
     }
 
     public void search(String query, boolean usage, String type, String limit) {
+        String token = searchForSongs.getToken();
+        if(token == null) return;
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")

@@ -24,6 +24,7 @@ import android.widget.ImageButton;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.util.ForAllCallback;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -55,12 +56,11 @@ public class HostSearchBarFragment extends Fragment {
     public HostSearchForSongs searchForSongs;
     private static final String HOST = "api.spotify.com";
     private List<Track> tracks = new ArrayList<>();
-    private String token;
     private AutoCompleteTextView searchText;
     private ImageButton searchButton;
     private ArrayAdapter<String> adapter;
 
-    public interface HostSearchForSongs {
+    public interface HostSearchForSongs extends ForAllCallback {
         void searchForSongs(List<Track> tracks);
         void openSavedPlaylistsFragment();
     }
@@ -69,9 +69,8 @@ public class HostSearchBarFragment extends Fragment {
         // Required empty public constructor
     }
 
-    public HostSearchBarFragment(HostSearchForSongs searchForSongs, String token) {
+    public HostSearchBarFragment(HostSearchForSongs searchForSongs) {
         this.searchForSongs = searchForSongs;
-        this.token = token;
     }
 
 
@@ -167,6 +166,8 @@ public class HostSearchBarFragment extends Fragment {
     }
 
     public void search(String query, boolean usage, String type, String limit) {
+        String token = searchForSongs.getToken();
+        if(token == null) return;
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")

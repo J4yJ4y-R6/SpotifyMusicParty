@@ -27,7 +27,7 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/partyPeopleRecyclerView"
-            android:layout_width="412dp"
+            android:layout_width="match_parent"
             android:layout_height="494dp"
             android:layout_marginTop="10dp"
             android:layout_marginBottom="20dp"

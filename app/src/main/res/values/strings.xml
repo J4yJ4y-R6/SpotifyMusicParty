@@ -27,6 +27,9 @@
     <string name="text_vetoType">Veto</string>
     <string name="text_votingType">Voting</string>
     <string name="text_save">Sichern</string>
+    <string name="text_loadingClient">Verbindung zum Server wird hergestellt</string>
+    <string name="text_loadingServer">Verbindung zu Spotify wird hergestellt</string>
+
     <string name="heading_settings">Einstellungen</string>
     <string name="service_channelName">Music Party Service Channel</string>
     <string name="service_name">MusicParty</string>
@@ -37,7 +40,6 @@
     <string name="service_serverConnected">Du bist Teil der %1$s</string>
     <string name="service_serverDisconnected">Du hast die %1$s verlassen</string>
     <string name="service_playlistDescription">Deine Playlist aus der %1$s.</string>
-    <string name="tex_loadingClient">Verbindung zum Server wird hergestellt</string>
     <string name="title_activity_host_party">HostPartyActivity</string>
     <string name="text_search">Suchen</string>
     <string name="text_songTitle">Song Titel eingeben</string>

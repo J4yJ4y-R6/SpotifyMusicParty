@@ -33,6 +33,7 @@ import com.google.gson.JsonObject;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DownloadImageTask;
+import com.tinf19.musicparty.util.ForAllCallback;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -74,8 +75,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     private View view;
     private String playlistID;
 
-
-    public interface FavoritePlaylistsCallback{
+    public interface FavoritePlaylistsCallback extends ForAllCallback {
         void reloadFavoritePlaylistsFragment();
         void playFavoritePlaylist(String id, ArrayList<String> idList);
         void changePlaylistName(String name, String id);
@@ -83,9 +83,8 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         void deletePlaylist(String id);
     }
 
-    public ShowSavedPlaylistsFragment(FavoritePlaylistsCallback favoritePlaylistsCallback, String token) {
+    public ShowSavedPlaylistsFragment(FavoritePlaylistsCallback favoritePlaylistsCallback) {
         this.favoritePlaylistsCallback = favoritePlaylistsCallback;
-        this.token = token;
     }
 
     public ShowSavedPlaylistsFragment() {
@@ -182,6 +181,8 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     }
 
     private void getPlaylistCoverUrl(String id, ImageView button) {
+        String token = favoritePlaylistsCallback.getToken();
+        if(token == null) return;
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")

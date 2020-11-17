@@ -117,7 +117,6 @@ public class ShowSongHostFragment extends Fragment {
             mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
         }
 
-        nowPlaying = openHostFragments.setShowNowPlaying();
         partyNameTextView = view.findViewById(R.id.partyOverviewTextView);
 
         currentPlayingTitleTextView = view.findViewById(R.id.songtitleHostTextView);

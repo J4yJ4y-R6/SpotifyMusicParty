@@ -15,6 +15,8 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
 import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
@@ -24,6 +26,7 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.TokenRefresh;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,11 +62,12 @@ public class ServerService extends Service implements Parcelable {
     private static final String TAG = ServerService.class.getName();
     private static final int PORT = 1403;
     private static final String HOST = "api.spotify.com";
-    public static final MediaType JSON
+    private static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
     private final IBinder mBinder = new LocalBinder();
     private String password;
     Thread serverThread = null;
+    private Thread tokenRefresh = null;
     private ServerSocket serverSocket;
     private List<CommunicationThread> clientThreads = new ArrayList<>();
     private Socket tempClientSocket;
@@ -108,6 +112,8 @@ public class ServerService extends Service implements Parcelable {
         void setNowPlaying(Track nowPlaying);
         void setPeopleCount(int count);
         void setPlayImage(boolean pause);
+        void showDefault();
+        void connect(HostActivity.ConnectionCallback connectionCallback);
     }
 
     public interface AfterDeleteCallback {
@@ -134,12 +140,35 @@ public class ServerService extends Service implements Parcelable {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        token = intent.getStringExtra(Constants.TOKEN);
+        //token = intent.getStringExtra(Constants.TOKEN);
         password = intent.getStringExtra(Constants.PASSWORD);
         partyName = intent.getStringExtra(Constants.PARTYNAME);
         Log.d(TAG, "partyName: " + partyName);
         if (first) {
-            getUserID();
+            tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenCallback() {
+                @Override
+                public void afterConnection(String token) {
+                    Log.d(TAG, "afterConnection: Token has been " + token);
+                    ServerService.this.token = token;
+                    if(spotifyPlayerCallback != null) {
+                        spotifyPlayerCallback.connect(appRemote -> {
+                            mSpotifyAppRemote = appRemote;
+                            Log.d(TAG, "afterConnection: App remote" + (appRemote != null));
+                            getUserID();
+                            addEventListener();
+                            if (spotifyPlayerCallback != null)
+                                spotifyPlayerCallback.showDefault();
+                        });
+                    }
+                }
+
+                @Override
+                public void afterRefresh(String token) {
+                    Log.d(TAG, "afterRefresh: Token hast been refreshed");
+                    ServerService.this.token = token;
+                }
+            }));
+            tokenRefresh.start();
             first = false;
         }
 
@@ -445,6 +474,7 @@ public class ServerService extends Service implements Parcelable {
     }
 
     public void deletePlaylist(String id) {
+        if(id == null) return;
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
@@ -834,14 +864,18 @@ public class ServerService extends Service implements Parcelable {
     }
 
     public Track getNowPlaying(){
-        return new Track(
+        return nowPlaying != null ? new Track(
                 nowPlaying.uri.split(":")[2],
                 nowPlaying.name,
                 nowPlaying.artists,
                 nowPlaying.imageUri.raw.split(":")[2],
                 nowPlaying.duration,
                 nowPlaying.album.name
-        );
+        ) : null;
+    }
+
+    public String getToken() {
+        return token;
     }
 
     class ServerThread implements Runnable {
