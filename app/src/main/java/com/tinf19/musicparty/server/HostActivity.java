@@ -18,6 +18,8 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -47,6 +49,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
@@ -62,6 +65,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
     private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
     private static final String STATE_PASSWORD = "password";
+    private static final String STATE_SERVICE = "service";
     private static final String STATE_TAG = "tag";
     private int mCounter;
     private String password;
@@ -110,7 +114,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 startService(serviceIntent);
             });
             // Tell the user about this for our demo.
-            Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected), Toast.LENGTH_SHORT).show();
+            if(mBoundService != null)
+                Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected, mBoundService.getPartyName()), Toast.LENGTH_SHORT).show();
+            else
+                Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected, "MusicParty"), Toast.LENGTH_SHORT).show();
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -230,6 +237,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         if(savedInstanceState != null) {
             mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
             password = savedInstanceState.getString(STATE_PASSWORD, "0000");
+            mBoundService = savedInstanceState.getParcelable(STATE_SERVICE);
             String currentFragmentTag = savedInstanceState.getString(STATE_TAG, "ShowSongHostFragment");
             if(!currentFragmentTag.equals("")) {
                 Log.d(TAG, "onCreate: " + currentFragmentTag);
@@ -267,6 +275,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         if(hostClosePartyFragment != null && hostClosePartyFragment.isVisible())
             tag = hostClosePartyFragment.getTag();
         outState.putString(STATE_TAG, tag);
+        outState.putParcelable(STATE_SERVICE, mBoundService);
     }
 
     @Override
@@ -472,7 +481,9 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public Track getCurrentPlaying() {
         if (mBoundService != null) return mBoundService.getNowPlaying();
-        else return null;
+        else {
+            return null;
+        }
     }
 
     @Override

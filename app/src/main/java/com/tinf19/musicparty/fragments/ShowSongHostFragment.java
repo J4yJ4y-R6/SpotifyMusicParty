@@ -87,6 +87,7 @@ public class ShowSongHostFragment extends Fragment {
         if(currentPlayingArtistTextView != null) currentPlayingArtistTextView.setSelected(true);
     }
 
+
     public void setPartyNameCount(int count) {
         if(partyNameTextView != null) {
             String text = partyName + " mit " + count + " Menschen";

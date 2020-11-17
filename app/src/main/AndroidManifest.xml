@@ -33,7 +33,9 @@
 
 
         <activity
-            android:name="com.journeyapps.barcodescanner.CaptureActivity"/>
+            android:name="com.journeyapps.barcodescanner.CaptureActivity"
+            android:screenOrientation="portrait"
+            tools:replace="screenOrientation"/>
         <activity android:name="com.tinf19.musicparty.client.PartyActivity"/>
         <activity android:name="com.tinf19.musicparty.client.ClientActivity">
             <intent-filter>

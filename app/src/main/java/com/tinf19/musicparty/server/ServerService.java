@@ -6,6 +6,8 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Binder;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.service.voice.AlwaysOnHotwordDetector;
 import android.util.Base64;
 import android.os.IBinder;
@@ -52,7 +54,7 @@ import okhttp3.ResponseBody;
 
 import static com.tinf19.musicparty.App.CHANNEL_ID;
 
-public class ServerService extends Service {
+public class ServerService extends Service implements Parcelable {
 
     private static final String TAG = ServerService.class.getName();
     private static final int PORT = 1403;
@@ -73,13 +75,34 @@ public class ServerService extends Service {
     private String partyName;
     private List<Track> tracks = new ArrayList<>();
     private List<Track> playlist = new ArrayList<>();
-    private ServerService mBoundService;
     private SpotifyAppRemote mSpotifyAppRemote;
     private boolean pause = true;
     private SpotifyPlayerCallback spotifyPlayerCallback;
     private  com.spotify.protocol.types.Track nowPlaying;
     private com.spotify.protocol.types.Track lastSongTitle;
     private boolean stopped;
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        //empty
+    }
+
+    public static final Creator<ServerService> CREATOR = new Creator<ServerService>() {
+        @Override
+        public ServerService createFromParcel(Parcel in) {
+            return new ServerService();
+        }
+
+        @Override
+        public ServerService[] newArray(int size) {
+            return new ServerService[size];
+        }
+    };
 
     public interface SpotifyPlayerCallback {
         void setNowPlaying(Track nowPlaying);
@@ -263,7 +286,7 @@ public class ServerService extends Service {
         JSONObject sampleObject = new JSONObject()
                 .put("name", name)
                 .put("public", false)
-                .put("description", getString(R.string.service_playlistDescription));
+                .put("description", getString(R.string.service_playlistDescription, partyName));
         RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
         Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()

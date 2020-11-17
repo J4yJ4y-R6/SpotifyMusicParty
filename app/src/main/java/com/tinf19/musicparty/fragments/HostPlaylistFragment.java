@@ -29,7 +29,7 @@ import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
 
 public class HostPlaylistFragment extends Fragment {
 
-    private static final String TAG = HostPlaylistRecycAdapter.class.getName();
+    private static final String TAG = HostPlaylistFragment.class.getName();
     private int mCounter;
     private RecyclerView recyclerView;
     private TextView currentSongTitleTextView;
@@ -58,6 +58,7 @@ public class HostPlaylistFragment extends Fragment {
         super.onStart();
         playlistCallback.showPlaylist();
         Track currentPlaying = playlistCallback.getCurrentPlaying();
+        Log.d(TAG, "onStart: " + currentPlaying);
         if(currentSongTitleTextView != null) currentSongTitleTextView.setText(currentPlaying.getName());
         if(currentSongArtistTextView != null) currentSongArtistTextView.setText(currentPlaying.getArtist(0).getName());
         if(currentSongCoverImageView != null) {
@@ -80,10 +81,11 @@ public class HostPlaylistFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof PlaylistCallback || context instanceof HostPlaylistRecycAdapter.HostPlaylistAdapterCallback) {
+        if(context instanceof HostPlaylistRecycAdapter.HostPlaylistAdapterCallback) {
             hostPlaylistAdapterCallback = (HostPlaylistRecycAdapter.HostPlaylistAdapterCallback) context;
-            playlistCallback = (PlaylistCallback) context;
         }
+        if(context instanceof PlaylistCallback)
+            playlistCallback = (PlaylistCallback) context;
     }
 
     @Override

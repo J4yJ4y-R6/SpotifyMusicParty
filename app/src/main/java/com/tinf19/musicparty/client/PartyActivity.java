@@ -89,7 +89,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                     Log.e(NAME, e.getMessage(), e);
                 }
             }).start();
-            exitService(getString(R.string.service_serverDisconnected));
+            exitService(getString(R.string.service_serverDisconnected, getPartyName()));
         }
     };
 
@@ -217,7 +217,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
             } catch (IOException e) {
                 Log.e(NAME, e.getMessage(), e);
             }
-            exitService(getString(R.string.service_serverDisconnected));
+            exitService(getString(R.string.service_serverDisconnected, getPartyName()));
         }).start();
     }
 

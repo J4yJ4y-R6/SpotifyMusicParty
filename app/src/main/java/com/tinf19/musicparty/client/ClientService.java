@@ -79,9 +79,11 @@ public class ClientService extends Service {
         Intent intentAction = new Intent(this, ActionReceiver.class);
         PendingIntent pendingIntentButton = PendingIntent.getBroadcast(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
 
+
+        //TODO: Service Text später Namen hinzufügen
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_name))
-                .setContentText(getString(R.string.service_clientMsg))
+                .setContentText(getString(R.string.service_clientMsg, "MusicParty"))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
                 .addAction(R.drawable.ic_exit_button, getString(R.string.text_leave),pendingIntentButton)
