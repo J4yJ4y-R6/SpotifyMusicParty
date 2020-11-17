@@ -93,7 +93,7 @@ public class ShowSongHostFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_show_song_host, container, false);
 
-        nowPlaying = openHostFragments.setShowNowPlaying();
+        //nowPlaying = openHostFragments.setShowNowPlaying();
 //        Log.d(TAG, "onCreateView: " + nowPlaying.getName());
 
         partyNameTextView = view.findViewById(R.id.partyOverviewTextView);

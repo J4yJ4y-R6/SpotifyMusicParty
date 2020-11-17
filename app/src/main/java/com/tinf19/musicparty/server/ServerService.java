@@ -13,6 +13,8 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
 import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
@@ -22,6 +24,7 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.TokenRefresh;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -57,11 +60,12 @@ public class ServerService extends Service {
     private static final String TAG = ServerService.class.getName();
     private static final int PORT = 1403;
     private static final String HOST = "api.spotify.com";
-    public static final MediaType JSON
+    private static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
     private final IBinder mBinder = new LocalBinder();
     private String password;
     Thread serverThread = null;
+    private Thread tokenRefresh = null;
     private ServerSocket serverSocket;
     private List<CommunicationThread> clientThreads = new ArrayList<>();
     private Socket tempClientSocket;
@@ -85,6 +89,8 @@ public class ServerService extends Service {
         void setNowPlaying(Track nowPlaying);
         void setPeopleCount(int count);
         void setPlayImage(boolean pause);
+        void showDefault();
+        void connect(HostActivity.ConnectionCallback connectionCallback);
     }
 
     public interface AfterDeleteCallback {
@@ -104,19 +110,42 @@ public class ServerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.d(NAME, "Stopped: " + stopped + " Lastsong: " + (lastSongTitle != null ? lastSongTitle.name : "Nichts"));
+        Log.d(TAG, "Stopped: " + stopped + " Lastsong: " + (lastSongTitle != null ? lastSongTitle.name : "Nichts"));
         startServer();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        token = intent.getStringExtra(Constants.TOKEN);
+        //token = intent.getStringExtra(Constants.TOKEN);
         password = intent.getStringExtra(Constants.PASSWORD);
         partyName = intent.getStringExtra(Constants.PARTYNAME);
         Log.d(TAG, "partyName: " + partyName);
         if (first) {
-            getUserID();
+            tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenCallback() {
+                @Override
+                public void afterConnection(String token) {
+                    Log.d(TAG, "afterConnection: Token has been " + token);
+                    ServerService.this.token = token;
+                    if(spotifyPlayerCallback != null) {
+                        spotifyPlayerCallback.connect(appRemote -> {
+                            mSpotifyAppRemote = appRemote;
+                            Log.d(TAG, "afterConnection: App remote" + (appRemote != null));
+                            getUserID();
+                            addEventListener();
+                            if (spotifyPlayerCallback != null)
+                                spotifyPlayerCallback.showDefault();
+                        });
+                    }
+                }
+
+                @Override
+                public void afterRefresh(String token) {
+                    Log.d(TAG, "afterRefresh: Token hast been refreshed");
+                    ServerService.this.token = token;
+                }
+            }));
+            tokenRefresh.start();
             first = false;
         }
 
@@ -361,26 +390,26 @@ public class ServerService extends Service {
                 .addPathSegment("tracks")
                 .addQueryParameter("offset", String.valueOf(100 * page))
                 .build();
-        Log.d(NAME, "Making request to " + completeURL.toString());
+        Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .get()
                 .addHeader("Authorization", "Bearer " + token)
                 .addHeader("Content-Type", "application/json")
                 .build();
-        Log.d(NAME, request.headers().toString());
+        Log.d(TAG, request.headers().toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 // Do something when request failed
                 e.printStackTrace();
-                Log.d(NAME, "Request Failed.");
+                Log.d(TAG, "Request Failed.");
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(NAME, response.body().string());
+                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
                     try {
@@ -409,11 +438,11 @@ public class ServerService extends Service {
                                             image,
                                             track.getInt("duration_ms"),
                                             track.getJSONObject("album").getString("name")));
-                            Log.d(NAME, tempTracks.get(i).toString());
+                            Log.d(TAG, tempTracks.get(i).toString());
                         }
                         afterExtractCallback.useTracks(tempTracks, count);
                     } catch (JSONException e) {
-                        Log.e(NAME, e.getMessage(), e);
+                        Log.e(TAG, e.getMessage(), e);
                     }
                 }
                 response.close();
@@ -422,6 +451,7 @@ public class ServerService extends Service {
     }
 
     public void deletePlaylist(String id) {
+        if(id == null) return;
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
@@ -760,7 +790,7 @@ public class ServerService extends Service {
                         if(lastSongTitle == null || (nowPlaying != null && !nowPlaying.name.equals(lastSongTitle.name))) {
                             if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
                                 stopped = true;
-                                Log.d(NAME, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
+                                Log.d(TAG, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
                                 mSpotifyAppRemote.getPlayerApi().skipPrevious();
                                 mSpotifyAppRemote.getPlayerApi().pause();
                                 pause = true;
@@ -774,13 +804,13 @@ public class ServerService extends Service {
                                 return;
                             }
                             lastSongTitle = nowPlaying;
-                            Log.d(NAME, "New song has been started " + track.uri.split(":")[2]);
+                            Log.d(TAG, "New song has been started " + track.uri.split(":")[2]);
                             stopped = false;
                             new Thread(()->{
                                 try {
                                     sendToAll(Commands.PLAYING, getNowPlaying().serialize());
                                 } catch (IOException | JSONException e) {
-                                    Log.e(NAME, e.getMessage(), e);
+                                    Log.e(TAG, e.getMessage(), e);
                                 }
                             }).start();
                             if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
@@ -811,14 +841,18 @@ public class ServerService extends Service {
     }
 
     public Track getNowPlaying(){
-        return new Track(
+        return nowPlaying != null ? new Track(
                 nowPlaying.uri.split(":")[2],
                 nowPlaying.name,
                 nowPlaying.artists,
                 nowPlaying.imageUri.raw.split(":")[2],
                 nowPlaying.duration,
                 nowPlaying.album.name
-        );
+        ) : null;
+    }
+
+    public String getToken() {
+        return token;
     }
 
     class ServerThread implements Runnable {

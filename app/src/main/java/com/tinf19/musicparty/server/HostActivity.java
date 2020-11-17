@@ -20,12 +20,16 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.spotify.sdk.android.auth.AuthorizationClient;
+import com.spotify.sdk.android.auth.AuthorizationRequest;
+import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.tinf19.musicparty.fragments.HostClosePartyFragment;
 import com.tinf19.musicparty.fragments.HostPlaylistFragment;
 import com.tinf19.musicparty.fragments.HostSearchBarFragment;
 import com.tinf19.musicparty.fragments.PartyPeopleFragment;
 import com.tinf19.musicparty.fragments.SearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
+import com.tinf19.musicparty.fragments.ServerLoadingFragment;
 import com.tinf19.musicparty.fragments.SettingsHostFragment;
 import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
 import com.tinf19.musicparty.fragments.ShowSongHostFragment;
@@ -57,6 +61,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private static final String TAG = HostActivity.class.getName();
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
     private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
+    private static final int REQUEST_CODE = 1337;
     private String password;
     private static HostActivity hostActivity;
 
@@ -66,7 +71,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private IntentFilter intentFilter;
     private ServerService mBoundService;
 
-    private String token;
+    //private String token;
     private boolean mShouldUnbind;
 
     private FragmentTransaction fragmentTransaction;
@@ -95,13 +100,14 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mBoundService = ((ServerService.LocalBinder) service).getService();
-            connect(appRemote -> {
+            loginToSpotify();
+            /*connect(appRemote -> {
                 Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
                 serviceIntent.putExtra(Constants.TOKEN, token);
                 serviceIntent.putExtra(Constants.PASSWORD, generatePassword());
                 serviceIntent.putExtra(Constants.PARTYNAME, getString(R.string.text_partyName));
                 startService(serviceIntent);
-            });
+            });*/
             // Tell the user about this for our demo.
             Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected), Toast.LENGTH_SHORT).show();
         }
@@ -112,39 +118,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     Toast.LENGTH_SHORT).show();
         }
     };
-
-    private void connect(ConnectionCallback connectionCallback) {
-        ConnectionParams connectionParams =
-                new ConnectionParams.Builder(CLIENT_ID)
-                        .setRedirectUri(REDIRECT_URI)
-                        .showAuthView(false)
-                        .build();
-        SpotifyAppRemote.connect(HostActivity.this, connectionParams,
-                new Connector.ConnectionListener() {
-
-                    @Override
-                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                        if (mBoundService != null)
-                            mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
-                        Log.d(TAG, "Connected! Yay!");
-                        //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
-                        // Now you can start interacting with App Remote
-                        connectionCallback.afterConnection(spotifyAppRemote);
-
-                        if (mBoundService != null) {
-                            mBoundService.setSpotifyPlayerCallback(HostActivity.this);
-                            mBoundService.addEventListener();
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Throwable throwable) {
-                        Log.e(TAG, throwable.getMessage(), throwable);
-
-                        // Something went wrong when attempting to connect! Handle errors here
-                    }
-                });
-    }
 
     void doBindService() {
         if (bindService(new Intent(this, ServerService.class),
@@ -181,6 +154,54 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         return password;
     }
 
+    public void loginToSpotify() {
+        Log.d(TAG, "Trying to get auth token");
+        AuthorizationRequest.Builder builder =
+                new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.CODE, REDIRECT_URI);
+        builder.setScopes(new String[]{"streaming", "app-remote-control", "playlist-modify-private", "playlist-modify-public", "user-read-private", "ugc-image-upload"});
+        AuthorizationRequest request = builder.build();
+        AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+
+        // Check if result comes from the correct activity
+        if (requestCode == REQUEST_CODE) {
+            AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
+
+            switch (response.getType()) {
+                // Response was successful and contains auth token
+                case TOKEN:
+                    // Handle successful response
+                    //token = response.getAccessToken();
+                    Log.d(TAG, "Expires in: " + response.getExpiresIn());
+                    Log.d(TAG, "Token gained successful: " + response.getAccessToken());
+                    break;
+                // Auth flow returned an error
+                case ERROR:
+                    // Handle error response
+                    Log.e(TAG, "Spotify login error");
+                    break;
+                // Most likely auth flow was cancelled
+                case CODE:
+                    Log.d(TAG, "Code: " + response.getCode());
+                    Log.d(TAG, "State: " + response.getState()); Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
+                    serviceIntent.putExtra(Constants.CODE, response.getCode());
+                    serviceIntent.putExtra(Constants.PASSWORD, generatePassword());
+                    serviceIntent.putExtra(Constants.PARTYNAME, getString(R.string.text_partyName));
+                    startService(serviceIntent);
+                    if(mBoundService != null)
+                        mBoundService.setSpotifyPlayerCallback(HostActivity.this);
+                    break;
+                default:
+                    // Handle other cases
+                    Log.e(TAG, "Something went wrong");
+            }
+        }
+    }
+
 
 //    Interaction with Activity
 
@@ -192,6 +213,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
 
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, new ServerLoadingFragment(), "ServerLoadingFragment").commitAllowingStateLoss();
         //Que.getInstance().add(new com.example.musicparty.music.Track("3cfOd4CMv2snFaKAnMdnvK"));
         //Que.getInstance().add(new com.example.musicparty.music.Track("76nqCfJOcFFWBJN32PAksn"));
 
@@ -205,19 +228,23 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-        token = getIntent().getStringExtra(Constants.TOKEN);
+        //token = getIntent().getStringExtra(Constants.TOKEN);
 
         doBindService();
 
-        hostSearchBarFragment = new HostSearchBarFragment(this, getIntent().getStringExtra(Constants.TOKEN));
+
+    }
+
+    @Override
+    public void showDefault() {
+        hostSearchBarFragment = new HostSearchBarFragment(this);
         showSongFragment = new ShowSongHostFragment(this);
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
         hostClosePartyFragment = new HostClosePartyFragment(this);
         settingsHostFragment = new SettingsHostFragment(this);
         hostPlaylistFragment = new HostPlaylistFragment(this, this);
         partyPeopleFragment = new PartyPeopleFragment(this);
-        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this, token);
-
+        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this);
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
         getSupportFragmentManager().beginTransaction().
@@ -290,6 +317,11 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void openSavedPlaylistsFragment() {
         animateFragmentChange(true, showSavedPlaylistsFragment, "ShowSavedPlaylistFragment");
+    }
+
+    @Override
+    public String getToken() {
+        return mBoundService != null ? mBoundService.getToken() : null;
     }
 
     @Override
@@ -387,6 +419,36 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         else return null;
     }
 
+    @Override
+    public void connect(HostActivity.ConnectionCallback connectionCallback) {
+        runOnUiThread(() -> {
+            Log.d(TAG, "connect: Trying to connect");
+            ConnectionParams connectionParams =
+                    new ConnectionParams.Builder(Constants.CLIENT_ID)
+                            .setRedirectUri(Constants.REDIRECT_URI)
+                            .showAuthView(false)
+                            .build();
+            SpotifyAppRemote.connect(HostActivity.this, connectionParams,
+                    new Connector.ConnectionListener() {
+
+                        @Override
+                        public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                            Log.d(TAG, "Connected! Yay!");
+                            //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
+                            // Now you can start interacting with App Remote
+                            connectionCallback.afterConnection(spotifyAppRemote);
+                            //if(mBoundService!= null) mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
+                        }
+
+                        @Override
+                        public void onFailure(Throwable throwable) {
+                            Log.e(TAG, throwable.getMessage(), throwable);
+
+                            // Something went wrong when attempting to connect! Handle errors here
+                        }
+                    });
+        });
+    }
 
 //    Methods for SearchSongsOutput
 
@@ -420,8 +482,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     public void nextSong(View view) {
         if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
             mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
-        else if (mBoundService != null)
-            connect(appRemote -> appRemote.getPlayerApi().skipNext());
+        //else if (mBoundService != null)
+            //connect(appRemote -> appRemote.getPlayerApi().skipNext());
     }
 
     @Override

@@ -31,18 +31,20 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        loginToSpotify();
+        //loginToSpotify();
+        binding.button.setEnabled(true);
+        binding.button2.setEnabled(true);
     }
 
     public void changeHost(View view){
         Intent intent = new Intent(this, HostActivity.class);
-        intent.putExtra(Constants.TOKEN, token);
+        //intent.putExtra(Constants.TOKEN, token);
         startActivity(intent);
     }
 
     public void changeClient(View view){
         Intent intent = new Intent(this, ClientActivity.class);
-        intent.putExtra(Constants.TOKEN, token);
+        //intent.putExtra(Constants.TOKEN, token);
         startActivity(intent);
     }
 
