@@ -78,7 +78,6 @@ public class HostSearchBarFragment extends Fragment {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(STATE_COUNTER, mCounter);
-        outState.putString(STATE_TOKEN, token);
     }
 
     @Override
@@ -103,7 +102,6 @@ public class HostSearchBarFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_host_search_bar, container, false);
 
         if(savedInstanceState != null) {
-            token = savedInstanceState.getString(STATE_TOKEN, "");
             mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
 
         }

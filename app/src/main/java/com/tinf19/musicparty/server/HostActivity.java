@@ -229,8 +229,31 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
 
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, new ServerLoadingFragment(), "ServerLoadingFragment").commitAllowingStateLoss();
+        hostSearchBarFragment = new HostSearchBarFragment(this);
+        showSongFragment = new ShowSongHostFragment(this);
+        searchSongsOutputFragment = new SearchSongsOutputFragment(this);
+        hostClosePartyFragment = new HostClosePartyFragment(this);
+        settingsHostFragment = new SettingsHostFragment(this);
+        hostPlaylistFragment = new HostPlaylistFragment(this, this);
+        partyPeopleFragment = new PartyPeopleFragment(this);
+        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this);
+
+        if(savedInstanceState != null) {
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
+            password = savedInstanceState.getString(STATE_PASSWORD, "0000");
+            mBoundService = savedInstanceState.getParcelable(STATE_SERVICE);
+            String currentFragmentTag = savedInstanceState.getString(STATE_TAG, "ShowSongHostFragment");
+            if(!currentFragmentTag.equals("")) {
+                Log.d(TAG, "onCreate: " + currentFragmentTag);
+                Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
+                Log.d(TAG, "onCreate: " + currentFragment.toString());
+                getSupportFragmentManager().beginTransaction().
+                        replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
+            }
+        } else {
+            getSupportFragmentManager().beginTransaction().
+                    replace(R.id.showSongHostFragmentFrame, new ServerLoadingFragment(), "ServerLoadingFragment").commitAllowingStateLoss();
+        }
         //Que.getInstance().add(new com.example.musicparty.music.Track("3cfOd4CMv2snFaKAnMdnvK"));
         //Que.getInstance().add(new com.example.musicparty.music.Track("76nqCfJOcFFWBJN32PAksn"));
 
@@ -253,32 +276,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void showDefault() {
-        hostSearchBarFragment = new HostSearchBarFragment(this);
-        showSongFragment = new ShowSongHostFragment(this);
-        searchSongsOutputFragment = new SearchSongsOutputFragment(this);
-        hostClosePartyFragment = new HostClosePartyFragment(this);
-        settingsHostFragment = new SettingsHostFragment(this);
-        hostPlaylistFragment = new HostPlaylistFragment(this, this);
-        partyPeopleFragment = new PartyPeopleFragment(this);
-
-        if(savedInstanceState != null) {
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
-            password = savedInstanceState.getString(STATE_PASSWORD, "0000");
-            mBoundService = savedInstanceState.getParcelable(STATE_SERVICE);
-            String currentFragmentTag = savedInstanceState.getString(STATE_TAG, "ShowSongHostFragment");
-            if(!currentFragmentTag.equals("")) {
-                Log.d(TAG, "onCreate: " + currentFragmentTag);
-                Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
-                Log.d(TAG, "onCreate: " + currentFragment.toString());
-                getSupportFragmentManager().beginTransaction().
-                        replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
-            }
-        } else {
-            getSupportFragmentManager().beginTransaction().
-                    replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
-            getSupportFragmentManager().beginTransaction().
-                    replace(R.id.searchBarHostFragmentFrame, hostSearchBarFragment, "HostSearchBarFragment").commitAllowingStateLoss();
-        }
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.searchBarHostFragmentFrame, hostSearchBarFragment, "HostSearchBarFragment").commitAllowingStateLoss();
     }
 
     @Override
