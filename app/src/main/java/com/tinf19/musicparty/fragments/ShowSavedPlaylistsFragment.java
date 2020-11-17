@@ -54,16 +54,10 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import static android.app.Activity.RESULT_OK;
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-import static com.tinf19.musicparty.util.Constants.TOKEN;
-
 
 public class ShowSavedPlaylistsFragment extends Fragment {
 
-    private static final String HOST = "api.spotify.com";
-    public static final int RESULT_LOAD_IMAGE = 1;
     private static final String TAG = ShowSavedPlaylistsFragment.class.getName();
-    private int mCounter;
     private String token;
     private SharedPreferences savePlaylistMemory;
     private ArrayList<ImageView> buttons = new ArrayList<>(9);;
@@ -94,8 +88,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
-        outState.putString(TOKEN, token);
+        outState.putString(Constants.TOKEN, token);
     }
 
     @Override
@@ -108,7 +101,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         super.onStart();
         savePlaylistMemory = getContext().getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
         idList = new ArrayList<>();
-        for(int i = 0; i < headers.size(); i++) {
+        for(int i = 0; i < savePlaylistMemory.getAll().size(); i++) {
             try {
                 JSONObject playlist = new JSONObject(savePlaylistMemory.getString("" + i, ""));
                 String id = playlist.getString("id");
@@ -136,8 +129,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_show_saved_playlists, container, false);
 
         if(savedInstanceState != null) {
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
-            token = savedInstanceState.getString(TOKEN, "");
+            token = savedInstanceState.getString(Constants.TOKEN, "");
         }
 
         headers.add(0, view.findViewById(R.id.gridZeroZeroHeaderTextView));
@@ -186,7 +178,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(id)
@@ -269,7 +261,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                                                                 //TODO wie kann man das mit dem Intent übergeben
                                                                 playlistID = id;
                                                                 photoPickerIntent.setType("image/*");
-                                                                startActivityForResult(photoPickerIntent, RESULT_LOAD_IMAGE);
+                                                                startActivityForResult(photoPickerIntent, Constants.RESULT_LOAD_IMAGE);
                                                             }
                                                         })
                                                         .setNegativeButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_edit_playlistname_button))

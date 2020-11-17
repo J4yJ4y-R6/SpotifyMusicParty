@@ -26,15 +26,13 @@ import java.util.Random;
 
 public class ClientActivity extends AppCompatActivity {
 
-    ActivityClientBinding binding;
     private static final String TAG = ClientActivity.class.getName();
-    private ImageButton scanQRCodeImageButton;
+    private final Random rand = new Random();
+    private ActivityClientBinding binding;
     private IntentIntegrator qrScan;
+    private ImageButton scanQRCodeImageButton;
     private EditText ipAddressEditText;
     private EditText passwordEditText;
-    final String lexicon = "ABCDEFGHIJKLMNOPQRSTUVWXYZ12345674890";
-    final Random rand = new Random();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -152,7 +150,7 @@ public class ClientActivity extends AppCompatActivity {
         while(builder.toString().length() == 0) {
             int length = rand.nextInt(5)+5;
             for(int i = 0; i < length; i++) {
-                builder.append(lexicon.charAt(rand.nextInt(lexicon.length())));
+                builder.append(Constants.LEXICON.charAt(rand.nextInt(Constants.LEXICON.length())));
             }
         }
         Log.d(TAG, "randomIdentifier: " + builder.toString());

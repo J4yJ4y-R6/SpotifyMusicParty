@@ -5,7 +5,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.tinf19.musicparty.client.ClientActivity;
 import com.tinf19.musicparty.databinding.ActivityMainBinding;
 import com.tinf19.musicparty.server.HostActivity;
-import com.tinf19.musicparty.util.Constants;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 
@@ -15,14 +14,12 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
+import com.tinf19.musicparty.util.Constants;
 
 public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
-    private static final String NAME = MainActivity.class.getName();
-    private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
-    private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
-    private static final int REQUEST_CODE = 1337;
+    private static final String TAG = MainActivity.class.getName();
     private static String token;
 
 
@@ -49,12 +46,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void loginToSpotify() {
-        Log.d(NAME, "Trying to get auth token");
+        Log.d(TAG, "Trying to get auth token");
         AuthorizationRequest.Builder builder =
-                new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
+                new AuthorizationRequest.Builder(Constants.CLIENT_ID, AuthorizationResponse.Type.TOKEN, Constants.REDIRECT_URI);
         builder.setScopes(new String[]{"streaming", "app-remote-control", "playlist-modify-private", "playlist-modify-public", "user-read-private", "ugc-image-upload"});
         AuthorizationRequest request = builder.build();
-        AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
+        AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);
     }
 
     @Override
@@ -62,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, intent);
 
         // Check if result comes from the correct activity
-        if (requestCode == REQUEST_CODE) {
+        if (requestCode == Constants.REQUEST_CODE) {
             AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
 
             switch (response.getType()) {
@@ -70,24 +67,24 @@ public class MainActivity extends AppCompatActivity {
                 case TOKEN:
                     // Handle successful response
                     token = response.getAccessToken();
-                    Log.d(NAME, "Expires in: " + response.getExpiresIn());
-                    Log.d(NAME, "Token gained successful: " + token);
+                    Log.d(TAG, "Expires in: " + response.getExpiresIn());
+                    Log.d(TAG, "Token gained successful: " + token);
                     binding.button.setEnabled(true);
                     binding.button2.setEnabled(true);
                     break;
                 // Auth flow returned an error
                 case ERROR:
                     // Handle error response
-                    Log.e(NAME, "Spotify login error");
+                    Log.e(TAG, "Spotify login error");
                     break;
                 // Most likely auth flow was cancelled
                 case CODE:
-                    Log.d(NAME, "Code: " + response.getCode());
-                    Log.d(NAME, "State: " + response.getState());
+                    Log.d(TAG, "Code: " + response.getCode());
+                    Log.d(TAG, "State: " + response.getState());
                     break;
                 default:
                     // Handle other cases
-                    Log.e(NAME, "Something went wrong");
+                    Log.e(TAG, "Something went wrong");
             }
         }
     }

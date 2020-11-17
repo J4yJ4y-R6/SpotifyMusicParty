@@ -19,12 +19,9 @@ import android.widget.Toast;
 
 import com.tinf19.musicparty.R;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-
 public class HostClosePartyFragment extends Fragment {
 
     private static final String TAG = HostClosePartyFragment.class.getName();
-    private int mCounter;
     private ClosePartyCallback closePartyCallback;
     private EditText savePlaylistNameEditText;
     private boolean savePlaylist;
@@ -41,12 +38,6 @@ public class HostClosePartyFragment extends Fragment {
 
     public HostClosePartyFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
     }
 
     @Override
@@ -67,8 +58,6 @@ public class HostClosePartyFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.fragment_host_close_party, container, false);
-        if(savedInstanceState!= null)
-            mCounter = savedInstanceState.getInt(STATE_COUNTER);
 
         Button denyEndPartyButton = view.findViewById(R.id.denyEndPartyButton);
         if(denyEndPartyButton != null) {

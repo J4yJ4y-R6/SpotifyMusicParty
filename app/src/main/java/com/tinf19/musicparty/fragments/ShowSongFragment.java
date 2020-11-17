@@ -22,11 +22,9 @@ import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
 
 public class ShowSongFragment extends Fragment {
 
-    private int mCounter;
     public PartyButtonClicked partyButtonClicked;
     private ImageView songCover;
     private TextView songTitle;
@@ -46,12 +44,6 @@ public class ShowSongFragment extends Fragment {
     }
 
     public ShowSongFragment() {
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
     }
 
     @Override
@@ -93,9 +85,6 @@ public class ShowSongFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_show_song, container, false);
-
-        if(savedInstanceState != null)
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
 
         songCover = rootView.findViewById(R.id.songCoverImageView);
         songTitle = rootView.findViewById(R.id.songtitleTextView);

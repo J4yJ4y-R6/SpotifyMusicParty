@@ -22,6 +22,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.spotify.sdk.android.auth.AuthorizationClient;
@@ -43,12 +44,15 @@ import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.util.HostPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.WiFiDirectBroadcastReceiver;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
+import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -61,28 +65,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-
 public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings, HostPlaylistRecycAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, ShowSavedPlaylistsFragment.FavoritePlaylistsCallback {
 
     private static final String TAG = HostActivity.class.getName();
-    private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
-    private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
-    private static final int REQUEST_CODE = 1337;
-    private static final String STATE_PASSWORD = "password";
-    private static final String STATE_SERVICE = "service";
-    private static final String STATE_TAG = "tag";
-    private int mCounter;
     private String password;
-    private static HostActivity hostActivity;
 
     private Channel channel;
     private WifiP2pManager manager;
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
     private ServerService mBoundService;
-
-    //private String token;
     private boolean mShouldUnbind;
 
     private FragmentTransaction fragmentTransaction;
@@ -111,7 +103,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mBoundService = ((ServerService.LocalBinder) service).getService();
-            loginToSpotify();
+            if(mBoundService.isFirst())
+                loginToSpotify();
             /*connect(appRemote -> {
                 Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
                 serviceIntent.putExtra(Constants.TOKEN, token);
@@ -171,10 +164,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     public void loginToSpotify() {
         Log.d(TAG, "Trying to get auth token");
         AuthorizationRequest.Builder builder =
-                new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.CODE, REDIRECT_URI);
+                new AuthorizationRequest.Builder(Constants.CLIENT_ID, AuthorizationResponse.Type.CODE, Constants.REDIRECT_URI);
         builder.setScopes(new String[]{"streaming", "app-remote-control", "playlist-modify-private", "playlist-modify-public", "user-read-private", "ugc-image-upload"});
         AuthorizationRequest request = builder.build();
-        AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
+        AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);
     }
 
     @Override
@@ -182,7 +175,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         super.onActivityResult(requestCode, resultCode, intent);
 
         // Check if result comes from the correct activity
-        if (requestCode == REQUEST_CODE) {
+        if (requestCode == Constants.REQUEST_CODE) {
             AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
 
             switch (response.getType()) {
@@ -225,7 +218,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
 
         setContentView(R.layout.activity_host_party);
-        hostActivity = this;
 
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
 
@@ -239,10 +231,9 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this);
 
         if(savedInstanceState != null) {
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
-            password = savedInstanceState.getString(STATE_PASSWORD, "0000");
-            mBoundService = savedInstanceState.getParcelable(STATE_SERVICE);
-            String currentFragmentTag = savedInstanceState.getString(STATE_TAG, "ShowSongHostFragment");
+            password = savedInstanceState.getString(Constants.PASSWORD, "0000");
+            mBoundService = savedInstanceState.getParcelable(Constants.SERVICE);
+            String currentFragmentTag = savedInstanceState.getString(Constants.TAG, "ShowSongHostFragment");
             if(!currentFragmentTag.equals("")) {
                 Log.d(TAG, "onCreate: " + currentFragmentTag);
                 Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
@@ -285,8 +276,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
-        outState.putString(STATE_PASSWORD, password);
+        outState.putString(Constants.PASSWORD, password);
         String tag = "";
         if(showSavedPlaylistsFragment != null && showSavedPlaylistsFragment.isVisible())
             tag = showSavedPlaylistsFragment.getTag();
@@ -302,8 +292,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             tag = hostPlaylistFragment.getTag();
         if(hostClosePartyFragment != null && hostClosePartyFragment.isVisible())
             tag = hostClosePartyFragment.getTag();
-        outState.putString(STATE_TAG, tag);
-        outState.putParcelable(STATE_SERVICE, mBoundService);
+        outState.putString(Constants.TAG, tag);
+        outState.putParcelable(Constants.SERVICE, mBoundService);
     }
 
     @Override
@@ -322,7 +312,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     protected void onDestroy() {
         super.onDestroy();
         if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
-            SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
+//            SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         doUnbindService();
         Log.d(TAG, "I got destroyed");
     }
@@ -592,11 +582,12 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             return false;
         SharedPreferences.Editor editor = savePlaylistMemory.edit();
         JSONObject playlist = new JSONObject();
+        String id = "";
         try {
             Log.d(TAG, "savePlaylistInSharedPreferences: " + name);
             playlist.put("name", name);
             if(mBoundService != null) {
-                String id = mBoundService.getPlaylistID();
+                id = mBoundService.getPlaylistID();
                 playlist.put("id", id);
                 mBoundService.updatePlaylistName(name, id);
             }
@@ -605,9 +596,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         }
 
         for(int i = 0; i < 9; i++) {
-            if(savePlaylistMemory.getString("" + i, null) == null) {
-                editor.putString("" + i, playlist.toString());
-                break;
+            try {
+                if(savePlaylistMemory.getString("" + i, null) == null || id.equals(new JSONObject(savePlaylistMemory.getString("" + i, "")).getString("id"))) {
+                    editor.putString("" + i, playlist.toString());
+                    break;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
         }
         editor.apply();
@@ -635,6 +630,12 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 mBoundService.deletePlaylist(playlistID);
             mBoundService.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:"+id);
             mBoundService.setPlaylistID(id);
+            mBoundService.getQueFromPlaylist(id);
+            try {
+                mBoundService.checkPlaylistFollowStatus(id);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
         //TODO: Spotify App geschlossen -> neue Verbindung
     }

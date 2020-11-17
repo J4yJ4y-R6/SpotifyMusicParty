@@ -26,8 +26,10 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.util.TokenRefresh;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -55,18 +57,12 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-import static com.tinf19.musicparty.App.CHANNEL_ID;
-
 public class ServerService extends Service implements Parcelable {
 
     private static final String TAG = ServerService.class.getName();
-    private static final int PORT = 1403;
-    private static final String HOST = "api.spotify.com";
-    private static final MediaType JSON
-            = MediaType.parse("application/json; charset=utf-8");
     private final IBinder mBinder = new LocalBinder();
     private String password;
-    Thread serverThread = null;
+    private Thread serverThread = null;
     private Thread tokenRefresh = null;
     private ServerSocket serverSocket;
     private List<CommunicationThread> clientThreads = new ArrayList<>();
@@ -120,10 +116,6 @@ public class ServerService extends Service implements Parcelable {
         void deleteFromDataset();
     }
 
-    public interface AfterExtractCallback {
-        void useTracks(List<Track> tracks, int size);
-    }
-
     public class LocalBinder extends Binder {
         ServerService getService() {
             return ServerService.this;
@@ -144,6 +136,7 @@ public class ServerService extends Service implements Parcelable {
         password = intent.getStringExtra(Constants.PASSWORD);
         partyName = intent.getStringExtra(Constants.PARTYNAME);
         Log.d(TAG, "partyName: " + partyName);
+        Log.d(TAG, "onStartCommand: " + first);
         if (first) {
             tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenCallback() {
                 @Override
@@ -179,7 +172,7 @@ public class ServerService extends Service implements Parcelable {
         PendingIntent pendingIntentButton = PendingIntent.getBroadcast(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
 
 
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+        Notification notification = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_name))
                 .setContentText(getString(R.string.service_serverMsg))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -231,6 +224,10 @@ public class ServerService extends Service implements Parcelable {
         return tmpPeopleList;
     }
 
+    public boolean isFirst() {
+        return first;
+    }
+
     public int getClientListSize() {
         return clientThreads.size();
     }
@@ -253,7 +250,7 @@ public class ServerService extends Service implements Parcelable {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("me")
                 .build();
@@ -306,7 +303,7 @@ public class ServerService extends Service implements Parcelable {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("users")
                 .addPathSegment(userID)
@@ -316,7 +313,7 @@ public class ServerService extends Service implements Parcelable {
                 .put("name", name)
                 .put("public", false)
                 .put("description", getString(R.string.service_playlistDescription, partyName));
-        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
+        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
         Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
@@ -360,7 +357,7 @@ public class ServerService extends Service implements Parcelable {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("me")
                 .addPathSegment("player")
@@ -397,16 +394,17 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
-    private void getQueFromPlaylist(String id, AfterExtractCallback afterExtractCallback) {
-        getQueFromPlaylist(id, 0, afterExtractCallback);
+    public void getQueFromPlaylist(String id) {
+        tracks.clear();
+        playlist.clear();
+        getQueFromPlaylist(id, 0);
     }
 
-    private void getQueFromPlaylist(String id, int page, AfterExtractCallback afterExtractCallback) {
-        List<Track> tempTracks = new ArrayList<>();
+    private void getQueFromPlaylist(String id, int page) {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(id)
@@ -438,7 +436,7 @@ public class ServerService extends Service implements Parcelable {
                     try {
                         JSONObject body = new JSONObject(response.body().string());
                         JSONArray items = body.getJSONArray("items");
-                        int count = body.getInt("toatal");
+                        int count = body.getInt("total");
 
                         for(int i = 0; i < items.length(); i++) {
                             JSONObject track = items.getJSONObject(i).getJSONObject("track");
@@ -453,17 +451,22 @@ public class ServerService extends Service implements Parcelable {
                                     .getJSONArray("images")
                                     .getJSONObject(2)
                                     .getString("url");
-                            tempTracks.add(
+                            Track tmpTrack =
                                     new Track(
                                             track.getString("id"),
                                             track.getString("name"),
                                             array,
                                             image,
                                             track.getInt("duration_ms"),
-                                            track.getJSONObject("album").getString("name")));
-                            Log.d(TAG, tempTracks.get(i).toString());
+                                            track.getJSONObject("album").getString("name"));
+                            tracks.add(tmpTrack);
+                            playlist.add(tmpTrack);
                         }
-                        afterExtractCallback.useTracks(tempTracks, count);
+                        Log.d(TAG, "onResponse: added " + tracks.size() + " elements" );
+                        if(page == 0 && tracks.size() > 0)
+                            tracks.remove(0);
+                        if(count > 100 * page)
+                            getQueFromPlaylist(id, page + 1);
                     } catch (JSONException e) {
                         Log.e(TAG, e.getMessage(), e);
                     }
@@ -473,12 +476,54 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
+    public void checkPlaylistFollowStatus(String id) throws JSONException {
+        String token = getToken();
+        if(token == null) return;
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(Constants.HOST)
+                .addPathSegment("v1")
+                .addPathSegment("playlists")
+                .addPathSegment(id)
+                .addPathSegment("followers")
+                .build();
+        Log.d(TAG, "Follow playlist with id:  " + id + ": " + completeURL.toString());
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("public", false);
+        RequestBody body = RequestBody.create(jsonObject.toString(), Constants.JSON);
+        Request request = new Request.Builder()
+                .url(completeURL)
+                .put(body)
+                .addHeader("Authorization", "Bearer " + token)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                e.printStackTrace();
+                Log.d(TAG, "onFailure: failed to follow playlist with id: " + id);
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    Log.d(TAG, "onResponse: already followed i guess");
+                    Log.d(TAG, "onResponse: " + response.body().string());
+                    throw new IOException("Error : " + response);
+                } else {
+                    Log.d(TAG, "onResponse: followed successfully playlist: " + id);
+                }
+            }
+        });
+    }
+
     public void deletePlaylist(String id) {
         if(id == null) return;
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(id)
@@ -515,7 +560,7 @@ public class ServerService extends Service implements Parcelable {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(playlistID)
@@ -550,11 +595,6 @@ public class ServerService extends Service implements Parcelable {
                 }else {
                     Log.d(TAG,"Request Successful. Track " + name + " has been added.");
                     size++;
-//                    try {
-//                        deleteItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen", 0);
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
                     if (size == 1) {
                         mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:" + playlistID);
                         new Thread(new Runnable() {
@@ -575,7 +615,7 @@ public class ServerService extends Service implements Parcelable {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(playlistID)
@@ -590,7 +630,7 @@ public class ServerService extends Service implements Parcelable {
         ;
         JSONObject sampleObject = new JSONObject()
                .put("tracks", new JSONArray().put(uris));
-        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
+        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
         //RequestBody body = RequestBody.create(new byte[]{}, null);
         Log.d(TAG, "Try to delete track " + name);
         Log.d(TAG, "Making request to " + completeURL.toString());
@@ -635,7 +675,7 @@ public class ServerService extends Service implements Parcelable {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(playlistID)
@@ -645,7 +685,7 @@ public class ServerService extends Service implements Parcelable {
         JSONObject sampleObject = new JSONObject()
                 .put("range_start", from)
                 .put("insert_before", to);
-        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
+        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
         Request request = new Request.Builder()
                 .url(completeURL)
                 .put(body)
@@ -684,7 +724,7 @@ public class ServerService extends Service implements Parcelable {
         byte[] encoded = Base64.encode(byteArray, Base64.NO_WRAP);
         HttpUrl completeUrl = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("users")
                 .addPathSegment(userID)
@@ -726,7 +766,7 @@ public class ServerService extends Service implements Parcelable {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(id)
@@ -734,7 +774,7 @@ public class ServerService extends Service implements Parcelable {
         Log.d(TAG, "Making request to " + completeURL.toString());
         JSONObject sampleObject = new JSONObject()
                 .put("name", name);
-        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
+        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
         Request request = new Request.Builder()
                 .url(completeURL)
                 .put(body)
@@ -883,8 +923,8 @@ public class ServerService extends Service implements Parcelable {
         @Override
         public void run() {
             try {
-                serverSocket = new ServerSocket(PORT);
-                Log.d(TAG, "Server Started on port " + PORT);
+                serverSocket = new ServerSocket(Constants.PORT);
+                Log.d(TAG, "Server Started on port " + Constants.PORT);
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
             }

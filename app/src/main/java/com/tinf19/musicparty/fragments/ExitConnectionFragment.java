@@ -19,13 +19,10 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-
 public class ExitConnectionFragment extends Fragment {
 
     private static final String TAG = ExitConnectionFragment.class.getName();
     public ConfirmExit confirmExit;
-    private int mCounter;
     private TextView leaveTextView;
 
     public interface ConfirmExit {
@@ -43,8 +40,6 @@ public class ExitConnectionFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-        }
     }
 
     @Override
@@ -64,9 +59,6 @@ public class ExitConnectionFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_exit_connection, container, false);
-
-        if(savedInstanceState != null)
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
 
         leaveTextView = view.findViewById(R.id.leavePartyOfTextView);
         Button denyButton = view.findViewById(R.id.denyLeavePartyButton);

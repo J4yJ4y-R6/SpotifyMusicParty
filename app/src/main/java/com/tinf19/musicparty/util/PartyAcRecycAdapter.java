@@ -25,9 +25,9 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
         void returnSong(Track track);
     }
 
-    SongCallback songCallback;
-    private List<Track> mDataset;
     private static final String TAG = PartyAcRecycAdapter.class.getName();
+    private SongCallback songCallback;
+    private List<Track> mDataset;
     private View textView;
 
     public class ViewHolder extends RecyclerView.ViewHolder implements SearchSongsOutputItemTouchHelperCallback.ItemTouchHelperViewHolder {

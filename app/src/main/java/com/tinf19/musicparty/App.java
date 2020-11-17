@@ -4,8 +4,9 @@ import android.app.Application;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 
+import com.tinf19.musicparty.util.Constants;
+
 public class App extends Application {
-    public static final String CHANNEL_ID = "musicPartyChannel";
 
     @Override
     public void onCreate() {
@@ -15,7 +16,7 @@ public class App extends Application {
 
     private void createNotificationChannel() {
         NotificationChannel serviceChannel = new NotificationChannel(
-                CHANNEL_ID,
+                Constants.CHANNEL_ID,
                 getString(R.string.service_channelName),
                 NotificationManager.IMPORTANCE_DEFAULT
         );

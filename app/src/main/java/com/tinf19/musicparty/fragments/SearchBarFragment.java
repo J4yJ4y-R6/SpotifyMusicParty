@@ -22,6 +22,7 @@ import android.widget.ImageButton;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.ForAllCallback;
 
 import org.json.JSONArray;
@@ -40,16 +41,11 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-import static com.tinf19.musicparty.util.Constants.TOKEN;
-
 public class SearchBarFragment extends Fragment {
 
     private static final String TAG = SearchBarFragment.class.getName();
-    private int mCounter;
     private String token;
-    public SearchForSongs searchForSongs;
-    private static final String HOST = "api.spotify.com";
+    private SearchForSongs searchForSongs;
     private List<Track> tracks = new ArrayList<>();
     private AutoCompleteTextView searchText;
     private ImageButton searchButton;
@@ -69,8 +65,7 @@ public class SearchBarFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
-        outState.putString(TOKEN, token);
+        outState.putString(Constants.TOKEN, token);
     }
 
     @Override
@@ -93,8 +88,7 @@ public class SearchBarFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_client_search_bar, container, false);
 
         if(savedInstanceState != null) {
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
-            token = savedInstanceState.getString(TOKEN, "");
+            token = savedInstanceState.getString(Constants.TOKEN, "");
         }
 
         searchText = view.findViewById(R.id.searchEditText);
@@ -149,7 +143,7 @@ public class SearchBarFragment extends Fragment {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("search")
                 .addQueryParameter("q", query)

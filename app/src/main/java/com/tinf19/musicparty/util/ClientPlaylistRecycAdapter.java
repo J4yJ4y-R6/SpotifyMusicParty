@@ -18,8 +18,8 @@ import java.util.List;
 
 public class ClientPlaylistRecycAdapter extends RecyclerView.Adapter<ClientPlaylistRecycAdapter.ViewHolder> {
 
-    private List<Track> mDataset;
     private static final String TAG = ClientPlaylistRecycAdapter.class.getName();
+    private List<Track> mDataset;
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 

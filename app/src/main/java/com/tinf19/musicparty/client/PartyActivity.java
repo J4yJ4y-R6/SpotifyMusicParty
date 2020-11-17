@@ -14,7 +14,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.PatternMatcher;
 import android.util.Log;
 
 import android.widget.Toast;
@@ -26,7 +25,6 @@ import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.tinf19.musicparty.databinding.ActivityClientPartyBinding;
 import com.tinf19.musicparty.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.fragments.LoadingFragment;
-import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.fragments.ExitConnectionFragment;
@@ -42,26 +40,20 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.List;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-import static com.tinf19.musicparty.util.Constants.TOKEN;
-
 
 public class PartyActivity extends AppCompatActivity implements ShowSongFragment.PartyButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, SearchSongsOutputFragment.AddSongCallback, ClientService.PartyCallback {
 
-    private static final int REQUEST_CODE = 1337;
     private static final String TAG = PartyActivity.class.getName();
-    private static final String STATE_TAG = "tag";
-    ActivityClientPartyBinding binding;
-    private FragmentTransaction fragmentTransaction;
-    private int mCounter;
-    private boolean mShouldUnbind;
+    private ActivityClientPartyBinding binding;
     private ClientService mBoundService;
-
+    private FragmentTransaction fragmentTransaction;
     private SearchSongsOutputFragment searchSongsOutputFragment;
     private ShowSongFragment showSongFragment;
     private ClientPlaylistFragment clientPlaylistFragment;
     private SearchBarFragment searchBarFragment;
     private ExitConnectionFragment exitConnectionFragment;
+
+    private boolean mShouldUnbind;
 
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -128,7 +120,6 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
         String tag = "";
         if(searchSongsOutputFragment != null && searchSongsOutputFragment.isVisible())
             tag = searchSongsOutputFragment.getTag();
@@ -138,7 +129,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
             tag = clientPlaylistFragment.getTag();
         if(exitConnectionFragment != null && exitConnectionFragment.isVisible())
             tag = exitConnectionFragment.getTag();
-        outState.putString(STATE_TAG, tag);
+        outState.putString(Constants.TAG, tag);
     }
 
     @Override
@@ -150,8 +141,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
 
         if(savedInstanceState != null){
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
-            String currentFragmentTag = savedInstanceState.getString(STATE_TAG, "ShowSongFragment");
+            String currentFragmentTag = savedInstanceState.getString(Constants.TAG, "ShowSongFragment");
             if(!currentFragmentTag.equals("")) {
                 Log.d(TAG, "onCreate: " + currentFragmentTag);
                 Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
@@ -172,7 +162,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                 new AuthorizationRequest.Builder(Constants.CLIENT_ID, AuthorizationResponse.Type.CODE, Constants.REDIRECT_URI);
         builder.setScopes(new String[]{});
         AuthorizationRequest request = builder.build();
-        AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
+        AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);
     }
 
     @Override
@@ -180,7 +170,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         super.onActivityResult(requestCode, resultCode, intent);
 
         // Check if result comes from the correct activity
-        if (requestCode == REQUEST_CODE) {
+        if (requestCode == Constants.REQUEST_CODE) {
             AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
 
             switch (response.getType()) {

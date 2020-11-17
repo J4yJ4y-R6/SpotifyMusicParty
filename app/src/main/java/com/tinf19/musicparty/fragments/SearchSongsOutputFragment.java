@@ -23,13 +23,10 @@ import com.tinf19.musicparty.util.SearchSongsOutputItemTouchHelperCallback;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-
 
 public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycAdapter.SongCallback {
 
     private static final String TAG = SearchSongsOutputFragment.class.getName();
-    private int mCouter;
     private RecyclerView recyclerView;
     private PartyAcRecycAdapter mAdapter;
     AddSongCallback addSongCallback;
@@ -43,12 +40,6 @@ public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycA
     }
 
     public SearchSongsOutputFragment() {
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCouter);
     }
 
     @Override
@@ -76,9 +67,6 @@ public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycA
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_search_songs_output, container, false);
-
-        if(savedInstanceState != null)
-            mCouter = savedInstanceState.getInt(STATE_COUNTER, 0);
 
         recyclerView = view.findViewById(R.id.songsOutputRecyclerView);
         if(recyclerView != null) {

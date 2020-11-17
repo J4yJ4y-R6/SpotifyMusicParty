@@ -17,19 +17,14 @@ import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.server.HostActivity;
 import com.tinf19.musicparty.util.PartyPeopleRecycAdapter;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-
 import java.util.ArrayList;
 
 public class PartyPeopleFragment extends Fragment {
 
     private static final String TAG = PartyPeopleFragment.class.getName();
-    private int mCounter;
     private RecyclerView recyclerView;
     private PartyPeopleRecycAdapter partyPeopleRecycAdapter;
     private PartyPeopleList partyPeopleList;
-    private ArrayList<PartyPeople> partyPeopleArrayList;
-    private HostActivity hostActivity = new HostActivity();
 
     public interface PartyPeopleList {
         ArrayList<PartyPeople> getPartyPeopleList();
@@ -41,12 +36,6 @@ public class PartyPeopleFragment extends Fragment {
 
     public PartyPeopleFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
     }
 
     @Override
@@ -72,9 +61,6 @@ public class PartyPeopleFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_party_people, container, false);
-
-        if(savedInstanceState != null)
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
 
         recyclerView = view.findViewById(R.id.partyPeopleRecyclerView);
         if(recyclerView != null) {

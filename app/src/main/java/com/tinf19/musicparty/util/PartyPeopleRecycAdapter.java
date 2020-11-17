@@ -18,8 +18,8 @@ import java.util.List;
 
 public class PartyPeopleRecycAdapter extends RecyclerView.Adapter<PartyPeopleRecycAdapter.ViewHolder> {
 
-    private List<PartyPeople> mDataset;
     private static final String TAG = PartyPeopleRecycAdapter.class.getName();
+    private List<PartyPeople> mDataset;
 
     public class ViewHolder extends RecyclerView.ViewHolder {
 

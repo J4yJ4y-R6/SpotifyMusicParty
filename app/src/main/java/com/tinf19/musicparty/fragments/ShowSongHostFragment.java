@@ -24,11 +24,8 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.DownloadImageTask;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-
 public class ShowSongHostFragment extends Fragment {
 
-    private int mCounter;
     private static final String TAG = ShowSongHostFragment.class.getName();
     private OpenHostFragments openHostFragments;
     private String partyName;
@@ -62,13 +59,6 @@ public class ShowSongHostFragment extends Fragment {
 
     public ShowSongHostFragment() {
         // Required empty public constructor
-    }
-
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
     }
 
     @Override
@@ -112,10 +102,6 @@ public class ShowSongHostFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_show_song_host, container, false);
-
-        if(savedInstanceState != null) {
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
-        }
 
         partyNameTextView = view.findViewById(R.id.partyOverviewTextView);
 

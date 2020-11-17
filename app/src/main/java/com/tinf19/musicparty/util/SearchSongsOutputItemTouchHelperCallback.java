@@ -8,9 +8,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 public class SearchSongsOutputItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
-    private final ItemTouchHelperAdapter mAdapter;
-    public static final float ALPHA_FULL = 1.0f;
     private static final String TAG = SearchSongsOutputItemTouchHelperCallback.class.getName();
+    private final ItemTouchHelperAdapter mAdapter;
     private PartyAcRecycAdapter adapter;
 
     public interface ItemTouchHelperAdapter {
@@ -59,7 +58,7 @@ public class SearchSongsOutputItemTouchHelperCallback extends ItemTouchHelper.Ca
     public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
             // Fade out the view as it is swiped out of the parent's bounds
-            final float alpha = ALPHA_FULL - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
+            final float alpha = Constants.ALPHA_FULL - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
             viewHolder.itemView.setAlpha(alpha);
             viewHolder.itemView.setTranslationX(dX);
         } else {
@@ -84,7 +83,7 @@ public class SearchSongsOutputItemTouchHelperCallback extends ItemTouchHelper.Ca
     public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
         super.clearView(recyclerView, viewHolder);
 
-        viewHolder.itemView.setAlpha(ALPHA_FULL);
+        viewHolder.itemView.setAlpha(Constants.ALPHA_FULL);
 
         if (viewHolder instanceof ItemTouchHelperViewHolder) {
             // Tell the view holder it's time to restore the idle state

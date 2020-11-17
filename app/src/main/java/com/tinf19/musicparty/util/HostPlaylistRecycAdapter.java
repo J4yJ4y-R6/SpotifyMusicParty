@@ -23,9 +23,9 @@ import java.util.List;
 
 public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistRecycAdapter.MyViewHolder> implements HostPlaylistItemMoveCallback.ItemTouchHelperContract {
 
+    private static final String TAG = HostPlaylistRecycAdapter.class.getName();
     private List<Track> mdataset;
     private View view;
-    private static final String TAG = HostPlaylistRecycAdapter.class.getName();
     private HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
 
     public interface HostPlaylistAdapterCallback {
