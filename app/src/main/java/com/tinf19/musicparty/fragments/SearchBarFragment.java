@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.text.Editable;
@@ -39,10 +40,14 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+import static com.tinf19.musicparty.util.Constants.TOKEN;
+
 public class SearchBarFragment extends Fragment {
 
-    //ActivityPartyBinding binding;
     private static final String TAG = SearchBarFragment.class.getName();
+    private int mCounter;
+    private String token;
     public SearchForSongs searchForSongs;
     private static final String HOST = "api.spotify.com";
     private List<Track> tracks = new ArrayList<>();
@@ -62,9 +67,23 @@ public class SearchBarFragment extends Fragment {
     }
 
     @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCounter);
+        outState.putString(TOKEN, token);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if(context instanceof SearchForSongs)
+            searchForSongs = (SearchForSongs) context;
     }
 
     @Override
@@ -72,7 +91,12 @@ public class SearchBarFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_client_search_bar, container, false);
-        //token = savedInstanceState.getBundle();
+
+        if(savedInstanceState != null) {
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
+            token = savedInstanceState.getString(TOKEN, "");
+        }
+
         searchText = view.findViewById(R.id.searchEditText);
         Point displaySize = new Point();
         getActivity().getWindowManager().getDefaultDisplay().getRealSize(displaySize);

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Point;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.text.Editable;
@@ -45,11 +46,13 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static android.os.ParcelFileDescriptor.MODE_APPEND;
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
 
 public class HostSearchBarFragment extends Fragment {
 
     private static final String TAG = HostSearchBarFragment.class.getName();
+    private static final String STATE_TOKEN = "token";
+    private int mCounter;
     public HostSearchForSongs searchForSongs;
     private static final String HOST = "api.spotify.com";
     private List<Track> tracks = new ArrayList<>();
@@ -71,6 +74,12 @@ public class HostSearchBarFragment extends Fragment {
     }
 
 
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCounter);
+        outState.putString(STATE_TOKEN, token);
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -78,13 +87,27 @@ public class HostSearchBarFragment extends Fragment {
     }
 
 
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if(context instanceof HostSearchForSongs) {
+            searchForSongs = (HostSearchForSongs) context;
+        }
+    }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_host_search_bar, container, false);
-        //token = savedInstanceState.getBundle();
+
+        if(savedInstanceState != null) {
+            token = savedInstanceState.getString(STATE_TOKEN, "");
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
+
+        }
+
         searchText = view.findViewById(R.id.hostSearchEditText);
         Point displaySize = new Point();
         getActivity().getWindowManager().getDefaultDisplay().getRealSize(displaySize);

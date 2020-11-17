@@ -1,12 +1,15 @@
 package com.tinf19.musicparty.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,10 +23,13 @@ import com.tinf19.musicparty.util.SearchSongsOutputItemTouchHelperCallback;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+
 
 public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycAdapter.SongCallback {
 
     private static final String TAG = SearchSongsOutputFragment.class.getName();
+    private int mCouter;
     private RecyclerView recyclerView;
     private PartyAcRecycAdapter mAdapter;
     AddSongCallback addSongCallback;
@@ -40,6 +46,12 @@ public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycA
     }
 
     @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCouter);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -53,10 +65,20 @@ public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycA
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if(context instanceof AddSongCallback)
+            addSongCallback = (AddSongCallback) context;
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_search_songs_output, container, false);
+
+        if(savedInstanceState != null)
+            mCouter = savedInstanceState.getInt(STATE_COUNTER, 0);
 
         recyclerView = view.findViewById(R.id.songsOutputRecyclerView);
         if(recyclerView != null) {

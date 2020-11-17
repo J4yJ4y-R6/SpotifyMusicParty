@@ -1,5 +1,6 @@
 package com.tinf19.musicparty.client;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
@@ -25,8 +26,7 @@ import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.tinf19.musicparty.databinding.ActivityClientPartyBinding;
 import com.tinf19.musicparty.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.fragments.LoadingFragment;
-import com.tinf19.musicparty.server.HostActivity;
-import com.tinf19.musicparty.server.ServerService;
+import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.fragments.ExitConnectionFragment;
@@ -42,15 +42,18 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.List;
 
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+import static com.tinf19.musicparty.util.Constants.TOKEN;
+
 
 public class PartyActivity extends AppCompatActivity implements ShowSongFragment.PartyButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, SearchSongsOutputFragment.AddSongCallback, ClientService.PartyCallback {
 
-
     private static final int REQUEST_CODE = 1337;
+    private static final String TAG = PartyActivity.class.getName();
+    private static final String STATE_TAG = "tag";
     ActivityClientPartyBinding binding;
     private FragmentTransaction fragmentTransaction;
-    private static final String TAG = PartyActivity.class.getName();
-    //private static String token;
+    private int mCounter;
     private boolean mShouldUnbind;
     private ClientService mBoundService;
 
@@ -89,7 +92,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                     Log.e(TAG, e.getMessage(), e);
                 }
             }).start();
-            exitService(getString(R.string.service_serverDisconnected));
+            exitService(getString(R.string.service_serverDisconnected, getPartyName()));
         }
     };
 
@@ -123,6 +126,22 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     }
 
     @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCounter);
+        String tag = "";
+        if(searchSongsOutputFragment != null && searchSongsOutputFragment.isVisible())
+            tag = searchSongsOutputFragment.getTag();
+        if(showSongFragment != null && showSongFragment.isVisible())
+            tag = showSongFragment.getTag();
+        if(clientPlaylistFragment != null && clientPlaylistFragment.isVisible())
+            tag = clientPlaylistFragment.getTag();
+        if(exitConnectionFragment != null && exitConnectionFragment.isVisible())
+            tag = exitConnectionFragment.getTag();
+        outState.putString(STATE_TAG, tag);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         //token = getIntent().getStringExtra(Constants.TOKEN);
@@ -130,12 +149,22 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
         setContentView(binding.getRoot());
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
 
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongFragmentFrame, new LoadingFragment(), "LoadingFragment").commitAllowingStateLoss();
+        if(savedInstanceState != null){
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
+            String currentFragmentTag = savedInstanceState.getString(STATE_TAG, "ShowSongFragment");
+            if(!currentFragmentTag.equals("")) {
+                Log.d(TAG, "onCreate: " + currentFragmentTag);
+                Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
+                Log.d(TAG, "onCreate: " + currentFragment.toString());
+                getSupportFragmentManager().beginTransaction().
+                        replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
+            }
+        } else {
+            getSupportFragmentManager().beginTransaction().
+                    replace(R.id.showSongFragmentFrame, new LoadingFragment(), "LoadingFragment").commitAllowingStateLoss();
 
-
-        doBindService();
-
+            doBindService();
+        }
     }
     public void loginToSpotify() {
         Log.d(TAG, "Trying to get auth token");
@@ -234,7 +263,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
-            exitService(getString(R.string.service_serverDisconnected));
+            exitService(getString(R.string.service_serverDisconnected, getPartyName()));
         }).start();
     }
 

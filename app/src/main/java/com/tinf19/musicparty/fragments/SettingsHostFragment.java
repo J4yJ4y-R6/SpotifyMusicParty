@@ -1,11 +1,13 @@
 package com.tinf19.musicparty.fragments;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
@@ -32,13 +34,14 @@ import com.tinf19.musicparty.util.Constants;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import static android.graphics.Color.GRAY;
-import static android.graphics.Color.GREEN;
 import static android.graphics.Color.WHITE;
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
 
 public class SettingsHostFragment extends Fragment {
 
     private static final String TAG = SettingsHostFragment.class.getName();
+    private static final String STATE_PARTYNAME = "partyname";
+    private int mCounter;
     private EditText changePartyName;
     private TextView ipAddressTextView;
     private TextView passwordTextView;
@@ -62,6 +65,13 @@ public class SettingsHostFragment extends Fragment {
 
 
     @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCounter);
+        outState.putString(STATE_PARTYNAME, partyName);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -82,9 +92,23 @@ public class SettingsHostFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if(context instanceof GetServerSettings) {
+            getServerSettings = (GetServerSettings) context;
+        }
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+
+        if(savedInstanceState != null) {
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
+            partyName = savedInstanceState.getString(STATE_PARTYNAME, "MusicParty");
+        }
+
         View view = inflater.inflate(R.layout.fragment_settings_host, container, false);
 
         ImageView qrCodeImageView = view.findViewById(R.id.qrConnectionSettingsImageView);

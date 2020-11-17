@@ -1,5 +1,7 @@
 package com.tinf19.musicparty.server;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
@@ -16,6 +18,8 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -49,6 +53,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
@@ -56,12 +61,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+
 public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings, HostPlaylistRecycAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, ShowSavedPlaylistsFragment.FavoritePlaylistsCallback {
 
     private static final String TAG = HostActivity.class.getName();
     private static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
     private static final String REDIRECT_URI = "http://com.example.musicparty/callback";
     private static final int REQUEST_CODE = 1337;
+    private static final String STATE_PASSWORD = "password";
+    private static final String STATE_SERVICE = "service";
+    private static final String STATE_TAG = "tag";
+    private int mCounter;
     private String password;
     private static HostActivity hostActivity;
 
@@ -109,7 +120,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 startService(serviceIntent);
             });*/
             // Tell the user about this for our demo.
-            Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected), Toast.LENGTH_SHORT).show();
+            if(mBoundService != null)
+                Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected, mBoundService.getPartyName()), Toast.LENGTH_SHORT).show();
+            else
+                Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected, "MusicParty"), Toast.LENGTH_SHORT).show();
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -208,6 +222,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
         setContentView(R.layout.activity_host_party);
         hostActivity = this;
 
@@ -244,11 +260,49 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         settingsHostFragment = new SettingsHostFragment(this);
         hostPlaylistFragment = new HostPlaylistFragment(this, this);
         partyPeopleFragment = new PartyPeopleFragment(this);
-        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this);
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.searchBarHostFragmentFrame, hostSearchBarFragment, "HostSearchBarFragment").commitAllowingStateLoss();
+
+        if(savedInstanceState != null) {
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
+            password = savedInstanceState.getString(STATE_PASSWORD, "0000");
+            mBoundService = savedInstanceState.getParcelable(STATE_SERVICE);
+            String currentFragmentTag = savedInstanceState.getString(STATE_TAG, "ShowSongHostFragment");
+            if(!currentFragmentTag.equals("")) {
+                Log.d(TAG, "onCreate: " + currentFragmentTag);
+                Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
+                Log.d(TAG, "onCreate: " + currentFragment.toString());
+                getSupportFragmentManager().beginTransaction().
+                        replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
+            }
+        } else {
+            getSupportFragmentManager().beginTransaction().
+                    replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
+            getSupportFragmentManager().beginTransaction().
+                    replace(R.id.searchBarHostFragmentFrame, hostSearchBarFragment, "HostSearchBarFragment").commitAllowingStateLoss();
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCounter);
+        outState.putString(STATE_PASSWORD, password);
+        String tag = "";
+        if(showSavedPlaylistsFragment != null && showSavedPlaylistsFragment.isVisible())
+            tag = showSavedPlaylistsFragment.getTag();
+        if(showSongFragment != null && showSongFragment.isVisible())
+            tag = showSongFragment.getTag();
+        if(settingsHostFragment != null && settingsHostFragment.isVisible())
+            tag = settingsHostFragment.getTag();
+        if(searchSongsOutputFragment != null && searchSongsOutputFragment.isVisible())
+            tag = searchSongsOutputFragment.getTag();
+        if(partyPeopleFragment != null && partyPeopleFragment.isVisible())
+            tag = partyPeopleFragment.getTag();
+        if(hostPlaylistFragment != null && hostPlaylistFragment.isVisible())
+            tag = hostPlaylistFragment.getTag();
+        if(hostClosePartyFragment != null && hostClosePartyFragment.isVisible())
+            tag = hostClosePartyFragment.getTag();
+        outState.putString(STATE_TAG, tag);
+        outState.putParcelable(STATE_SERVICE, mBoundService);
     }
 
     @Override
@@ -489,7 +543,9 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public Track getCurrentPlaying() {
         if (mBoundService != null) return mBoundService.getNowPlaying();
-        else return null;
+        else {
+            return null;
+        }
     }
 
     @Override

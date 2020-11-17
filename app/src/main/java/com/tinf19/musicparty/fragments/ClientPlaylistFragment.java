@@ -2,6 +2,7 @@ package com.tinf19.musicparty.fragments;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -21,9 +22,12 @@ import com.tinf19.musicparty.util.DownloadImageTask;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+
 public class ClientPlaylistFragment extends Fragment {
 
     private static final String TAG = ClientPlaylistFragment.class.getName();
+    private int mCounter;
     private RecyclerView recyclerView;
     private ClientPlaylistRecycAdapter clientPlaylistRecycAdapter;
     private ImageView currentSongCoverImageView;
@@ -36,6 +40,12 @@ public class ClientPlaylistFragment extends Fragment {
     }
 
     @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt(STATE_COUNTER, mCounter);
+    }
+
+    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -45,6 +55,9 @@ public class ClientPlaylistFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_client_playlist, container, false);
+
+        if(savedInstanceState != null)
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
 
         recyclerView = view.findViewById(R.id.clientPlaylistRecyclerView);
         if(recyclerView != null) {

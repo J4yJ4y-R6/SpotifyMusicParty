@@ -1,8 +1,10 @@
 package com.tinf19.musicparty.fragments;
 
+import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
 import android.text.Spannable;
@@ -17,11 +19,14 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 
+import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
+
 public class ExitConnectionFragment extends Fragment {
 
+    private static final String TAG = ExitConnectionFragment.class.getName();
     public ConfirmExit confirmExit;
-    private TextView partyNameTextView;
-    private static final String NAME = ExitConnectionFragment.class.getName();
+    private int mCounter;
+    private TextView leaveTextView;
 
     public interface ConfirmExit {
         void denyExit();
@@ -49,12 +54,21 @@ public class ExitConnectionFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        if(context instanceof ConfirmExit)
+            confirmExit = (ConfirmExit) context;
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_exit_connection, container, false);
-        //binding = ActivityPartyBinding.inflate(getLayoutInflater());
 
-        partyNameTextView = view.findViewById(R.id.leavePartyNameTextView);
+        if(savedInstanceState != null)
+            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
+
+        leaveTextView = view.findViewById(R.id.leavePartyOfTextView);
         Button denyButton = view.findViewById(R.id.denyLeavePartyButton);
         Button acceptButton = view.findViewById(R.id.acceptLeavePartyButton);
         denyButton.setOnClickListener(v -> confirmExit.denyExit());
@@ -64,12 +78,12 @@ public class ExitConnectionFragment extends Fragment {
     }
 
     public void setPartyName(String name) {
-        if(partyNameTextView != null) {
-            Log.d(NAME, name);
-            partyNameTextView.setText(name, TextView.BufferType.SPANNABLE);
-            Spannable spannable = (Spannable)partyNameTextView.getText();
-            int start = 0;
-            int end = name.length();
+        if(leaveTextView != null) {
+            leaveTextView.setText(getString(R.string.text_leaveParty, name), TextView.BufferType.SPANNABLE);
+            Spannable spannable = (Spannable)leaveTextView.getText();
+            Log.d(TAG, "setPartyName: " + spannable.charAt(23));
+            int start = 23;
+            int end = 23 + name.length();
             spannable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
     }
