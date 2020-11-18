@@ -1,16 +1,13 @@
 package com.tinf19.musicparty.server;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Binder;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.service.voice.AlwaysOnHotwordDetector;
 import android.util.Base64;
 import android.os.IBinder;
 import android.util.Log;
@@ -18,10 +15,6 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
-import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
-import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragmentNew;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.ActionReceiver;
@@ -30,7 +23,6 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
-import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.util.ShowSavedPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.TokenRefresh;
 
@@ -48,19 +40,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
 
 public class ServerService extends Service implements Parcelable {
 
@@ -794,7 +782,7 @@ public class ServerService extends Service implements Parcelable {
                     Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(TAG,"Request Successful. Playlist cover changed.");
+                    Log.d(TAG,"Request Successful. Playlist cover changed to " + response.body().string());
                     callback.reloadFavoritePlaylistsFragment();
                 }
                 response.close();

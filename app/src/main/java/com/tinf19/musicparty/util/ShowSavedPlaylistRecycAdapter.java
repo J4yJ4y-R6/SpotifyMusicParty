@@ -4,9 +4,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
+import android.content.res.Configuration;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,23 +16,19 @@ import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.tinf19.musicparty.R;
-import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragmentNew;
+import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
 import com.tinf19.musicparty.music.Playlist;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.util.ArrayList;
-
-import static android.app.Activity.RESULT_OK;
 
 public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSavedPlaylistRecycAdapter.ViewHolder> {
 
@@ -46,6 +40,7 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
     private String playlistID;
     private FavoritePlaylistCallback favoritePlaylistCallback;
     private static final String TAG = ShowSavedPlaylistRecycAdapter.class.getName();
+    private ShowSavedPlaylistsFragment showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment();
 
     public interface GalleryCallback {
         void openGalleryForUpload(Intent intent, String playlistID);
@@ -94,6 +89,12 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
         LayoutInflater inflater = LayoutInflater.from(context);
 
         View view = inflater.inflate(R.layout.favorite_grid_cell_layout, parent, false);
+        GridLayoutManager.LayoutParams lp = (GridLayoutManager.LayoutParams) view.getLayoutParams();
+        if(showSavedPlaylistsFragment.getScreenOrientation() == Configuration.ORIENTATION_PORTRAIT)
+            lp.height = parent.getMeasuredHeight() / 2;
+        else
+            lp.height = parent.getMeasuredHeight();
+        view.setLayoutParams(lp);
         savePlaylistMemory = context.getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
         return new ViewHolder(view);
     }

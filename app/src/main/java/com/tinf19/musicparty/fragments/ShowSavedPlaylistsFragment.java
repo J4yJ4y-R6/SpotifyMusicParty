@@ -1,9 +1,10 @@
 package com.tinf19.musicparty.fragments;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -11,24 +12,25 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.text.BoringLayout;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.view.WindowManager;
 import android.widget.Toast;
-import android.widget.ViewSwitcher;
 
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.music.Playlist;
 import com.tinf19.musicparty.util.Constants;
-import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.util.ForAllCallback;
+import com.tinf19.musicparty.util.ShowSavedPlaylistRecycAdapter;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -49,30 +51,25 @@ import okhttp3.Response;
 
 import static android.app.Activity.RESULT_OK;
 
-public class ShowSavedPlaylistsFragment extends Fragment {
+public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPlaylistRecycAdapter.GalleryCallback {
 
     private static final String TAG = ShowSavedPlaylistsFragment.class.getName();
     private String token;
     private SharedPreferences savePlaylistMemory;
-    private ArrayList<ImageView> buttons = new ArrayList<>(9);;
-    private ArrayList<TextView> headers = new ArrayList<>(9);;
-    private ArrayList<ViewSwitcher> viewSwitchers = new ArrayList<>(9);
-    private ArrayList<EditText> changeNames = new ArrayList<>(9);
-    private ArrayList<String> idList;
-    private FavoritePlaylistsCallback favoritePlaylistsCallback;
-    private View view;
+    private ArrayList<Playlist> playlists = new ArrayList<>();
+    private ShowSavedPlaylistsFragment.ShowSavedPlaylistCallback favoritePlaylistsCallback;
+    private ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback favoritePlaylistCallback;
     private String playlistID;
+    private String playlistCoverUrl;
+    private ShowSavedPlaylistRecycAdapter showSavedPlaylistRecycAdapter;
 
-    public interface FavoritePlaylistsCallback extends ForAllCallback {
-        void reloadFavoritePlaylistsFragment();
-        void playFavoritePlaylist(String id, ArrayList<String> idList);
-        void changePlaylistName(String name, String id);
+    public interface ShowSavedPlaylistCallback extends ForAllCallback {
         void changePlaylistCover(String id, Bitmap image);
-        void deletePlaylist(String id);
     }
 
-    public ShowSavedPlaylistsFragment(FavoritePlaylistsCallback favoritePlaylistsCallback) {
+    public ShowSavedPlaylistsFragment(ShowSavedPlaylistCallback favoritePlaylistsCallback, ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback favoritePlaylistCallback) {
         this.favoritePlaylistsCallback = favoritePlaylistsCallback;
+        this.favoritePlaylistCallback = favoritePlaylistCallback;
     }
 
     public ShowSavedPlaylistsFragment() {
@@ -93,8 +90,9 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+        playlists.clear();
         savePlaylistMemory = getContext().getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
-        idList = new ArrayList<>();
+        ArrayList<String> idList = new ArrayList<>();
         for(int i = 0; i < savePlaylistMemory.getAll().size(); i++) {
             try {
                 JSONObject playlist = new JSONObject(savePlaylistMemory.getString("" + i, ""));
@@ -104,68 +102,56 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                 e.printStackTrace();
             }
         }
-        for(int i = 0; i < headers.size(); i++) {
-            setPlaylists(headers.get(i), buttons.get(i), viewSwitchers.get(i), changeNames.get(i), i);
+        for(int i = 0; i < savePlaylistMemory.getAll().size(); i++) {
+            setPlaylists(i);
         }
+        while(playlists.size() < savePlaylistMemory.getAll().size());
+        showSavedPlaylistRecycAdapter.setPlaylists(playlists, idList);
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof  FavoritePlaylistsCallback)
-            favoritePlaylistsCallback = (FavoritePlaylistsCallback) context;
+        if(context instanceof  ShowSavedPlaylistCallback)
+            favoritePlaylistsCallback = (ShowSavedPlaylistCallback) context;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        view = inflater.inflate(R.layout.fragment_show_saved_playlists, container, false);
+        View view = inflater.inflate(R.layout.fragment_show_saved_playlists, container, false);
 
         if(savedInstanceState != null)
             token = savedInstanceState.getString(Constants.TOKEN, "");
 
-        headers.add(0, view.findViewById(R.id.favoriteHeaderTextView));
-        buttons.add(0, view.findViewById(R.id.favoriteCoverImageView));
-        viewSwitchers.add(0, view.findViewById(R.id.favoriteSwitcher));
-        changeNames.add(0, view.findViewById(R.id.favoriteHeaderEditText));
-        headers.add(1, view.findViewById(R.id.gridZeroOneTextView));
-        buttons.add(1, view.findViewById(R.id.gridZeroOneImageButton));
-        viewSwitchers.add(1, view.findViewById(R.id.gridZeroOneSwitcher));
-        changeNames.add(1, view.findViewById(R.id.gridZeroOneHeaderEditText));
-        headers.add(2, view.findViewById(R.id.gridZeroTwoTextView));
-        buttons.add(2, view.findViewById(R.id.gridZeroTwoImageButton));
-        viewSwitchers.add(2, view.findViewById(R.id.gridZeroTwoSwitcher));
-        changeNames.add(2, view.findViewById(R.id.gridZeroTwoHeaderEditText));
-        headers.add(3, view.findViewById(R.id.gridOneZeroTextView));
-        buttons.add(3, view.findViewById(R.id.gridOneZeroImageButton));
-        viewSwitchers.add(3, view.findViewById(R.id.gridOneZeroSwitcher));
-        changeNames.add(3, view.findViewById(R.id.gridOneZeroHeaderEditText));
-        headers.add(4, view.findViewById(R.id.gridOneOneTextView));
-        buttons.add(4, view.findViewById(R.id.gridOneOneImageButton));
-        viewSwitchers.add(4, view.findViewById(R.id.gridOneOneSwitcher));
-        changeNames.add(4, view.findViewById(R.id.gridOneOneHeaderEditText));
-        headers.add(5, view.findViewById(R.id.gridOneTwoTextView));
-        buttons.add(5, view.findViewById(R.id.gridOneTwoImageButton));
-        viewSwitchers.add(5, view.findViewById(R.id.gridOneTwoSwitcher));
-        changeNames.add(5, view.findViewById(R.id.gridOneTwoHeaderEditText));
-        headers.add(6, view.findViewById(R.id.gridTwoZeroTextView));
-        buttons.add(6, view.findViewById(R.id.gridTwoZeroImageButton));
-        viewSwitchers.add(6, view.findViewById(R.id.gridTwoZeroSwitcher));
-        changeNames.add(6, view.findViewById(R.id.gridTwoZeroHeaderEditText));
-        headers.add(7, view.findViewById(R.id.gridTwoOneTextView));
-        buttons.add(7, view.findViewById(R.id.gridTwoOneImageButton));
-        viewSwitchers.add(7, view.findViewById(R.id.gridTwoOneSwitcher));
-        changeNames.add(7, view.findViewById(R.id.gridTwoOneHeaderEditText));
-        headers.add(8, view.findViewById(R.id.gridTwoTwoTextView));
-        buttons.add(8, view.findViewById(R.id.gridTwoTwoImageButton));
-        viewSwitchers.add(8, view.findViewById(R.id.gridTwoTwoSwitcher));
-        changeNames.add(8, view.findViewById(R.id.gridTwoTwoHeaderEditText));
+        RecyclerView recyclerView = view.findViewById(R.id.gridRecyclerview);
+        showSavedPlaylistRecycAdapter = new ShowSavedPlaylistRecycAdapter(new ArrayList<>(), this, favoritePlaylistCallback);
+        if(recyclerView != null) {
+            recyclerView.setAdapter(showSavedPlaylistRecycAdapter);
+            if(getScreenOrientation() == Configuration.ORIENTATION_PORTRAIT)
+                recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
+            else
+                recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 5));
+        }
 
         return view;
     }
 
-    private void getPlaylistCoverUrl(String id, ImageView button) {
+    public int getScreenOrientation()
+    {
+        int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
+        int screenHeight = Resources.getSystem().getDisplayMetrics().heightPixels;
+        int orientation;
+        if(screenWidth < screenHeight){
+            orientation = Configuration.ORIENTATION_PORTRAIT;
+        } else {
+                orientation = Configuration.ORIENTATION_LANDSCAPE;
+        }
+        return orientation;
+    }
+
+    private void getPlaylistCoverUrl(String id, String name) {
         String token = favoritePlaylistsCallback.getToken();
         if(token == null) return;
         OkHttpClient client = new OkHttpClient();
@@ -177,7 +163,6 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                 .addPathSegment(id)
                 .addPathSegment("images")
                 .build();
-        Log.d(TAG, "Search for autofill in " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .addHeader("Authorization", "Bearer " + token)
@@ -196,13 +181,15 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                     throw new IOException("Error : " + response);
                 } else {
                     try {
-                        Log.d(TAG, "onResponse: got autofill hints");
                         final String data = response.body().string();
                         response.close();
                         JSONArray jsonArray = new JSONArray(data);
                         JSONObject jsonObject = jsonArray.getJSONObject(0);
-                        String url = jsonObject.getString("url");
-                        new DownloadImageTask(button).execute(url);
+                        playlistCoverUrl = jsonObject.getString("url");
+                        Playlist playlist = new Playlist(id, name, playlistCoverUrl);
+                        Log.d(TAG, "onResponse: " + playlist.toString());
+                        playlists.add(playlist);
+
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -211,138 +198,14 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         });
     }
 
-    private void setPlaylists(TextView header, ImageView button, ViewSwitcher viewSwitcher, EditText changeName, int key) {
+    private void setPlaylists(int key) {
         try {
-            String response =  savePlaylistMemory.getString("" + key, "");
-            if(!response.equals("")) {
+            String response = savePlaylistMemory.getString("" + key, "");
+            if (!response.equals("")) {
                 JSONObject element = new JSONObject(response);
                 String name = element.getString("name");
                 String id = element.getString("id");
-
-                getPlaylistCoverUrl(id, button);
-
-                if(changeName != null && viewSwitcher != null && header != null && button != null) {
-                    header.setText(name);
-                    viewSwitcher.setVisibility(View.VISIBLE);
-                    button.setVisibility(View.VISIBLE);
-                    button.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            if (!(viewSwitcher.getCurrentView() instanceof EditText)) {
-                                new AlertDialog.Builder(getContext())
-                                        .setTitle(name)
-                                        .setMessage(getString(R.string.text_favoritePlaylistsDialogWindow))
-                                        .setPositiveButton("", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                new AlertDialog.Builder(getContext())
-                                                        .setTitle(getString(R.string.text_editPlaylist_dialog))
-                                                        .setMessage(getString(R.string.text_chooseEditOption_dialog))
-                                                        .setPositiveButton("", new DialogInterface.OnClickListener() {
-                                                            @Override
-                                                            public void onClick(DialogInterface dialog, int which) {
-                                                                viewSwitcher.showNext();
-                                                            }
-                                                        })
-                                                        .setPositiveButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_edit_button))
-                                                        .setNegativeButton("", new DialogInterface.OnClickListener() {
-                                                            @Override
-                                                            public void onClick(DialogInterface dialog, int which) {
-                                                                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                                                                //TODO wie kann man das mit dem Intent übergeben
-                                                                playlistID = id;
-                                                                photoPickerIntent.setType("image/*");
-                                                                startActivityForResult(photoPickerIntent, Constants.RESULT_LOAD_IMAGE);
-                                                            }
-                                                        })
-                                                        .setNegativeButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_edit_playlistname_button))
-                                                        .show();
-                                            }
-                                        })
-                                        .setPositiveButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_edit_button))
-                                        .setNeutralButton("", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                favoritePlaylistsCallback.playFavoritePlaylist(id, idList);
-                                            }
-                                        })
-                                        .setNeutralButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_play_track_button))
-                                        .setNegativeButton("", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-
-                                                new AlertDialog.Builder(getContext())
-                                                        .setTitle(getString(R.string.text_delete))
-                                                        .setMessage(getString(R.string.text_chooseDeleteOption_dialog))
-                                                        .setPositiveButton("", new DialogInterface.OnClickListener() {
-                                                            @Override
-                                                            public void onClick(DialogInterface dialog, int which) {
-                                                                //window is closing
-                                                            }
-                                                        })
-                                                        .setPositiveButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_deny_button))
-                                                        .setNegativeButton("", new DialogInterface.OnClickListener() {
-                                                            @Override
-                                                            public void onClick(DialogInterface dialog, int which) {
-                                                                SharedPreferences.Editor editor = savePlaylistMemory.edit();
-                                                                editor.remove("" + key);
-                                                                editor.apply();
-                                                                if (key < 8) {
-                                                                    int counter = key;
-                                                                    while (counter <= 8) {
-                                                                        String nextPlaylist = savePlaylistMemory.getString("" + (counter + 1), "");
-                                                                        if (!nextPlaylist.equals(""))
-                                                                            editor.putString("" + counter, nextPlaylist);
-                                                                        else {
-                                                                            editor.remove("" + counter);
-                                                                        }
-                                                                        editor.apply();
-                                                                        counter++;
-                                                                    }
-                                                                }
-                                                                String toastMessage = name + getString(R.string.text_toastPlaylistDeleted);
-                                                                Toast.makeText(getContext(), toastMessage, Toast.LENGTH_SHORT).show();
-                                                                favoritePlaylistsCallback.reloadFavoritePlaylistsFragment();
-                                                                favoritePlaylistsCallback.deletePlaylist(id);
-                                                            }
-                                                        })
-                                                        .setNegativeButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_accept_button))
-                                                        .show();
-                                            }
-                                        })
-                                        .setNegativeButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_trash_can_button))
-                                        .show();
-                            } else {
-                                new AlertDialog.Builder(getContext())
-                                        .setTitle(R.string.text_editPlaylist_dialog)
-                                        .setMessage(getString(R.string.text_acceptEditOption_dialog))
-                                        .setPositiveButton("", new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                String newName = changeName.getText().toString();
-                                                if (!newName.equals("")) {
-                                                    JSONObject playlist = new JSONObject();
-                                                    try {
-                                                        playlist.put("name", newName);
-                                                        playlist.put("id", id);
-                                                    } catch (JSONException e) {
-                                                        e.printStackTrace();
-                                                    }
-                                                    SharedPreferences.Editor editor = savePlaylistMemory.edit();
-                                                    editor.putString("" + key, playlist.toString());
-                                                    editor.apply();
-                                                    favoritePlaylistsCallback.changePlaylistName(newName, id);
-                                                    header.setText(newName);
-                                                }
-                                                viewSwitcher.showNext();
-                                            }
-                                        })
-                                        .setPositiveButtonIcon(ContextCompat.getDrawable(getContext(), R.drawable.ic_edit_button))
-                                        .show();
-                            }
-                        }
-                    });
-                }
+                getPlaylistCoverUrl(id, name);
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -350,10 +213,14 @@ public class ShowSavedPlaylistsFragment extends Fragment {
     }
 
     @Override
+    public void openGalleryForUpload(Intent intent, String playlistID) {
+        this.playlistID = playlistID;
+        startActivityForResult(intent, Constants.RESULT_LOAD_IMAGE);
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-
-
         if(resultCode == RESULT_OK && data != null) {
             try {
                 final Uri imageUri = data.getData();

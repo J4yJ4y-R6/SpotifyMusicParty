@@ -2,7 +2,6 @@ package com.tinf19.musicparty.server;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.MotionEventCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -19,8 +18,6 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
 import android.widget.Toast;
 
 import com.spotify.sdk.android.auth.AuthorizationClient;
@@ -35,7 +32,6 @@ import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.fragments.ServerLoadingFragment;
 import com.tinf19.musicparty.fragments.SettingsHostFragment;
 import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
-import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragmentNew;
 import com.tinf19.musicparty.fragments.ShowSongHostFragment;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.music.Track;
@@ -61,7 +57,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings, HostPlaylistRecycAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, ShowSavedPlaylistsFragmentNew.ShowSavedPlaylistCallback, ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback {
+public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings, HostPlaylistRecycAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, ShowSavedPlaylistsFragment.ShowSavedPlaylistCallback, ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback {
 
     private static final String TAG = HostActivity.class.getName();
     private String password;
@@ -81,7 +77,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private SettingsHostFragment settingsHostFragment;
     private HostPlaylistFragment hostPlaylistFragment;
     private PartyPeopleFragment partyPeopleFragment;
-    private ShowSavedPlaylistsFragmentNew showSavedPlaylistsFragment;
+    private ShowSavedPlaylistsFragment showSavedPlaylistsFragment;
 
 
     public interface ConnectionCallback {
@@ -225,7 +221,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         settingsHostFragment = new SettingsHostFragment(this);
         hostPlaylistFragment = new HostPlaylistFragment(this, this);
         partyPeopleFragment = new PartyPeopleFragment(this);
-        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragmentNew(this, this);
+        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this, this);
 
         if(savedInstanceState != null) {
             password = savedInstanceState.getString(Constants.PASSWORD, "0000");
@@ -324,21 +320,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         else {
             hostSearchBarFragment.clearSearch();
             animateFragmentChange(false, showSongFragment, "ShowSongFragment");
-        }
-    }
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        int action = MotionEventCompat.getActionMasked(event);
-        switch (action) {
-            case (MotionEvent.ACTION_DOWN):
-                Log.d(TAG, "onTouchEvent: down");
-                return true;
-            case (MotionEvent.ACTION_UP):
-                Log.d(TAG, "onTouchEvent: up");
-                return true;
-            default:
-                return super.onTouchEvent(event);
         }
     }
 
