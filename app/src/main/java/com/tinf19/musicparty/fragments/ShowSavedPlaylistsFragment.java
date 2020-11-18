@@ -125,10 +125,10 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         if(savedInstanceState != null)
             token = savedInstanceState.getString(Constants.TOKEN, "");
 
-        headers.add(0, view.findViewById(R.id.gridZeroZeroHeaderTextView));
-        buttons.add(0, view.findViewById(R.id.gridZeroZeroImageButton));
-        viewSwitchers.add(0, view.findViewById(R.id.gridZeroZeroSwitcher));
-        changeNames.add(0, view.findViewById(R.id.gridZeroZeroHeaderEditText));
+        headers.add(0, view.findViewById(R.id.favoriteHeaderTextView));
+        buttons.add(0, view.findViewById(R.id.favoriteCoverImageView));
+        viewSwitchers.add(0, view.findViewById(R.id.favoriteSwitcher));
+        changeNames.add(0, view.findViewById(R.id.favoriteHeaderEditText));
         headers.add(1, view.findViewById(R.id.gridZeroOneTextView));
         buttons.add(1, view.findViewById(R.id.gridZeroOneImageButton));
         viewSwitchers.add(1, view.findViewById(R.id.gridZeroOneSwitcher));

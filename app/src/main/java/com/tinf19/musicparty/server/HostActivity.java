@@ -35,6 +35,7 @@ import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.fragments.ServerLoadingFragment;
 import com.tinf19.musicparty.fragments.SettingsHostFragment;
 import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
+import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragmentNew;
 import com.tinf19.musicparty.fragments.ShowSongHostFragment;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.music.Track;
@@ -43,6 +44,7 @@ import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.HostPlaylistRecycAdapter;
+import com.tinf19.musicparty.util.ShowSavedPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.WiFiDirectBroadcastReceiver;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
@@ -59,7 +61,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings, HostPlaylistRecycAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, ShowSavedPlaylistsFragment.FavoritePlaylistsCallback {
+public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings, HostPlaylistRecycAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, ShowSavedPlaylistsFragmentNew.ShowSavedPlaylistCallback, ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback {
 
     private static final String TAG = HostActivity.class.getName();
     private String password;
@@ -79,7 +81,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private SettingsHostFragment settingsHostFragment;
     private HostPlaylistFragment hostPlaylistFragment;
     private PartyPeopleFragment partyPeopleFragment;
-    private ShowSavedPlaylistsFragment showSavedPlaylistsFragment;
+    private ShowSavedPlaylistsFragmentNew showSavedPlaylistsFragment;
 
 
     public interface ConnectionCallback {
@@ -223,7 +225,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         settingsHostFragment = new SettingsHostFragment(this);
         hostPlaylistFragment = new HostPlaylistFragment(this, this);
         partyPeopleFragment = new PartyPeopleFragment(this);
-        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this);
+        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragmentNew(this, this);
 
         if(savedInstanceState != null) {
             password = savedInstanceState.getString(Constants.PASSWORD, "0000");
@@ -637,6 +639,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.d(TAG, "run: " + id);
                     mBoundService.updatePlaylistCover(id, image, HostActivity.this);
                 }
             }).start();

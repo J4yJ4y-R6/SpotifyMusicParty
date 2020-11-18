@@ -21,6 +21,7 @@ import androidx.core.app.NotificationManagerCompat;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
+import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragmentNew;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.ActionReceiver;
@@ -30,6 +31,7 @@ import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DownloadImageTask;
+import com.tinf19.musicparty.util.ShowSavedPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.TokenRefresh;
 
 import org.jetbrains.annotations.NotNull;
@@ -752,7 +754,7 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
-    public void updatePlaylistCover(String id, Bitmap image, ShowSavedPlaylistsFragment.FavoritePlaylistsCallback callback) {
+    public void updatePlaylistCover(String id, Bitmap image, ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback callback) {
         OkHttpClient client = new OkHttpClient();
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
@@ -792,7 +794,7 @@ public class ServerService extends Service implements Parcelable {
                     Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(TAG,"Request Successful. Playlist name changed.");
+                    Log.d(TAG,"Request Successful. Playlist cover changed.");
                     callback.reloadFavoritePlaylistsFragment();
                 }
                 response.close();

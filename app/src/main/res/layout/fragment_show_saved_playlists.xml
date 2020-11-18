@@ -25,7 +25,7 @@
                 app:rowCount="6">
 
                 <ViewSwitcher
-                    android:id="@+id/gridZeroZeroSwitcher"
+                    android:id="@+id/favoriteSwitcher"
                     android:layout_width="wrap_content"
                     android:layout_height="40dp"
                     android:paddingTop="10dp"
@@ -36,14 +36,14 @@
                     app:layout_rowWeight="1">
 
                     <TextView
-                        android:id="@+id/gridZeroZeroHeaderTextView"
+                        android:id="@+id/favoriteHeaderTextView"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
                         android:textAlignment="center"
                         android:textSize="18sp" />
 
                     <EditText
-                        android:id="@+id/gridZeroZeroHeaderEditText"
+                        android:id="@+id/favoriteHeaderEditText"
                         android:layout_width="100dp"
                         android:layout_height="wrap_content"
                         android:autofillHints="playlistName"
@@ -54,7 +54,7 @@
                 </ViewSwitcher>
 
                 <ImageView
-                    android:id="@+id/gridZeroZeroImageButton"
+                    android:id="@+id/favoriteCoverImageView"
                     android:layout_width="60dip"
                     android:layout_height="60dip"
                     android:layout_marginLeft="10dp"
