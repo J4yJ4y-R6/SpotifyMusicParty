@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
@@ -75,7 +74,6 @@ public class HostClosePartyFragment extends Fragment {
                 public void onClick(View v) {
                     if(savePlaylistNameEditText != null) {
                         String playlistName = savePlaylistNameEditText.getText().toString();
-                        Log.d(TAG, "onClick: " + playlistName);
                         if(!playlistName.equals("")) {
                             if(!closePartyCallback.savePlaylistInSharedPreferences(playlistName))
                                 Toast.makeText(getContext(), getString(R.string.text_toastPlaylistNotSaved), Toast.LENGTH_SHORT).show();
@@ -102,13 +100,11 @@ public class HostClosePartyFragment extends Fragment {
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     savePlaylist = isChecked;
                     if(isChecked) {
-                        Log.d(TAG, "onCheckedChanged: Playlist wird gespeichert");
                         if(savePlaylistNameEditText != null) {
                             savePlaylistNameEditText.setEnabled(true);
                             savePlaylistNameEditText.setVisibility(View.VISIBLE);
                         }
                     } else {
-                        Log.d(TAG, "onCheckedChanged: Playlist wird nicht gespeichert");
                         if(savePlaylistNameEditText != null) {
                             savePlaylistNameEditText.setEnabled(false);
                             savePlaylistNameEditText.setVisibility(View.INVISIBLE);

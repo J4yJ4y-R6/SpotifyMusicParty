@@ -66,21 +66,17 @@ public class ClientPlaylistFragment extends Fragment {
         Log.d(TAG, track.getName());
         if(currentSongTitleTextView != null) {
             currentSongTitleTextView.setText(track.getName());
-            Log.d(TAG, "onCreateViewHolder: " + track.getName());
         }
         if(currentSongArtistTextView != null) {
             currentSongArtistTextView.setText(track.getArtist(0).getName());
-            Log.d(TAG, "onCreateViewHolder: " + track.getArtist(0).getName());
         }
         if(currentSongCoverImageView != null) {
             String coverURL = "https://i.scdn.co/image/"+track.getCover();
             new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
-            Log.d(TAG, "onCreateViewHolder: " + coverURL);
         }
     }
 
     public void showResult(List<Track> tracks) {
-        Log.d(TAG, "showResult: show Playlist");
         if(clientPlaylistRecycAdapter != null) {
             clientPlaylistRecycAdapter.setDataset(tracks);
             clientPlaylistRecycAdapter.notifyDataSetChanged();

@@ -55,7 +55,6 @@ public class HostPlaylistFragment extends Fragment {
         super.onStart();
         playlistCallback.showPlaylist();
         Track currentPlaying = playlistCallback.getCurrentPlaying();
-        Log.d(TAG, "onStart: " + currentPlaying);
         if(currentSongTitleTextView != null) currentSongTitleTextView.setText(currentPlaying.getName());
         if(currentSongArtistTextView != null) currentSongArtistTextView.setText(currentPlaying.getArtist(0).getName());
         if(currentSongCoverImageView != null) {
@@ -105,7 +104,6 @@ public class HostPlaylistFragment extends Fragment {
     }
 
     public void showResult(List<Track> tracks) {
-        Log.d(TAG, "showResult: show Playlist");
         if(hostPlaylistRecycAdapter != null) {
             hostPlaylistRecycAdapter.setDataset(tracks);
             hostPlaylistRecycAdapter.notifyDataSetChanged();

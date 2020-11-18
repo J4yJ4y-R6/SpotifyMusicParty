@@ -3,7 +3,6 @@ package com.tinf19.musicparty.fragments;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 
@@ -77,12 +76,10 @@ public class SettingsHostFragment extends Fragment {
         super.onStart();
         if(ipAddressTextView != null) {
             String text = getString(R.string.text_ip_address) + ": " + getServerSettings.getIpAddress();
-            Log.d(TAG, "onStart IpAddress: " + text);
             ipAddressTextView.setText(text);
         }
         if(passwordTextView != null) {
             String text = getString(R.string.app_password) + ": " + getServerSettings.getPassword();
-            Log.d(TAG, "onStart Password: " + text);
             passwordTextView.setText(text);
         }
     }

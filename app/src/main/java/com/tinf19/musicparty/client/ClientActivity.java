@@ -1,9 +1,7 @@
 package com.tinf19.musicparty.client;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentTransaction;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -52,9 +50,6 @@ public class ClientActivity extends AppCompatActivity {
             String password = getIntent().getData().getQueryParameter(Constants.PASSWORD);
             String ip = getIntent().getData().getQueryParameter(Constants.ADDRESS);
 
-            Log.d("ClientActivitiy", "data: " + password);
-            Log.d("ClientActivitiy", "ip: " + ip);
-
             if (password != null && ip != null) {
                 ipAddressEditText.setText(ip);
                 passwordEditText.setText(password);
@@ -73,7 +68,6 @@ public class ClientActivity extends AppCompatActivity {
                 }
             });
         }
-
         ImageButton infoIpToolboxImageButton = binding.infoIpSymbolImageButton;
         TextView loginDescriptionTextView = binding.loginDescriptionTextView;
         if(infoIpToolboxImageButton != null && loginDescriptionTextView != null) {
@@ -87,7 +81,6 @@ public class ClientActivity extends AppCompatActivity {
                 }
             });
         }
-
         scanQRCodeImageButton = binding.loginViaQRCodeImageButton;
         if(scanQRCodeImageButton != null) {
             scanQRCodeImageButton.setOnClickListener(new View.OnClickListener() {
@@ -97,7 +90,6 @@ public class ClientActivity extends AppCompatActivity {
                 }
             });
         }
-
         scanQRCodeImageButton = binding.loginViaQRCodeImageButton;
         scanQRCodeImageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -109,7 +101,6 @@ public class ClientActivity extends AppCompatActivity {
 
     public void nextPage(View view) {
         Intent intent = new Intent(this, PartyActivity.class);
-        //intent.putExtra(Constants.TOKEN, getIntent().getStringExtra("token"));
         intent.putExtra(Constants.PASSWORD, binding.etPassword.getText().toString());
         intent.putExtra(Constants.ADDRESS, binding.etAddress.getText().toString());
         if (!binding.usernameEditText.getText().toString().equals(""))
@@ -125,12 +116,10 @@ public class ClientActivity extends AppCompatActivity {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if(result != null) {
             if(result.getContents() == null) {
-                Toast.makeText(this, "Kein Ergebnis gefunden", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, getString(R.string.text_qrCodeNoResult), Toast.LENGTH_LONG).show();
             } else {
                 try {
                     JSONObject obj = new JSONObject(result.getContents());
-                    Log.d(TAG, "onActivityResult: " + obj.getString("ipaddress"));
-                    Log.d(TAG, "onActivityResult: " + obj.getString("password"));
                     if(ipAddressEditText != null) {
                         ipAddressEditText.setText(obj.getString("ipaddress"));
                         passwordEditText.setText(obj.getString("password"));
@@ -153,7 +142,6 @@ public class ClientActivity extends AppCompatActivity {
                 builder.append(Constants.LEXICON.charAt(rand.nextInt(Constants.LEXICON.length())));
             }
         }
-        Log.d(TAG, "randomIdentifier: " + builder.toString());
         return builder.toString();
     }
 

@@ -66,7 +66,6 @@ public class ServerService extends Service implements Parcelable {
     private Thread tokenRefresh = null;
     private ServerSocket serverSocket;
     private List<CommunicationThread> clientThreads = new ArrayList<>();
-    private Socket tempClientSocket;
     private String userID;
     private String token;
     private String playlistID;
@@ -82,28 +81,6 @@ public class ServerService extends Service implements Parcelable {
     private com.spotify.protocol.types.Track lastSongTitle;
     private boolean stopped;
 
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        //empty
-    }
-
-    public static final Creator<ServerService> CREATOR = new Creator<ServerService>() {
-        @Override
-        public ServerService createFromParcel(Parcel in) {
-            return new ServerService();
-        }
-
-        @Override
-        public ServerService[] newArray(int size) {
-            return new ServerService[size];
-        }
-    };
-
     public interface SpotifyPlayerCallback {
         void setNowPlaying(Track nowPlaying);
         void setPeopleCount(int count);
@@ -117,10 +94,10 @@ public class ServerService extends Service implements Parcelable {
     }
 
     public class LocalBinder extends Binder {
-        ServerService getService() {
-            return ServerService.this;
-        }
+        ServerService getService() { return ServerService.this; }
     }
+
+    // Service - Interaction
 
     @Override
     public void onCreate() {
@@ -132,11 +109,8 @@ public class ServerService extends Service implements Parcelable {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        //token = intent.getStringExtra(Constants.TOKEN);
         password = intent.getStringExtra(Constants.PASSWORD);
         partyName = intent.getStringExtra(Constants.PARTYNAME);
-        Log.d(TAG, "partyName: " + partyName);
-        Log.d(TAG, "onStartCommand: " + first);
         if (first) {
             tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenCallback() {
                 @Override
@@ -208,13 +182,54 @@ public class ServerService extends Service implements Parcelable {
         return mBinder;
     }
 
-    public SpotifyAppRemote getmSpotifyAppRemote() {
-        return ( mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()) ? mSpotifyAppRemote : null;
+    public void addEventListener() {
+        mSpotifyAppRemote.getPlayerApi()
+                .subscribeToPlayerState()
+                .setEventCallback(playerState -> {
+                    final com.spotify.protocol.types.Track track = playerState.track;
+                    if(playlistID != null) {
+                        nowPlaying = track;
+                        if(lastSongTitle == null || (nowPlaying != null && !nowPlaying.name.equals(lastSongTitle.name))) {
+                            if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
+                                stopped = true;
+                                Log.d(TAG, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
+                                mSpotifyAppRemote.getPlayerApi().skipPrevious();
+                                mSpotifyAppRemote.getPlayerApi().pause();
+                                pause = true;
+                                if(spotifyPlayerCallback != null)
+                                    spotifyPlayerCallback.setPlayImage(true);
+                                return;
+                            } else if(tracks.size() == 0 && lastSongTitle != null) {
+                                return;
+                            }
+                            lastSongTitle = nowPlaying;
+                            Log.d(TAG, "New song has been started " + track.uri.split(":")[2]);
+                            stopped = false;
+                            new Thread(()->{
+                                try {
+                                    sendToAll(Commands.PLAYING, getNowPlaying().serialize());
+                                } catch (IOException | JSONException e) {
+                                    Log.e(TAG, e.getMessage(), e);
+                                }
+                            }).start();
+                            if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
+                                tracks.remove(0);
+                            }
+                        }
+                        pause = playerState.isPaused;
+                        if (track != null && spotifyPlayerCallback != null) {
+                            spotifyPlayerCallback.setNowPlaying(getNowPlaying());
+                        }
+
+                        if(spotifyPlayerCallback != null) spotifyPlayerCallback.setPlayImage(pause);
+                    }
+                });
     }
 
-    public void setmSpotifyAppRemote(SpotifyAppRemote mSpotifyAppRemote) {
-        this.mSpotifyAppRemote = mSpotifyAppRemote;
-    }
+
+    // Getter
+
+    public SpotifyAppRemote getmSpotifyAppRemote() { return ( mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()) ? mSpotifyAppRemote : null; }
     
     public List<PartyPeople> getPeopleList() {
         List<PartyPeople> tmpPeopleList = new ArrayList<>();
@@ -236,15 +251,51 @@ public class ServerService extends Service implements Parcelable {
         return playlistID;
     }
 
-    public void setPlaylistID(String id) { this.playlistID = id; }
-
     public String getPartyName() {
         return partyName;
     }
 
+    public String getToken() {
+        return token;
+    }
+
+    public Track getNowPlaying(){
+        return nowPlaying != null ? new Track(
+                nowPlaying.uri.split(":")[2],
+                nowPlaying.name,
+                nowPlaying.artists,
+                nowPlaying.imageUri.raw.split(":")[2],
+                nowPlaying.duration,
+                nowPlaying.album.name
+        ) : null;
+    }
+
+    public List<Track> getPlaylist() {
+        return tracks;
+    }
+
+    public boolean getPause() {
+        return pause;
+    }
+
+
+
+    // Setter
+
+    public void setPlaylistID(String id) { this.playlistID = id; }
+
     public void setPartyName(String partyName) {
         this.partyName = partyName;
     }
+
+    public void setSpotifyPlayerCallback(SpotifyPlayerCallback spotifyPlayerCallback) {
+        this.spotifyPlayerCallback = spotifyPlayerCallback;
+    }
+
+
+
+
+    // HTTP Requests
 
     private void getUserID() {
         OkHttpClient client = new OkHttpClient();
@@ -288,14 +339,6 @@ public class ServerService extends Service implements Parcelable {
                 response.close();
             }
         });
-    }
-
-    public List<Track> getPlaylist() {
-        return tracks;
-    }
-
-    public boolean getPause() {
-        return pause;
     }
 
     private void createPlaylist(String name) throws JSONException {
@@ -344,7 +387,6 @@ public class ServerService extends Service implements Parcelable {
                 try {
                     playlist.add(new Track("600HVBpzF1WfBdaRwbEvLz", "Frozen", new Artist[]{new Artist("tsads", "Disney")}, "test", 0, "Disner"));
                     addItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen");
-                    //addItem("spotify:track:76nqCfJOcFFWBJN32PAksn", "Kings and Queens");
                 } catch (JSONException e) {
                     Log.e(TAG, e.getMessage(), e);
                 }
@@ -372,7 +414,6 @@ public class ServerService extends Service implements Parcelable {
                 .addHeader("Authorization", "Bearer " + token)
                 .addHeader("Content-Type", "application/json")
                 .build();
-        Log.d(TAG, request.headers().toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -508,8 +549,6 @@ public class ServerService extends Service implements Parcelable {
             @Override
             public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
                 if (!response.isSuccessful()) {
-                    Log.d(TAG, "onResponse: already followed i guess");
-                    Log.d(TAG, "onResponse: " + response.body().string());
                     throw new IOException("Error : " + response);
                 } else {
                     Log.d(TAG, "onResponse: followed successfully playlist: " + id);
@@ -567,10 +606,6 @@ public class ServerService extends Service implements Parcelable {
                 .addPathSegment("tracks")
                 .addQueryParameter("uris", uri)
                 .build();
-        //String [] uris = {uri};
-        //JSONObject sampleObject = new JSONObject()
-        //        .put("uris", uris);
-        //RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
         RequestBody body = RequestBody.create(new byte[]{}, null);
         Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
@@ -631,10 +666,7 @@ public class ServerService extends Service implements Parcelable {
         JSONObject sampleObject = new JSONObject()
                .put("tracks", new JSONArray().put(uris));
         RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
-        //RequestBody body = RequestBody.create(new byte[]{}, null);
-        Log.d(TAG, "Try to delete track " + name);
         Log.d(TAG, "Making request to " + completeURL.toString());
-        Log.d(TAG, "JSON Body: " +  sampleObject.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .delete(body)
@@ -792,7 +824,6 @@ public class ServerService extends Service implements Parcelable {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
                     Log.d(TAG,"Request Successful. Playlist name changed.");
@@ -802,14 +833,39 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
+
+
+    // Parcel
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) { }
+
+    public static final Creator<ServerService> CREATOR = new Creator<ServerService>() {
+        @Override
+        public ServerService createFromParcel(Parcel in) {
+            return new ServerService();
+        }
+
+        @Override
+        public ServerService[] newArray(int size) {
+            return new ServerService[size];
+        }
+    };
+
+
+    // In-App Lists
+
     public void addItemToPlaylist(Track track) {
         playlist.add(track);
         tracks.add(track);
     }
 
-    public void addItemToTrackList(Track track) {
-        tracks.add(track);
-    }
+    public void addItemToTrackList(Track track) { tracks.add(track); }
 
     public void togglePlayback() {
         if (pause && getmSpotifyAppRemote() != null) {
@@ -828,94 +884,15 @@ public class ServerService extends Service implements Parcelable {
             getmSpotifyAppRemote().getPlayerApi().pause();
     }
 
-    private void stopAll() throws IOException {
-        Log.d(TAG, "Stopping server");
-        for(CommunicationThread client : clientThreads) {
-            client.sendMessage(Commands.QUIT, "Session has been closed");
-            client.close();
-        }
-    }
 
-    public void sendToAll(Commands command, String message) throws IOException {
-        for(CommunicationThread client : clientThreads) {
-            if (client.login)
-                client.sendMessage(command, message);
-        }
-    }
 
-    public void addEventListener() {
-        mSpotifyAppRemote.getPlayerApi()
-                .subscribeToPlayerState()
-                .setEventCallback(playerState -> {
-                    final com.spotify.protocol.types.Track track = playerState.track;
-                    if(playlistID != null) {
-                        nowPlaying = track;
-                        if(lastSongTitle == null || (nowPlaying != null && !nowPlaying.name.equals(lastSongTitle.name))) {
-                            if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
-                                stopped = true;
-                                Log.d(TAG, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
-                                mSpotifyAppRemote.getPlayerApi().skipPrevious();
-                                mSpotifyAppRemote.getPlayerApi().pause();
-                                pause = true;
-//                            long postion = lastSongTitle.duration - 10000;
-//                            Log.d(NAME, "SEEK TO: " + postion);
-//                            mSpotifyAppRemote.getPlayerApi().seekTo(postion);
-                                if(spotifyPlayerCallback != null)
-                                    spotifyPlayerCallback.setPlayImage(true);
-                                return;
-                            } else if(tracks.size() == 0 && lastSongTitle != null) {
-                                return;
-                            }
-                            lastSongTitle = nowPlaying;
-                            Log.d(TAG, "New song has been started " + track.uri.split(":")[2]);
-                            stopped = false;
-                            new Thread(()->{
-                                try {
-                                    sendToAll(Commands.PLAYING, getNowPlaying().serialize());
-                                } catch (IOException | JSONException e) {
-                                    Log.e(TAG, e.getMessage(), e);
-                                }
-                            }).start();
-                            if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
-                                tracks.remove(0);
-                            }
-                        }
-                        pause = playerState.isPaused;
-                        if (track != null && spotifyPlayerCallback != null) {
-                            //Log.d(NAME, track.name + " by " + track.artist.name);
-                            //if (playerState.playbackPosition == 0)
-                            //nextSong();
-                            spotifyPlayerCallback.setNowPlaying(getNowPlaying());
-                        }
 
-                        if(spotifyPlayerCallback != null) spotifyPlayerCallback.setPlayImage(pause);
-                    }
-                });
-    }
-
-    public void setSpotifyPlayerCallback(SpotifyPlayerCallback spotifyPlayerCallback) {
-        this.spotifyPlayerCallback = spotifyPlayerCallback;
-    }
+    // Interaction with Server
 
     private void startServer(){
         Log.d(TAG, "Try to start server");
         this.serverThread = new Thread(new ServerThread());
         this.serverThread.start();
-    }
-
-    public Track getNowPlaying(){
-        return nowPlaying != null ? new Track(
-                nowPlaying.uri.split(":")[2],
-                nowPlaying.name,
-                nowPlaying.artists,
-                nowPlaying.imageUri.raw.split(":")[2],
-                nowPlaying.duration,
-                nowPlaying.album.name
-        ) : null;
-    }
-
-    public String getToken() {
-        return token;
     }
 
     class ServerThread implements Runnable {
@@ -941,6 +918,24 @@ public class ServerService extends Service implements Parcelable {
         }
     }
 
+
+
+    // Interaction with Clients
+
+    private void stopAll() throws IOException {
+        for(CommunicationThread client : clientThreads) {
+            client.sendMessage(Commands.QUIT, "Session has been closed");
+            client.close();
+        }
+    }
+
+    public void sendToAll(Commands command, String message) throws IOException {
+        for(CommunicationThread client : clientThreads) {
+            if (client.login)
+                client.sendMessage(command, message);
+        }
+    }
+
     class CommunicationThread extends Thread {
 
         private Socket clientSocket;
@@ -951,7 +946,6 @@ public class ServerService extends Service implements Parcelable {
         private final long createdTime;
 
         public CommunicationThread(Socket socket) {
-            Log.d(TAG, "New client request");
             this.clientSocket = socket;
             this.createdTime = System.currentTimeMillis();
         }
@@ -1013,7 +1007,6 @@ public class ServerService extends Service implements Parcelable {
                                         Track track = new Track(attribute);
                                         addItemToPlaylist(track);
                                         addItem(track.getURI(), track.getName());
-                                        //sendToAll(Commands.QUEUE, track.serialize());
                                     }
                                     break;
                                 case PLAYING:
@@ -1022,7 +1015,6 @@ public class ServerService extends Service implements Parcelable {
                                     }
                                     break;
                                 case PLAYLIST:
-                                    Log.d(TAG, "Show Playlist for user " + username);
                                     StringBuilder response = new StringBuilder();
                                     if(nowPlaying != null) {
                                         response.append("~");

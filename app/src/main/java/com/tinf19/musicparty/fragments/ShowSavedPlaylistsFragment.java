@@ -15,21 +15,16 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-import android.provider.MediaStore;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 
-import com.google.gson.FieldAttributes;
-import com.google.gson.JsonObject;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DownloadImageTask;
@@ -43,7 +38,6 @@ import org.json.JSONObject;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import okhttp3.Call;
@@ -128,9 +122,8 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         // Inflate the layout for this fragment
         view = inflater.inflate(R.layout.fragment_show_saved_playlists, container, false);
 
-        if(savedInstanceState != null) {
+        if(savedInstanceState != null)
             token = savedInstanceState.getString(Constants.TOKEN, "");
-        }
 
         headers.add(0, view.findViewById(R.id.gridZeroZeroHeaderTextView));
         buttons.add(0, view.findViewById(R.id.gridZeroZeroImageButton));
@@ -228,7 +221,6 @@ public class ShowSavedPlaylistsFragment extends Fragment {
 
                 getPlaylistCoverUrl(id, button);
 
-                Log.d(TAG, "setPlaylists: " + key + ": " + element.toString());
                 if(changeName != null && viewSwitcher != null && header != null && button != null) {
                     header.setText(name);
                     viewSwitcher.setVisibility(View.VISIBLE);
@@ -256,7 +248,6 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                                                         .setNegativeButton("", new DialogInterface.OnClickListener() {
                                                             @Override
                                                             public void onClick(DialogInterface dialog, int which) {
-                                                                Log.d(TAG, "onClick: edit cover");
                                                                 Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
                                                                 //TODO wie kann man das mit dem Intent übergeben
                                                                 playlistID = id;
@@ -340,7 +331,6 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                                                     SharedPreferences.Editor editor = savePlaylistMemory.edit();
                                                     editor.putString("" + key, playlist.toString());
                                                     editor.apply();
-                                                    Log.d(TAG, "onClick: new name is: " + newName);
                                                     favoritePlaylistsCallback.changePlaylistName(newName, id);
                                                     header.setText(newName);
                                                 }
@@ -370,7 +360,6 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                 final InputStream imageStream = getContext().getContentResolver().openInputStream(imageUri);
                 final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
 
-                Log.d(TAG, "onActivityResult: " + selectedImage.getByteCount());
                 if(selectedImage.getByteCount() > 250000) {
                     Toast.makeText(getActivity(), "Dein Bild ist zu groß. Die Maximalgröße für Playlist-Cover ist 250KB", Toast.LENGTH_LONG).show();
                 } else {
@@ -379,7 +368,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
                         playlistID = "";
                     }
                     else
-                        Log.d(TAG, "onActivityResult: error");
+                        Log.d(TAG, "onActivityResult: Image could not be updated because no playlist attached");
                 }
             } catch (FileNotFoundException e) {
                 e.printStackTrace();

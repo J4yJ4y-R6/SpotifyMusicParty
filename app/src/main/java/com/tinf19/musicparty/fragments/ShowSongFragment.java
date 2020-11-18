@@ -54,7 +54,6 @@ public class ShowSongFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        Log.d(ShowSongFragment.class.getName(), "I have been started");
         started = true;
         if(songTitle != null) {
             songTitle.setSelected(true);
@@ -124,7 +123,6 @@ public class ShowSongFragment extends Fragment {
     }
 
     public void showSongs(Track track) {
-        Log.d(ShowSongFragment.class.getName(), "Now Playing: " + track.toString());
         if(songCover != null) {
             String coverURL = "https://i.scdn.co/image/"+track.getCover();
             new DownloadImageTask(songCover).execute(coverURL);
@@ -141,10 +139,8 @@ public class ShowSongFragment extends Fragment {
     }
 
     public void setPartyName(String name) {
-        //TODO: Format String partyName
         String conTo = "Verbunden mit ";
         String partyName = conTo + name;
-        Log.d(ShowSongFragment.class.getName(), "setPartyName: " + partyName);
         if(connectedToParty != null && !name.equals("")) {
             connectedToParty.setText(partyName, TextView.BufferType.SPANNABLE);
             Spannable spannable = (Spannable)connectedToParty.getText();

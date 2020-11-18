@@ -73,7 +73,6 @@ public class ExitConnectionFragment extends Fragment {
         if(leaveTextView != null) {
             leaveTextView.setText(getString(R.string.text_leaveParty, name), TextView.BufferType.SPANNABLE);
             Spannable spannable = (Spannable)leaveTextView.getText();
-            Log.d(TAG, "setPartyName: " + spannable.charAt(23));
             int start = 23;
             int end = 23 + name.length();
             spannable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);

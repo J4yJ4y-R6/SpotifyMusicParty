@@ -11,9 +11,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.PartyPeople;
-import com.tinf19.musicparty.music.Track;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class PartyPeopleRecycAdapter extends RecyclerView.Adapter<PartyPeopleRecycAdapter.ViewHolder> {

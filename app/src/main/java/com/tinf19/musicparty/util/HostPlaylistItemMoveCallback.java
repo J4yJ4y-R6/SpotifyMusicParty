@@ -1,16 +1,11 @@
 package com.tinf19.musicparty.util;
 
-import android.content.ClipData;
-import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.tinf19.musicparty.server.HostActivity;
 
 public class HostPlaylistItemMoveCallback extends ItemTouchHelper.Callback {
 
@@ -74,7 +69,6 @@ public class HostPlaylistItemMoveCallback extends ItemTouchHelper.Callback {
 
     @Override
     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-        Log.d(HostActivity.class.getName(), "Swiped " + direction);
         mAdapter.onRowDeleted(viewHolder.getAdapterPosition());
     }
 }

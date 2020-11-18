@@ -1,7 +1,6 @@
 package com.tinf19.musicparty.server;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
@@ -18,11 +17,8 @@ import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.spotify.sdk.android.auth.AuthorizationClient;
@@ -44,20 +40,16 @@ import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
-import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.util.HostPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.WiFiDirectBroadcastReceiver;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 
-import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.util.ArrayList;
@@ -147,7 +139,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     public void stopService() {
         if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null) {
-            Log.d(TAG, "stopService: Pausing music");
             mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
             SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         }
@@ -183,8 +174,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 case TOKEN:
                     // Handle successful response
                     //token = response.getAccessToken();
-                    Log.d(TAG, "Expires in: " + response.getExpiresIn());
-                    Log.d(TAG, "Token gained successful: " + response.getAccessToken());
+                    Log.d(TAG, "Token gained successful");
                     break;
                 // Auth flow returned an error
                 case ERROR:
@@ -209,14 +199,17 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         }
     }
 
+    @Override
+    public String getToken() {
+        return mBoundService != null ? mBoundService.getToken() : null;
+    }
+
 
 //    Interaction with Activity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
         setContentView(R.layout.activity_host_party);
 
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
@@ -235,9 +228,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             mBoundService = savedInstanceState.getParcelable(Constants.SERVICE);
             String currentFragmentTag = savedInstanceState.getString(Constants.TAG, "ShowSongHostFragment");
             if(!currentFragmentTag.equals("")) {
-                Log.d(TAG, "onCreate: " + currentFragmentTag);
                 Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
-                Log.d(TAG, "onCreate: " + currentFragment.toString());
                 getSupportFragmentManager().beginTransaction().
                         replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
             }
@@ -245,8 +236,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             getSupportFragmentManager().beginTransaction().
                     replace(R.id.showSongHostFragmentFrame, new ServerLoadingFragment(), "ServerLoadingFragment").commitAllowingStateLoss();
         }
-        //Que.getInstance().add(new com.example.musicparty.music.Track("3cfOd4CMv2snFaKAnMdnvK"));
-        //Que.getInstance().add(new com.example.musicparty.music.Track("76nqCfJOcFFWBJN32PAksn"));
 
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         channel = manager.initialize(this, getMainLooper(), null);
@@ -258,11 +247,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_CONNECTION_CHANGED_ACTION);
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
-        //token = getIntent().getStringExtra(Constants.TOKEN);
-
         doBindService();
-
-
     }
 
     @Override
@@ -325,7 +310,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     protected void onStop() {
         super.onStop();
-        Log.d(TAG, "I have been stopped");
     }
 
     @Override
@@ -354,7 +338,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void searchForSongs(List<Track> tracks) {
-        Log.d("ShowSongFragment", "back to show");
         animateFragmentChange(true, searchSongsOutputFragment, "SearchSongOutputFragment");
         this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));
     }
@@ -362,11 +345,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void openSavedPlaylistsFragment() {
         animateFragmentChange(true, showSavedPlaylistsFragment, "ShowSavedPlaylistFragment");
-    }
-
-    @Override
-    public String getToken() {
-        return mBoundService != null ? mBoundService.getToken() : null;
     }
 
     @Override
@@ -391,8 +369,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void reloadFavoritePlaylistsFragment() {
-        Fragment frg = null;
-        frg = getSupportFragmentManager().findFragmentByTag("ShowSavedPlaylistFragment");
+        Fragment frg = getSupportFragmentManager().findFragmentByTag("ShowSavedPlaylistFragment");
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.detach(frg);
         ft.attach(frg);
@@ -413,9 +390,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void setPeopleCount(int count) {
-        this.runOnUiThread(() -> showSongFragment.setPartyNameCount(count));
-    }
+    public void setPeopleCount(int count) { this.runOnUiThread(() -> showSongFragment.setPartyNameCount(count)); }
 
     @Override
     public void setPlayImage(boolean pause) {
@@ -429,9 +404,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public String getPartyPeoplePartyName() {
-        return mBoundService != null ? mBoundService.getPartyName() : getString(R.string.text_partyName);
-    }
+    public String getPartyPeoplePartyName() { return mBoundService != null ? mBoundService.getPartyName() : getString(R.string.text_partyName); }
 
     @Override
     public void nextTrack() {
@@ -479,7 +452,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                         @Override
                         public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                             Log.d(TAG, "Connected! Yay!");
-                            //mSpotifyAppRemote.getPlayerApi().play("spotify:track:3cfOd4CMv2snFaKAnMdnvK");
                             // Now you can start interacting with App Remote
                             connectionCallback.afterConnection(spotifyAppRemote);
                             //if(mBoundService!= null) mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
@@ -488,8 +460,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                         @Override
                         public void onFailure(Throwable throwable) {
                             Log.e(TAG, throwable.getMessage(), throwable);
-
-                            // Something went wrong when attempting to connect! Handle errors here
                         }
                     });
         });
@@ -502,7 +472,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         this.runOnUiThread(() -> Toast.makeText(HostActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
         new Thread(() -> {
             try {
-                Log.d(TAG, "Trying to send message to server");
                 if (mBoundService != null) {
                     mBoundService.addItem(track.getURI(), track.getName());
                     mBoundService.addItemToPlaylist(track);
@@ -524,19 +493,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         }
     }
 
-    public void nextSong(View view) {
-        if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
-            mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
-        //else if (mBoundService != null)
-            //connect(appRemote -> appRemote.getPlayerApi().skipNext());
-    }
-
     @Override
     public Track getCurrentPlaying() {
         if (mBoundService != null) return mBoundService.getNowPlaying();
-        else {
-            return null;
-        }
+        else return null;
     }
 
     @Override
@@ -584,7 +544,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         JSONObject playlist = new JSONObject();
         String id = "";
         try {
-            Log.d(TAG, "savePlaylistInSharedPreferences: " + name);
             playlist.put("name", name);
             if(mBoundService != null) {
                 id = mBoundService.getPlaylistID();
@@ -679,7 +638,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 for (InetAddress addr : addrs) {
                     if (!addr.isLoopbackAddress()) {
                         String sAddr = addr.getHostAddress();
-                        //boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
                         boolean isIPv4 = sAddr.indexOf(':') < 0;
 
                         if (useIPv4) {
@@ -694,8 +652,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     }
                 }
             }
-        } catch (Exception ignored) {
-        } // for now eat exceptions
+        } catch (Exception ignored) { }
         return "";
     }
 

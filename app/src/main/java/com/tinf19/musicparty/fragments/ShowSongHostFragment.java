@@ -1,16 +1,13 @@
 package com.tinf19.musicparty.fragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -29,7 +26,6 @@ public class ShowSongHostFragment extends Fragment {
     private static final String TAG = ShowSongHostFragment.class.getName();
     private OpenHostFragments openHostFragments;
     private String partyName;
-    private Track nowPlaying;
     private ImageButton playTrackImageButton;
     private TextView currentPlayingTitleTextView;
     private TextView currentPlayingAlbumTextView;
@@ -66,7 +62,6 @@ public class ShowSongHostFragment extends Fragment {
         super.onStart();
         this.partyName = openHostFragments.getPartyPeoplePartyName();
         setPartyNameCount(openHostFragments.getPartyPeopleSize());
-        Log.d(TAG, "onStart: got party name: " + partyName);
         if(openHostFragments != null) {
             setPlayTrackButtonImage(openHostFragments.getPauseState());
             Track track = openHostFragments.setShowNowPlaying();
@@ -148,7 +143,6 @@ public class ShowSongHostFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     buttonEffect(lastTrackImageButton);
-                    Log.d(TAG, "onClick: play last track");
                     openHostFragments.lastTrack();
                     setPlayTrackButtonImage(false);
                 }
@@ -161,7 +155,6 @@ public class ShowSongHostFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     buttonEffect(playTrackImageButton);
-                    Log.d(TAG, "onClick: play track");
                     boolean pause = !openHostFragments.getPauseState();
                     openHostFragments.playTrack();
                     setPlayTrackButtonImage(pause);
@@ -175,7 +168,6 @@ public class ShowSongHostFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     buttonEffect(nextTrackImageButton);
-                    Log.d(TAG, "onClick: play next track");
                     openHostFragments.nextTrack();
                     setPlayTrackButtonImage(false);
                 }

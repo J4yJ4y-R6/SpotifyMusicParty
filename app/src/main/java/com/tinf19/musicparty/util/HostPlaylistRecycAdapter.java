@@ -75,7 +75,6 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
 
     @Override
     public void onRowMoved(int fromPosition, int toPosition) {
-        Log.d(TAG, "onRowMoved: done");
         if(fromPosition < toPosition) {
             for (int i = fromPosition; i < toPosition; i++) {
                 Collections.swap(mdataset, i, i+1);
@@ -102,9 +101,6 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
 
     @Override
     public void onRowDeleted(int position) {
-        Log.d(TAG, mdataset.get(position).toString());
-        Log.d(TAG, "onRowDeleted: " + position);
-        //mdataset.remove(toDelete);
         hostPlaylistAdapterCallback.removeItem(mdataset.get(position), position, this::notifyDataSetChanged);
     }
 

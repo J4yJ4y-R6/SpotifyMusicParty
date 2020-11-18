@@ -232,7 +232,6 @@ public class ClientService extends Service {
                                      partyCallback.setTrack(nowPlaying);
                                      break;
                                 case PLAYLIST:
-                                    Log.d(TAG, "Show Playlist");
                                     List<Track> tracks = new ArrayList<>();
                                     for (int i = 3; i < parts.length; i++) {
                                         if(!parts[i].equals(""))

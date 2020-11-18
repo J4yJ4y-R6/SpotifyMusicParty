@@ -1,9 +1,5 @@
 package com.tinf19.musicparty.music;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
-import com.tinf19.musicparty.server.ServerService;
 import com.tinf19.musicparty.util.Constants;
 
 import org.json.JSONArray;
@@ -62,17 +58,6 @@ public class Track {
 
     }
 
-/*
-    public Track(Parcel in) {
-        this.id = in.readString();
-        this.name = in.readString();
-        this.cover = in.readString();
-        this.album = in.readString();
-        this.duration = in.readLong();
-        this.artist = new Artist[]{new  Artist("1234", "Silas")};
-    }
-*/
-
     public String getId() {
         return id;
     }
@@ -126,31 +111,4 @@ public class Track {
                 .put(Constants.ALBUM, album);
         return tempObject.toString();
     }
-
-/*    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(id);
-        dest.writeString(name);
-        dest.writeString(cover);
-        dest.writeString(album);
-        dest.writeLong(duration);
-        dest.writeArray(artist);
-    }
-
-    public static final Creator<Track> CREATOR = new Creator<Track>() {
-        @Override
-        public Track createFromParcel(Parcel in) {
-            return new Track(in);
-        }
-
-        @Override
-        public Track[] newArray(int size) {
-            return new Track[size];
-        }
-    };*/
 }

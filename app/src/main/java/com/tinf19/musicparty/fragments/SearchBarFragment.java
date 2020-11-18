@@ -87,9 +87,9 @@ public class SearchBarFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_client_search_bar, container, false);
 
-        if(savedInstanceState != null) {
+        if(savedInstanceState != null)
             token = savedInstanceState.getString(Constants.TOKEN, "");
-        }
+
 
         searchText = view.findViewById(R.id.searchEditText);
         Point displaySize = new Point();
@@ -100,9 +100,7 @@ public class SearchBarFragment extends Fragment {
         if(searchText != null) {
             searchText.addTextChangedListener(new TextWatcher() {
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                    //
-                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -111,9 +109,7 @@ public class SearchBarFragment extends Fragment {
                 }
 
                 @Override
-                public void afterTextChanged(Editable s) {
-                    //
-                }
+                public void afterTextChanged(Editable s) { }
             });
         }
         searchButton = view.findViewById(R.id.searchButton);
@@ -155,7 +151,6 @@ public class SearchBarFragment extends Fragment {
                 .url(completeURL)
                 .addHeader("Authorization", "Bearer " + token)
                 .build();
-        Log.d(TAG, request.headers().toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -206,7 +201,7 @@ public class SearchBarFragment extends Fragment {
                 adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, titles);
                 getActivity().runOnUiThread( () -> searchText.setAdapter(adapter));
             } else {
-                Log.d(TAG, "showAutofills: response couldnt reach searchText");
+                Log.d(TAG, "showAutofills: not able to show hints under searchText");
             }
         } catch (JSONException e) {
             e.printStackTrace();

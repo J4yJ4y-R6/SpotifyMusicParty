@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -48,7 +47,6 @@ public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycA
     }
 
     public void showResult(List<Track> tracks) {
-        Log.d(TAG, "Showing result");
         if(mAdapter != null) {
             mAdapter.setDataset(tracks);
             mAdapter.notifyDataSetChanged();
