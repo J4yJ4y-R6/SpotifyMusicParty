@@ -32,6 +32,7 @@ public class Constants {
     public static final int PORT = 1403;
     public static final String STOP = "STOP_SERVICE";
     public static final short LOADING_TIME = 5;
+    public static final int NOTIFY_ID = 1;
 
 
     public static final int RESULT_LOAD_IMAGE = 1;

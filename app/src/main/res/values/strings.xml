@@ -36,7 +36,7 @@
     <string name="service_name">MusicParty</string>
     <string name="service_clientMsg">Du bist Teil einer %1$s</string>
     <string name="service_clientConnectionError">Die Verbindung zum Host ist fehlgeschlagen</string>
-    <string name="service_serverMsg">Du hostest eine MusicParty</string>
+    <string name="service_serverMsg">Du hostest die Party: %1$s</string>
     <string name="service_serverClosed">Der Host hat die Party beendet</string>
     <string name="service_serverConnected">Du bist Teil der %1$s</string>
     <string name="service_serverDisconnected">Du hast die %1$s verlassen</string>

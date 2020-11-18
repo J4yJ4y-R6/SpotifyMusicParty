@@ -1,8 +1,10 @@
 package com.tinf19.musicparty.server;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Binder;
@@ -14,6 +16,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
@@ -80,6 +83,8 @@ public class ServerService extends Service implements Parcelable {
     private  com.spotify.protocol.types.Track nowPlaying;
     private com.spotify.protocol.types.Track lastSongTitle;
     private boolean stopped;
+    private PendingIntent pendingIntent;
+    private PendingIntent pendingIntentButton;
 
     public interface SpotifyPlayerCallback {
         void setNowPlaying(Track nowPlaying);
@@ -148,12 +153,14 @@ public class ServerService extends Service implements Parcelable {
 
         Notification notification = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_name))
-                .setContentText(getString(R.string.service_serverMsg))
+                .setContentText(getString(R.string.service_serverMsg, getPartyName()))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
                 .addAction(R.drawable.ic_exit_button, getString(R.string.text_end),pendingIntentButton)
                 .build();
-        startForeground(1, notification);
+        startForeground(Constants.NOTIFY_ID, notification);
+
+        Log.d(TAG, "onStartCommand: first notify");
 
         return START_NOT_STICKY;
     }
@@ -894,6 +901,20 @@ public class ServerService extends Service implements Parcelable {
         this.serverThread = new Thread(new ServerThread());
         this.serverThread.start();
     }
+
+    public void updateServiceNotifaction() {
+        String text = getString(R.string.service_serverMsg, partyName);
+        NotificationManagerCompat mNotificationManager = NotificationManagerCompat.from(this);
+        Notification notificationUpdate = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
+                .setContentTitle(getString(R.string.service_name))
+                .setContentText(text)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentIntent(pendingIntent)
+                .addAction(R.drawable.ic_exit_button, getString(R.string.text_end),pendingIntentButton)
+                .build();
+        mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
+    }
+
 
     class ServerThread implements Runnable {
 

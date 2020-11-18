@@ -2,6 +2,7 @@ package com.tinf19.musicparty.server;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.view.MotionEventCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
@@ -18,6 +19,7 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
@@ -323,6 +325,20 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         }
     }
 
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        int action = MotionEventCompat.getActionMasked(event);
+        switch (action) {
+            case (MotionEvent.ACTION_DOWN):
+                Log.d(TAG, "onTouchEvent: down");
+                return true;
+            case (MotionEvent.ACTION_UP):
+                Log.d(TAG, "onTouchEvent: up");
+                return true;
+            default:
+                return super.onTouchEvent(event);
+        }
+    }
 
     //  changing fragment source
 
@@ -675,6 +691,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 public void run() {
                     try {
                         mBoundService.sendToAll(Commands.LOGIN, mBoundService.getPartyName());
+                        mBoundService.updateServiceNotifaction();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
