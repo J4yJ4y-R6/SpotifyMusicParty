@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import android.text.BoringLayout;
 import android.util.DisplayMetrics;
@@ -130,9 +131,9 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
         if(recyclerView != null) {
             recyclerView.setAdapter(showSavedPlaylistRecycAdapter);
             if(getScreenOrientation() == Configuration.ORIENTATION_PORTRAIT)
-                recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
+                recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
             else
-                recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 5));
+                recyclerView.setLayoutManager(new StaggeredGridLayoutManager(5, StaggeredGridLayoutManager.VERTICAL));
         }
 
         return view;

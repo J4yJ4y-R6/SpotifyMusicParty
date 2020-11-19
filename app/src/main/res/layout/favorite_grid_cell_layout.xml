@@ -3,12 +3,17 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:layout_margin="10dp"
+    android:background="@drawable/playlists_cards_background"
+    android:orientation="vertical"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp">
 
     <ViewSwitcher
         android:id="@+id/favoriteSwitcher"
         android:layout_width="100dip"
         android:layout_height="60dip"
+        android:layout_gravity="center|center_horizontal"
         android:paddingTop="10dp"
         android:textAlignment="center"
         android:visibility="visible">
@@ -37,10 +42,10 @@
         android:id="@+id/favoriteCoverImageView"
         android:layout_width="100dip"
         android:layout_height="100dip"
+        android:layout_gravity="center|center_horizontal|center_vertical"
         android:background="@color/transparent"
         android:contentDescription="@string/text_playlistCover"
         android:longClickable="true"
         android:src="@color/transparent"
         android:visibility="visible" />
-
 </LinearLayout>

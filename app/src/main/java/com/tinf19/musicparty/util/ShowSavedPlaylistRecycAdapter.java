@@ -20,6 +20,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
@@ -89,9 +90,10 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
         LayoutInflater inflater = LayoutInflater.from(context);
 
         View view = inflater.inflate(R.layout.favorite_grid_cell_layout, parent, false);
-        GridLayoutManager.LayoutParams lp = (GridLayoutManager.LayoutParams) view.getLayoutParams();
+        StaggeredGridLayoutManager.LayoutParams lp = (StaggeredGridLayoutManager.LayoutParams) view.getLayoutParams();
         if(showSavedPlaylistsFragment.getScreenOrientation() == Configuration.ORIENTATION_PORTRAIT)
             lp.height = parent.getMeasuredHeight() / 2;
+
         else
             lp.height = parent.getMeasuredHeight();
         view.setLayoutParams(lp);
@@ -111,7 +113,7 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
         if (headerTV != null && headerET != null && coverIV != null && switcher != null) {
             holder.headerTextView.setText(name);
             new DownloadImageTask(holder.coverImageView).execute(coverURL);
-            coverIV.setOnClickListener(new View.OnClickListener() {
+            holder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (!(switcher.getCurrentView() instanceof EditText)) {
