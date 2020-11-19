@@ -25,6 +25,7 @@
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:textAlignment="center"
+            android:textColor="#FFFFFF"
             android:textSize="18sp" />
 
         <EditText
@@ -35,6 +36,7 @@
             android:hint="@string/text_editName"
             android:inputType="textShortMessage"
             android:textAlignment="center"
+            android:textColor="#FFFFFF"
             android:textSize="18sp" />
     </ViewSwitcher>
 
@@ -45,7 +47,7 @@
         android:layout_gravity="center|center_horizontal|center_vertical"
         android:background="@color/transparent"
         android:contentDescription="@string/text_playlistCover"
-        android:longClickable="true"
+        android:clickable="true"
         android:src="@color/transparent"
         android:visibility="visible" />
 </LinearLayout>

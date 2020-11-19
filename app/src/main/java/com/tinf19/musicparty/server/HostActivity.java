@@ -376,6 +376,15 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
+    public void reloadPlaylistFragment() {
+        Fragment frg = getSupportFragmentManager().findFragmentByTag("HostPlaylistFragment");
+        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.detach(frg);
+        ft.attach(frg);
+        ft.commit();
+    }
+
+    @Override
     public void deletePlaylist(String id) {
         if(mBoundService != null)
             mBoundService.deletePlaylist(id);
@@ -510,7 +519,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void removeItem(Track toRemove, int position, ServerService.AfterDeleteCallback callback) {
+    public void removeItem(Track toRemove, int position, ServerService.AfterCallback callback) {
         if(mBoundService != null) {
             try {
                 mBoundService.deleteItem(toRemove.getURI(), toRemove.getName(), position, () -> runOnUiThread(callback::deleteFromDataset));
@@ -537,7 +546,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public boolean savePlaylistInSharedPreferences(String name) {
         SharedPreferences savePlaylistMemory = this.getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
-        if(!savePlaylistMemory.getString("9", "").equals(""))
+        if(!savePlaylistMemory.getString("29", "").equals(""))
             return false;
         SharedPreferences.Editor editor = savePlaylistMemory.edit();
         JSONObject playlist = new JSONObject();
@@ -553,7 +562,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             e.printStackTrace();
         }
 
-        for(int i = 0; i < 9; i++) {
+        for(int i = 0; i < 30; i++) {
             try {
                 if(savePlaylistMemory.getString("" + i, null) == null || id.equals(new JSONObject(savePlaylistMemory.getString("" + i, "")).getString("id"))) {
                     editor.putString("" + i, playlist.toString());

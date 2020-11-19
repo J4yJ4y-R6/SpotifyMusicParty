@@ -1,7 +1,6 @@
 package com.tinf19.musicparty.util;
 
 import android.graphics.Color;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,7 +29,7 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
 
     public interface HostPlaylistAdapterCallback {
         void swapPlaylistItems(int from, int to);
-        void removeItem(Track toRemove, int position, ServerService.AfterDeleteCallback callback);
+        void removeItem(Track toRemove, int position, ServerService.AfterCallback callback);
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {

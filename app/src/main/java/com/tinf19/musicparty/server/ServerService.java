@@ -82,9 +82,10 @@ public class ServerService extends Service implements Parcelable {
         void setPlayImage(boolean pause);
         void showDefault();
         void connect(HostActivity.ConnectionCallback connectionCallback);
+        void reloadPlaylistFragment();
     }
 
-    public interface AfterDeleteCallback {
+    public interface AfterCallback {
         void deleteFromDataset();
     }
 
@@ -643,7 +644,7 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
-    public void deleteItem(String uri, String name, int position, AfterDeleteCallback callback) throws JSONException {
+    public void deleteItem(String uri, String name, int position, AfterCallback callback) throws JSONException {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
@@ -860,6 +861,7 @@ public class ServerService extends Service implements Parcelable {
     public void addItemToPlaylist(Track track) {
         playlist.add(track);
         tracks.add(track);
+        spotifyPlayerCallback.reloadPlaylistFragment();
     }
 
     public void addItemToTrackList(Track track) { tracks.add(track); }

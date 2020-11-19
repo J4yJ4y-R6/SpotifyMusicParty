@@ -41,7 +41,9 @@ import org.json.JSONObject;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -57,12 +59,13 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
     private static final String TAG = ShowSavedPlaylistsFragment.class.getName();
     private String token;
     private SharedPreferences savePlaylistMemory;
-    private ArrayList<Playlist> playlists = new ArrayList<>();
+    private Playlist[] playlists;
     private ShowSavedPlaylistsFragment.ShowSavedPlaylistCallback favoritePlaylistsCallback;
     private ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback favoritePlaylistCallback;
     private String playlistID;
     private String playlistCoverUrl;
     private ShowSavedPlaylistRecycAdapter showSavedPlaylistRecycAdapter;
+    private int counter;
 
     public interface ShowSavedPlaylistCallback extends ForAllCallback {
         void changePlaylistCover(String id, Bitmap image);
@@ -91,8 +94,9 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
     @Override
     public void onStart() {
         super.onStart();
-        playlists.clear();
         savePlaylistMemory = getContext().getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
+        playlists = new Playlist[savePlaylistMemory.getAll().size()];
+        counter = 0;
         ArrayList<String> idList = new ArrayList<>();
         for(int i = 0; i < savePlaylistMemory.getAll().size(); i++) {
             try {
@@ -106,8 +110,8 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
         for(int i = 0; i < savePlaylistMemory.getAll().size(); i++) {
             setPlaylists(i);
         }
-        while(playlists.size() < savePlaylistMemory.getAll().size());
-        showSavedPlaylistRecycAdapter.setPlaylists(playlists, idList);
+        while(counter < savePlaylistMemory.getAll().size());
+        showSavedPlaylistRecycAdapter.setPlaylists(new ArrayList<Playlist>(Arrays.asList(playlists)), idList);
     }
 
     @Override
@@ -152,7 +156,7 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
         return orientation;
     }
 
-    private void getPlaylistCoverUrl(String id, String name) {
+    private void getPlaylistCoverUrl(String id, String name, int key) {
         String token = favoritePlaylistsCallback.getToken();
         if(token == null) return;
         OkHttpClient client = new OkHttpClient();
@@ -189,7 +193,8 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
                         playlistCoverUrl = jsonObject.getString("url");
                         Playlist playlist = new Playlist(id, name, playlistCoverUrl);
                         Log.d(TAG, "onResponse: " + playlist.toString());
-                        playlists.add(playlist);
+                        playlists[key] = playlist;
+                        counter++;
 
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -206,7 +211,7 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
                 JSONObject element = new JSONObject(response);
                 String name = element.getString("name");
                 String id = element.getString("id");
-                getPlaylistCoverUrl(id, name);
+                getPlaylistCoverUrl(id, name, key);
             }
         } catch (JSONException e) {
             e.printStackTrace();

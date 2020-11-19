@@ -5,6 +5,13 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.ColorFilter;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +25,7 @@ import android.widget.ViewSwitcher;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
+import androidx.palette.graphics.Palette;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
@@ -25,11 +33,15 @@ import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
 import com.tinf19.musicparty.music.Playlist;
+import com.tinf19.musicparty.server.HostActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Map;
 
 public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSavedPlaylistRecycAdapter.ViewHolder> {
 
@@ -42,6 +54,7 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
     private FavoritePlaylistCallback favoritePlaylistCallback;
     private static final String TAG = ShowSavedPlaylistRecycAdapter.class.getName();
     private ShowSavedPlaylistsFragment showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment();
+    private View view;
 
     public interface GalleryCallback {
         void openGalleryForUpload(Intent intent, String playlistID);
@@ -89,7 +102,7 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
         context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
 
-        View view = inflater.inflate(R.layout.favorite_grid_cell_layout, parent, false);
+        view = inflater.inflate(R.layout.favorite_grid_cell_layout, parent, false);
         StaggeredGridLayoutManager.LayoutParams lp = (StaggeredGridLayoutManager.LayoutParams) view.getLayoutParams();
         if(showSavedPlaylistsFragment.getScreenOrientation() == Configuration.ORIENTATION_PORTRAIT)
             lp.height = parent.getMeasuredHeight() / 2;
@@ -100,6 +113,7 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
         savePlaylistMemory = context.getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
         return new ViewHolder(view);
     }
+
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
@@ -113,7 +127,19 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
         if (headerTV != null && headerET != null && coverIV != null && switcher != null) {
             holder.headerTextView.setText(name);
             new DownloadImageTask(holder.coverImageView).execute(coverURL);
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        int color = convertToBitmap(new URL(coverURL));
+                        Log.d(TAG, "onBindViewHolder: " + color);
+                        ((HostActivity) context).runOnUiThread( () -> holder.itemView.setBackgroundColor(color));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }).start();
+            View.OnClickListener onclick = new  View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (!(switcher.getCurrentView() instanceof EditText)) {
@@ -227,10 +253,18 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
                                 .show();
                     }
                 }
-            });
+            };
+            holder.itemView.setOnClickListener(onclick);
+            holder.coverImageView.setOnClickListener(onclick);
         }
     }
 
+    public static int convertToBitmap(URL url_value) throws IOException {
+        Bitmap mIcon1 =
+                BitmapFactory.decodeStream(url_value.openConnection().getInputStream());
+        Palette palette = Palette.from(mIcon1).maximumColorCount(30).generate();
+        return palette.getDominantColor(0xFFFFFFFF);
+    }
 
 
     @Override
