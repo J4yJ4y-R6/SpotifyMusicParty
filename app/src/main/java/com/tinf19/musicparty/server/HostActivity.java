@@ -189,7 +189,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     startService(serviceIntent);
                     if(mBoundService != null) {
                         mBoundService.setSpotifyPlayerCallback(HostActivity.this);
-                        HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.service_serverMsg), Toast.LENGTH_SHORT).show());
+                        HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.service_serverMsg, getString(R.string.text_partyName)), Toast.LENGTH_SHORT).show());
                     }
                     break;
                 default:

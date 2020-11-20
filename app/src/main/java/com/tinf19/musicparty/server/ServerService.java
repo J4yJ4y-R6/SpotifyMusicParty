@@ -211,51 +211,6 @@ public class ServerService extends Service implements Parcelable {
         return mBinder;
     }
 
-    public void addEventListener() {
-        mSpotifyAppRemote.getPlayerApi()
-                .subscribeToPlayerState()
-                .setEventCallback(playerState -> {
-                    final com.spotify.protocol.types.Track track = playerState.track;
-                    if(playlistID != null) {
-                        nowPlaying = track;
-                        if(lastSongTitle == null || (nowPlaying != null && !nowPlaying.name.equals(lastSongTitle.name))) {
-                            if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
-                                stopped = true;
-                                Log.d(TAG, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
-                                mSpotifyAppRemote.getPlayerApi().skipPrevious();
-                                mSpotifyAppRemote.getPlayerApi().pause();
-                                pause = true;
-                                if(spotifyPlayerCallback != null)
-                                    spotifyPlayerCallback.setPlayImage(true);
-                                return;
-                            } else if(tracks.size() == 0 && lastSongTitle != null) {
-                                return;
-                            }
-                            lastSongTitle = nowPlaying;
-                            Log.d(TAG, "New song has been started " + track.uri.split(":")[2]);
-                            stopped = false;
-                            new Thread(()->{
-                                try {
-                                    sendToAll(Commands.PLAYING, getNowPlaying().serialize());
-                                } catch (IOException | JSONException e) {
-                                    Log.e(TAG, e.getMessage(), e);
-                                }
-                            }).start();
-                            if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
-                                tracks.remove(0);
-                            }
-                        }
-                        pause = playerState.isPaused;
-                        if (track != null && spotifyPlayerCallback != null) {
-                            spotifyPlayerCallback.setNowPlaying(getNowPlaying());
-                        }
-
-                        if(spotifyPlayerCallback != null) spotifyPlayerCallback.setPlayImage(pause);
-                    }
-                });
-    }
-
-
     // Getter
 
     public SpotifyAppRemote getmSpotifyAppRemote() { return ( mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()) ? mSpotifyAppRemote : null; }
