@@ -28,24 +28,20 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.tinf19.musicparty.App.CHANNEL_ID;
-
 public class ClientService extends Service {
 
-
     private static final String TAG = ClientService.class.getName();
-    private static final int PORT = 1403;
-    private static final short LOADING_TIME = 5;
-    private boolean stopped;
     private final IBinder mBinder = new LocalBinder();
+    private PartyCallback partyCallback;
     private ClientThread clientThread;
     private Thread tokenRefresh;
     private Socket clientSocket;
-    private boolean first = true;
-    private List<Track> queue = new ArrayList<>();
-    private PartyCallback partyCallback;
     private Track nowPlaying;
+    private List<Track> queue = new ArrayList<>();
+    private boolean stopped;
+    private boolean first = true;
     private String token;
+
 
     public interface PartyCallback {
         void setTrack(Track track);
@@ -84,7 +80,7 @@ public class ClientService extends Service {
 
 
         //TODO: Service Text später Namen hinzufügen
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+        Notification notification = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_name))
                 .setContentText(getString(R.string.service_clientMsg, "MusicParty"))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -184,16 +180,16 @@ public class ClientService extends Service {
         @Override
         public void run() {
             try {
-                Log.d(TAG, "Try to login to " + address + ":" + PORT + " with password " + this.password);
+                Log.d(TAG, "Try to login to " + address + ":" + Constants.PORT + " with password " + this.password);
                 new Thread(() -> {
                     try {
-                        Thread.sleep(LOADING_TIME*1000);
+                        Thread.sleep(Constants.LOADING_TIME*1000);
                     } catch (InterruptedException e) {
                         Log.e(TAG, e.getMessage(), e);
                     }
                     if(clientSocket == null) partyCallback.exitService(getString(R.string.service_clientConnectionError));
                 }).start();
-                clientSocket = new Socket(this.address, PORT);
+                clientSocket = new Socket(this.address, Constants.PORT);
                 new Thread(() -> {
                     while(partyCallback == null);
                     partyCallback.showFragments();
@@ -236,7 +232,6 @@ public class ClientService extends Service {
                                      partyCallback.setTrack(nowPlaying);
                                      break;
                                 case PLAYLIST:
-                                    Log.d(TAG, "Show Playlist");
                                     List<Track> tracks = new ArrayList<>();
                                     for (int i = 3; i < parts.length; i++) {
                                         if(!parts[i].equals(""))

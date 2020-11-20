@@ -14,7 +14,6 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.PatternMatcher;
 import android.util.Log;
 
 import android.widget.Toast;
@@ -26,7 +25,6 @@ import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.tinf19.musicparty.databinding.ActivityClientPartyBinding;
 import com.tinf19.musicparty.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.fragments.LoadingFragment;
-import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.fragments.ExitConnectionFragment;
@@ -42,35 +40,25 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.List;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-import static com.tinf19.musicparty.util.Constants.TOKEN;
-
 
 public class PartyActivity extends AppCompatActivity implements ShowSongFragment.PartyButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, SearchSongsOutputFragment.AddSongCallback, ClientService.PartyCallback {
 
-    private static final int REQUEST_CODE = 1337;
     private static final String TAG = PartyActivity.class.getName();
-    private static final String STATE_TAG = "tag";
-    ActivityClientPartyBinding binding;
-    private FragmentTransaction fragmentTransaction;
-    private int mCounter;
-    private boolean mShouldUnbind;
+    private ActivityClientPartyBinding binding;
     private ClientService mBoundService;
-
+    private FragmentTransaction fragmentTransaction;
     private SearchSongsOutputFragment searchSongsOutputFragment;
     private ShowSongFragment showSongFragment;
     private ClientPlaylistFragment clientPlaylistFragment;
     private SearchBarFragment searchBarFragment;
     private ExitConnectionFragment exitConnectionFragment;
 
+    private boolean mShouldUnbind;
+
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mBoundService = ((ClientService.LocalBinder)service).getService();
             loginToSpotify();
-/*            String partyName = mBoundService.getClientThread().getPartyName();
-            if(partyName != null) {
-                setPartyName(partyName);
-            }*/
             if(mBoundService.isStopped()) {
                 exitService(getString(R.string.service_serverClosed));
             }
@@ -128,7 +116,6 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
         String tag = "";
         if(searchSongsOutputFragment != null && searchSongsOutputFragment.isVisible())
             tag = searchSongsOutputFragment.getTag();
@@ -138,31 +125,26 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
             tag = clientPlaylistFragment.getTag();
         if(exitConnectionFragment != null && exitConnectionFragment.isVisible())
             tag = exitConnectionFragment.getTag();
-        outState.putString(STATE_TAG, tag);
+        outState.putString(Constants.TAG, tag);
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //token = getIntent().getStringExtra(Constants.TOKEN);
         binding = ActivityClientPartyBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
 
         if(savedInstanceState != null){
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
-            String currentFragmentTag = savedInstanceState.getString(STATE_TAG, "ShowSongFragment");
+            String currentFragmentTag = savedInstanceState.getString(Constants.TAG, "ShowSongFragment");
             if(!currentFragmentTag.equals("")) {
-                Log.d(TAG, "onCreate: " + currentFragmentTag);
                 Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
-                Log.d(TAG, "onCreate: " + currentFragment.toString());
                 getSupportFragmentManager().beginTransaction().
                         replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
             }
         } else {
             getSupportFragmentManager().beginTransaction().
                     replace(R.id.showSongFragmentFrame, new LoadingFragment(), "LoadingFragment").commitAllowingStateLoss();
-
             doBindService();
         }
     }
@@ -172,31 +154,23 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
                 new AuthorizationRequest.Builder(Constants.CLIENT_ID, AuthorizationResponse.Type.CODE, Constants.REDIRECT_URI);
         builder.setScopes(new String[]{});
         AuthorizationRequest request = builder.build();
-        AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
+        AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
 
-        // Check if result comes from the correct activity
-        if (requestCode == REQUEST_CODE) {
+        if (requestCode == Constants.REQUEST_CODE) {
             AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
 
             switch (response.getType()) {
-                // Response was successful and contains auth token
                 case TOKEN:
-                    // Handle successful response
-                    //token = response.getAccessToken();
-                    Log.d(TAG, "Expires in: " + response.getExpiresIn());
-                    Log.d(TAG, "Token gained successful: " + response.getAccessToken());
+                    Log.d(TAG, "Token gained successful");
                     break;
-                // Auth flow returned an error
                 case ERROR:
-                    // Handle error response
                     Log.e(TAG, "Spotify login error");
                     break;
-                // Most likely auth flow was cancelled
                 case CODE:
                     Log.d(TAG, "Code: " + response.getCode());
                     Log.d(TAG, "State: " + response.getState());
@@ -218,7 +192,6 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
 
     public void showFragments() {
-        Log.d(TAG, "showFragments: End of loading");
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
         showSongFragment = new ShowSongFragment(this);
         clientPlaylistFragment = new ClientPlaylistFragment();
@@ -239,7 +212,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     public void showPlaylist() {
         if(mBoundService != null) {
             try {
-                mBoundService.getClientThread().sendMessage(Commands.PLAYLIST, "User ask for Playlist");
+                mBoundService.getClientThread().sendMessage(Commands.PLAYLIST, "User request the current Playlist");
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
@@ -256,10 +229,9 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     @Override
     public void acceptExit() {
         new Thread(()->{
-            Log.d(TAG, "User tries to leave the party");
             try {
                 if(mBoundService != null)
-                mBoundService.getClientThread().sendMessage(Commands.QUIT, "User left the channel");
+                mBoundService.getClientThread().sendMessage(Commands.QUIT, "User left the party");
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
@@ -277,7 +249,6 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void searchForSongs(List<Track> tracks) {
-        Log.d("ShowSongFragment", "back to show");
         animateFragmentChange(true, searchSongsOutputFragment, "SearchSongOutputFragment");
         this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));
     }
@@ -288,8 +259,6 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
             while(!showSongFragment.getStarted() || mBoundService == null || mBoundService.getClientThread().getPartyName() == null);
             if(mBoundService != null) {
                 mBoundService.setTrack();
-                Log.d(TAG, "Hidden: " + showSongFragment.isHidden());
-                Log.d(TAG, "Partyname: " + mBoundService.getClientThread().getPartyName());
                 setPartyName(mBoundService.getClientThread().getPartyName());
             }
         }).start();
@@ -333,7 +302,6 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void setTrack(Track track) {
-        Log.d(TAG, "Now Playing: " + track.toString());
         runOnUiThread(() -> showSongFragment.showSongs(track));
     }
 
@@ -358,13 +326,11 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
 
     @Override
     public void setPlaylist(List<Track> trackList) {
-        Log.d("ClientPlaylistFragment", "show playlist");
         this.runOnUiThread(() -> clientPlaylistFragment.showResult(trackList));
     }
 
     @Override
     public void setCurrentTrack(Track track) {
-        Log.d(TAG, "set current track");
         this.runOnUiThread(() -> clientPlaylistFragment.setCurrentPlaying(track));
     }
 

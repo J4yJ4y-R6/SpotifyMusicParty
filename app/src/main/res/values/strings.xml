@@ -29,13 +29,14 @@
     <string name="text_save">Sichern</string>
     <string name="text_loadingClient">Verbindung zum Server wird hergestellt</string>
     <string name="text_loadingServer">Verbindung zu Spotify wird hergestellt</string>
+    <string name="text_qrCodeNoResult">Kein Ergebnis gefunden</string>
 
     <string name="heading_settings">Einstellungen</string>
     <string name="service_channelName">Music Party Service Channel</string>
     <string name="service_name">MusicParty</string>
     <string name="service_clientMsg">Du bist Teil einer %1$s</string>
     <string name="service_clientConnectionError">Die Verbindung zum Host ist fehlgeschlagen</string>
-    <string name="service_serverMsg">Du hostest eine MusicParty</string>
+    <string name="service_serverMsg">Du hostest die Party: %1$s</string>
     <string name="service_serverClosed">Der Host hat die Party beendet</string>
     <string name="service_serverConnected">Du bist Teil der %1$s</string>
     <string name="service_serverDisconnected">Du hast die %1$s verlassen</string>
@@ -60,8 +61,9 @@
     <string name="text_shareIP_Descrition">IP Addresse und Passwort teilen</string>
     <string name="text_shareQR_Description">QR-Code teilen</string>
     <string name="text_shareLink_Description">Link zum beitreten teilen</string>
+    <string name="text_songsOutputSwipeForQue">Wischen um das Lied der Warteschlange hinzuzufügen</string>
 
-    <string name="text_toastPlaylistNotSaved">Playlist konnte nicht gespeichert werden. Prüfe ob du schon neun Playlisten gespeichert hast.</string>
+    <string name="text_toastPlaylistNotSaved">Playlist konnte nicht gespeichert werden. Prüfe ob du schon 30 Playlisten gespeichert hast.</string>
     <string name="text_toastPlaylistNameNeeded">Playlist konnte nicht gespeichert werden. Du musst einen Namen Hinzufügen</string>
     <string name="text_favoritePlaylistsDialogWindow">Möchtest du die Playlist löschen, abspielen oder bearbeiten?</string>
     <string name="text_toastPlaylistDeleted"> wurde erfolgreich aus deinen Favoriten gelöscht</string>
@@ -75,6 +77,20 @@
     <string name="text_acceptEditOption_dialog">Bestätige das verändern des Playlistnamens</string>
     <string name="text_delete">Löschen</string>
     <string name="text_chooseDeleteOption_dialog">Möchtest du die Playlist wirklich aus deinen Favoriten löschen?</string>
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
 
 
 </resources>

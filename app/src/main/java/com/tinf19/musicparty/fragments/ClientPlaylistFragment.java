@@ -22,14 +22,11 @@ import com.tinf19.musicparty.util.DownloadImageTask;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-
 public class ClientPlaylistFragment extends Fragment {
 
     private static final String TAG = ClientPlaylistFragment.class.getName();
-    private int mCounter;
-    private RecyclerView recyclerView;
     private ClientPlaylistRecycAdapter clientPlaylistRecycAdapter;
+    private RecyclerView recyclerView;
     private ImageView currentSongCoverImageView;
     private TextView currentSongTitleTextView;
     private TextView currentSongArtistTextView;
@@ -37,12 +34,6 @@ public class ClientPlaylistFragment extends Fragment {
 
     public ClientPlaylistFragment() {
         // Required empty public constructor
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
     }
 
     @Override
@@ -55,9 +46,6 @@ public class ClientPlaylistFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_client_playlist, container, false);
-
-        if(savedInstanceState != null)
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
 
         recyclerView = view.findViewById(R.id.clientPlaylistRecyclerView);
         if(recyclerView != null) {
@@ -78,21 +66,17 @@ public class ClientPlaylistFragment extends Fragment {
         Log.d(TAG, track.getName());
         if(currentSongTitleTextView != null) {
             currentSongTitleTextView.setText(track.getName());
-            Log.d(TAG, "onCreateViewHolder: " + track.getName());
         }
         if(currentSongArtistTextView != null) {
             currentSongArtistTextView.setText(track.getArtist(0).getName());
-            Log.d(TAG, "onCreateViewHolder: " + track.getArtist(0).getName());
         }
         if(currentSongCoverImageView != null) {
             String coverURL = "https://i.scdn.co/image/"+track.getCover();
             new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
-            Log.d(TAG, "onCreateViewHolder: " + coverURL);
         }
     }
 
     public void showResult(List<Track> tracks) {
-        Log.d(TAG, "showResult: show Playlist");
         if(clientPlaylistRecycAdapter != null) {
             clientPlaylistRecycAdapter.setDataset(tracks);
             clientPlaylistRecycAdapter.notifyDataSetChanged();

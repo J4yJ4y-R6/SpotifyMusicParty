@@ -1,7 +1,6 @@
 package com.tinf19.musicparty.util;
 
 import android.graphics.Color;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,14 +22,14 @@ import java.util.List;
 
 public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistRecycAdapter.MyViewHolder> implements HostPlaylistItemMoveCallback.ItemTouchHelperContract {
 
+    private static final String TAG = HostPlaylistRecycAdapter.class.getName();
     private List<Track> mdataset;
     private View view;
-    private static final String TAG = HostPlaylistRecycAdapter.class.getName();
     private HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
 
     public interface HostPlaylistAdapterCallback {
         void swapPlaylistItems(int from, int to);
-        void removeItem(Track toRemove, int position, ServerService.AfterDeleteCallback callback);
+        void removeItem(Track toRemove, int position, ServerService.AfterCallback callback);
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
@@ -75,7 +74,6 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
 
     @Override
     public void onRowMoved(int fromPosition, int toPosition) {
-        Log.d(TAG, "onRowMoved: done");
         if(fromPosition < toPosition) {
             for (int i = fromPosition; i < toPosition; i++) {
                 Collections.swap(mdataset, i, i+1);
@@ -102,9 +100,6 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
 
     @Override
     public void onRowDeleted(int position) {
-        Log.d(TAG, mdataset.get(position).toString());
-        Log.d(TAG, "onRowDeleted: " + position);
-        //mdataset.remove(toDelete);
         hostPlaylistAdapterCallback.removeItem(mdataset.get(position), position, this::notifyDataSetChanged);
     }
 

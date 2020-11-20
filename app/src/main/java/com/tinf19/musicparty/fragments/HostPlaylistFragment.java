@@ -25,12 +25,9 @@ import com.tinf19.musicparty.util.HostPlaylistItemMoveCallback;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-
 public class HostPlaylistFragment extends Fragment {
 
     private static final String TAG = HostPlaylistFragment.class.getName();
-    private int mCounter;
     private RecyclerView recyclerView;
     private TextView currentSongTitleTextView;
     private TextView currentSongArtistTextView;
@@ -58,19 +55,12 @@ public class HostPlaylistFragment extends Fragment {
         super.onStart();
         playlistCallback.showPlaylist();
         Track currentPlaying = playlistCallback.getCurrentPlaying();
-        Log.d(TAG, "onStart: " + currentPlaying);
         if(currentSongTitleTextView != null) currentSongTitleTextView.setText(currentPlaying.getName());
         if(currentSongArtistTextView != null) currentSongArtistTextView.setText(currentPlaying.getArtist(0).getName());
         if(currentSongCoverImageView != null) {
             String coverURL = "https://i.scdn.co/image/" + currentPlaying.getCover();
             new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
         };
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
     }
 
     @Override
@@ -94,9 +84,6 @@ public class HostPlaylistFragment extends Fragment {
         // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.fragment_host_playlist, container, false);
 
-        if(savedInstanceState != null)
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
-
         recyclerView = view.findViewById(R.id.hostPlaylistRecyclerView);
         if(recyclerView != null) {
             hostPlaylistRecycAdapter = new HostPlaylistRecycAdapter(new ArrayList<Track>(), hostPlaylistAdapterCallback);
@@ -117,7 +104,6 @@ public class HostPlaylistFragment extends Fragment {
     }
 
     public void showResult(List<Track> tracks) {
-        Log.d(TAG, "showResult: show Playlist");
         if(hostPlaylistRecycAdapter != null) {
             hostPlaylistRecycAdapter.setDataset(tracks);
             hostPlaylistRecycAdapter.notifyDataSetChanged();

@@ -2,12 +2,12 @@ package com.tinf19.musicparty.util;
 
 
 import android.content.Context;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
@@ -25,9 +25,9 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
         void returnSong(Track track);
     }
 
-    SongCallback songCallback;
-    private List<Track> mDataset;
     private static final String TAG = PartyAcRecycAdapter.class.getName();
+    private SongCallback songCallback;
+    private List<Track> mDataset;
     private View textView;
 
     public class ViewHolder extends RecyclerView.ViewHolder implements SearchSongsOutputItemTouchHelperCallback.ItemTouchHelperViewHolder {
@@ -88,9 +88,9 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
         ImageView songCoverIV = holder.songCoverImageView;
         if(songCoverIV != null)
             new DownloadImageTask(songCoverIV).execute(cover);
-//        holder.itemView.setOnClickListener(v -> {
-//            songCallback.returnSong(mDataset.get(position));
-//        });
+        holder.itemView.setOnClickListener(v -> {
+            Toast.makeText(textView.getContext(), textView.getContext().getString(R.string.text_songsOutputSwipeForQue), Toast.LENGTH_LONG).show();
+        });
 
     }
 

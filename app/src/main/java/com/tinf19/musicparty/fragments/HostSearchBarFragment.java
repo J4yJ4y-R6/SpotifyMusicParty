@@ -24,6 +24,7 @@ import android.widget.ImageButton;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.ForAllCallback;
 
 import org.jetbrains.annotations.NotNull;
@@ -46,15 +47,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-
 public class HostSearchBarFragment extends Fragment {
 
     private static final String TAG = HostSearchBarFragment.class.getName();
-    private static final String STATE_TOKEN = "token";
-    private int mCounter;
-    public HostSearchForSongs searchForSongs;
-    private static final String HOST = "api.spotify.com";
+    private HostSearchForSongs searchForSongs;
     private List<Track> tracks = new ArrayList<>();
     private AutoCompleteTextView searchText;
     private ImageButton searchButton;
@@ -73,13 +69,6 @@ public class HostSearchBarFragment extends Fragment {
         this.searchForSongs = searchForSongs;
     }
 
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
-    }
-
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,9 +78,8 @@ public class HostSearchBarFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof HostSearchForSongs) {
+        if(context instanceof HostSearchForSongs)
             searchForSongs = (HostSearchForSongs) context;
-        }
     }
 
 
@@ -100,11 +88,6 @@ public class HostSearchBarFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_host_search_bar, container, false);
-
-        if(savedInstanceState != null) {
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
-
-        }
 
         searchText = view.findViewById(R.id.hostSearchEditText);
         Point displaySize = new Point();
@@ -115,20 +98,15 @@ public class HostSearchBarFragment extends Fragment {
         if(searchText != null) {
             searchText.addTextChangedListener(new TextWatcher() {
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                    //
-                }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if(!searchText.getText().toString().equals(""))
-                        search(s.toString(), false, "artist,track", "5");
+                    if(!searchText.getText().toString().equals("")) search(s.toString(), false, "artist,track", "5");
                 }
 
                 @Override
-                public void afterTextChanged(Editable s) {
-                    //
-                }
+                public void afterTextChanged(Editable s) {}
             });
         }
 
@@ -153,10 +131,7 @@ public class HostSearchBarFragment extends Fragment {
         if (favoriteSavedPlaylistsImageButton != null) {
             favoriteSavedPlaylistsImageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onClick(View v) {
-                    Log.d(TAG, "onClick: show saved playlists");
-                    searchForSongs.openSavedPlaylistsFragment();
-                }
+                public void onClick(View v) { searchForSongs.openSavedPlaylistsFragment(); }
             });
         }
 
@@ -169,7 +144,7 @@ public class HostSearchBarFragment extends Fragment {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("search")
                 .addQueryParameter("q", query)
@@ -181,7 +156,6 @@ public class HostSearchBarFragment extends Fragment {
                 .url(completeURL)
                 .addHeader("Authorization", "Bearer " + token)
                 .build();
-        Log.d(TAG, request.headers().toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -232,7 +206,7 @@ public class HostSearchBarFragment extends Fragment {
                 adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, titles);
                 getActivity().runOnUiThread( () -> searchText.setAdapter(adapter));
             } else {
-                Log.d(TAG, "showAutofills: response couldnt reach searchText");
+                Log.d(TAG, "showAutofills: not able to show the hints under searchText");
             }
         } catch (JSONException e) {
             e.printStackTrace();

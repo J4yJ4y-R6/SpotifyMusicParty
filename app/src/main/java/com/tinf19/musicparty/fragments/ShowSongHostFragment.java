@@ -1,16 +1,13 @@
 package com.tinf19.musicparty.fragments;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -24,15 +21,11 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.DownloadImageTask;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
-
 public class ShowSongHostFragment extends Fragment {
 
-    private int mCounter;
     private static final String TAG = ShowSongHostFragment.class.getName();
     private OpenHostFragments openHostFragments;
     private String partyName;
-    private Track nowPlaying;
     private ImageButton playTrackImageButton;
     private TextView currentPlayingTitleTextView;
     private TextView currentPlayingAlbumTextView;
@@ -64,19 +57,11 @@ public class ShowSongHostFragment extends Fragment {
         // Required empty public constructor
     }
 
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
-    }
-
     @Override
     public void onStart() {
         super.onStart();
         this.partyName = openHostFragments.getPartyPeoplePartyName();
         setPartyNameCount(openHostFragments.getPartyPeopleSize());
-        Log.d(TAG, "onStart: got party name: " + partyName);
         if(openHostFragments != null) {
             setPlayTrackButtonImage(openHostFragments.getPauseState());
             Track track = openHostFragments.setShowNowPlaying();
@@ -112,10 +97,6 @@ public class ShowSongHostFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_show_song_host, container, false);
-
-        if(savedInstanceState != null) {
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
-        }
 
         partyNameTextView = view.findViewById(R.id.partyOverviewTextView);
 
@@ -162,7 +143,6 @@ public class ShowSongHostFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     buttonEffect(lastTrackImageButton);
-                    Log.d(TAG, "onClick: play last track");
                     openHostFragments.lastTrack();
                     setPlayTrackButtonImage(false);
                 }
@@ -175,7 +155,6 @@ public class ShowSongHostFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     buttonEffect(playTrackImageButton);
-                    Log.d(TAG, "onClick: play track");
                     boolean pause = !openHostFragments.getPauseState();
                     openHostFragments.playTrack();
                     setPlayTrackButtonImage(pause);
@@ -189,7 +168,6 @@ public class ShowSongHostFragment extends Fragment {
                 @Override
                 public void onClick(View v) {
                     buttonEffect(nextTrackImageButton);
-                    Log.d(TAG, "onClick: play next track");
                     openHostFragments.nextTrack();
                     setPlayTrackButtonImage(false);
                 }

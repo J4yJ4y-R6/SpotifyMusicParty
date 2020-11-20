@@ -22,11 +22,9 @@ import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 
-import static com.tinf19.musicparty.util.Constants.STATE_COUNTER;
 
 public class ShowSongFragment extends Fragment {
 
-    private int mCounter;
     public PartyButtonClicked partyButtonClicked;
     private ImageView songCover;
     private TextView songTitle;
@@ -49,12 +47,6 @@ public class ShowSongFragment extends Fragment {
     }
 
     @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt(STATE_COUNTER, mCounter);
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
@@ -62,7 +54,6 @@ public class ShowSongFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        Log.d(ShowSongFragment.class.getName(), "I have been started");
         started = true;
         if(songTitle != null) {
             songTitle.setSelected(true);
@@ -93,9 +84,6 @@ public class ShowSongFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         rootView = inflater.inflate(R.layout.fragment_show_song, container, false);
-
-        if(savedInstanceState != null)
-            mCounter = savedInstanceState.getInt(STATE_COUNTER, 0);
 
         songCover = rootView.findViewById(R.id.songCoverImageView);
         songTitle = rootView.findViewById(R.id.songtitleTextView);
@@ -135,7 +123,6 @@ public class ShowSongFragment extends Fragment {
     }
 
     public void showSongs(Track track) {
-        Log.d(ShowSongFragment.class.getName(), "Now Playing: " + track.toString());
         if(songCover != null) {
             String coverURL = "https://i.scdn.co/image/"+track.getCover();
             new DownloadImageTask(songCover).execute(coverURL);
@@ -152,10 +139,8 @@ public class ShowSongFragment extends Fragment {
     }
 
     public void setPartyName(String name) {
-        //TODO: Format String partyName
         String conTo = "Verbunden mit ";
         String partyName = conTo + name;
-        Log.d(ShowSongFragment.class.getName(), "setPartyName: " + partyName);
         if(connectedToParty != null && !name.equals("")) {
             connectedToParty.setText(partyName, TextView.BufferType.SPANNABLE);
             Spannable spannable = (Spannable)connectedToParty.getText();

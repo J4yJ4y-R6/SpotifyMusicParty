@@ -8,12 +8,12 @@ import android.graphics.Bitmap;
 import android.os.Binder;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.service.voice.AlwaysOnHotwordDetector;
 import android.util.Base64;
 import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
@@ -23,6 +23,7 @@ import com.spotify.protocol.types.CrossfadeState;
 import com.spotify.protocol.types.Empty;
 import com.spotify.protocol.types.PlayerContext;
 import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
+
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.ActionReceiver;
@@ -31,8 +32,10 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.ShowSavedPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.TokenRefresh;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,36 +49,25 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.ResponseBody;
-
-import static com.tinf19.musicparty.App.CHANNEL_ID;
 
 public class ServerService extends Service implements Parcelable {
 
     private static final String TAG = ServerService.class.getName();
-    private static final int PORT = 1403;
-    private static final String HOST = "api.spotify.com";
-    private static final MediaType JSON
-            = MediaType.parse("application/json; charset=utf-8");
     private final IBinder mBinder = new LocalBinder();
     private String password;
-    Thread serverThread = null;
+    private Thread serverThread = null;
     private Thread tokenRefresh = null;
     private ServerSocket serverSocket;
     private List<CommunicationThread> clientThreads = new ArrayList<>();
-    private Socket tempClientSocket;
     private String userID;
     private String token;
     private String playlistID;
@@ -91,28 +83,8 @@ public class ServerService extends Service implements Parcelable {
     private  com.spotify.protocol.types.Track nowPlaying;
     private com.spotify.protocol.types.Track lastSongTitle;
     private boolean stopped;
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        //empty
-    }
-
-    public static final Creator<ServerService> CREATOR = new Creator<ServerService>() {
-        @Override
-        public ServerService createFromParcel(Parcel in) {
-            return new ServerService();
-        }
-
-        @Override
-        public ServerService[] newArray(int size) {
-            return new ServerService[size];
-        }
-    };
+    private PendingIntent pendingIntent;
+    private PendingIntent pendingIntentButton;
 
     public interface SpotifyPlayerCallback {
         void setNowPlaying(Track nowPlaying);
@@ -120,21 +92,18 @@ public class ServerService extends Service implements Parcelable {
         void setPlayImage(boolean pause);
         void showDefault();
         void connect(HostActivity.ConnectionCallback connectionCallback);
+        void reloadPlaylistFragment();
     }
 
-    public interface AfterDeleteCallback {
+    public interface AfterCallback {
         void deleteFromDataset();
     }
 
-    public interface AfterExtractCallback {
-        void useTracks(List<Track> tracks, int size);
+    public class LocalBinder extends Binder {
+        ServerService getService() { return ServerService.this; }
     }
 
-    public class LocalBinder extends Binder {
-        ServerService getService() {
-            return ServerService.this;
-        }
-    }
+    // Service - Interaction
 
     @Override
     public void onCreate() {
@@ -146,10 +115,8 @@ public class ServerService extends Service implements Parcelable {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        //token = intent.getStringExtra(Constants.TOKEN);
         password = intent.getStringExtra(Constants.PASSWORD);
         partyName = intent.getStringExtra(Constants.PARTYNAME);
-        Log.d(TAG, "partyName: " + partyName);
         if (first) {
             tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenCallback() {
                 @Override
@@ -206,14 +173,16 @@ public class ServerService extends Service implements Parcelable {
         PendingIntent pendingIntentButton = PendingIntent.getBroadcast(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
 
 
-        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
+        Notification notification = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_name))
-                .setContentText(getString(R.string.service_serverMsg))
+                .setContentText(getString(R.string.service_serverMsg, getPartyName()))
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentIntent(pendingIntent)
                 .addAction(R.drawable.ic_exit_button, getString(R.string.text_end),pendingIntentButton)
                 .build();
-        startForeground(1, notification);
+        startForeground(Constants.NOTIFY_ID, notification);
+
+        Log.d(TAG, "onStartCommand: first notify");
 
         return START_NOT_STICKY;
     }
@@ -242,13 +211,54 @@ public class ServerService extends Service implements Parcelable {
         return mBinder;
     }
 
-    public SpotifyAppRemote getmSpotifyAppRemote() {
-        return ( mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()) ? mSpotifyAppRemote : null;
+    public void addEventListener() {
+        mSpotifyAppRemote.getPlayerApi()
+                .subscribeToPlayerState()
+                .setEventCallback(playerState -> {
+                    final com.spotify.protocol.types.Track track = playerState.track;
+                    if(playlistID != null) {
+                        nowPlaying = track;
+                        if(lastSongTitle == null || (nowPlaying != null && !nowPlaying.name.equals(lastSongTitle.name))) {
+                            if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
+                                stopped = true;
+                                Log.d(TAG, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
+                                mSpotifyAppRemote.getPlayerApi().skipPrevious();
+                                mSpotifyAppRemote.getPlayerApi().pause();
+                                pause = true;
+                                if(spotifyPlayerCallback != null)
+                                    spotifyPlayerCallback.setPlayImage(true);
+                                return;
+                            } else if(tracks.size() == 0 && lastSongTitle != null) {
+                                return;
+                            }
+                            lastSongTitle = nowPlaying;
+                            Log.d(TAG, "New song has been started " + track.uri.split(":")[2]);
+                            stopped = false;
+                            new Thread(()->{
+                                try {
+                                    sendToAll(Commands.PLAYING, getNowPlaying().serialize());
+                                } catch (IOException | JSONException e) {
+                                    Log.e(TAG, e.getMessage(), e);
+                                }
+                            }).start();
+                            if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
+                                tracks.remove(0);
+                            }
+                        }
+                        pause = playerState.isPaused;
+                        if (track != null && spotifyPlayerCallback != null) {
+                            spotifyPlayerCallback.setNowPlaying(getNowPlaying());
+                        }
+
+                        if(spotifyPlayerCallback != null) spotifyPlayerCallback.setPlayImage(pause);
+                    }
+                });
     }
 
-    public void setmSpotifyAppRemote(SpotifyAppRemote mSpotifyAppRemote) {
-        this.mSpotifyAppRemote = mSpotifyAppRemote;
-    }
+
+    // Getter
+
+    public SpotifyAppRemote getmSpotifyAppRemote() { return ( mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()) ? mSpotifyAppRemote : null; }
     
     public List<PartyPeople> getPeopleList() {
         List<PartyPeople> tmpPeopleList = new ArrayList<>();
@@ -256,6 +266,10 @@ public class ServerService extends Service implements Parcelable {
             tmpPeopleList.add(new PartyPeople(client.username, System.currentTimeMillis() - client.createdTime));
         }
         return tmpPeopleList;
+    }
+
+    public boolean isFirst() {
+        return first;
     }
 
     public int getClientListSize() {
@@ -266,23 +280,59 @@ public class ServerService extends Service implements Parcelable {
         return playlistID;
     }
 
-    public void setPlaylistID(String id) { this.playlistID = id; }
-
     public String getPartyName() {
         return partyName;
     }
 
     public List<Track> getTracks() { return tracks;}
 
+    public String getToken() {
+        return token;
+    }
+
+    public Track getNowPlaying(){
+        return nowPlaying != null ? new Track(
+                nowPlaying.uri.split(":")[2],
+                nowPlaying.name,
+                nowPlaying.artists,
+                nowPlaying.imageUri.raw.split(":")[2],
+                nowPlaying.duration,
+                nowPlaying.album.name
+        ) : null;
+    }
+
+    public List<Track> getPlaylist() {
+        return tracks;
+    }
+
+    public boolean getPause() {
+        return pause;
+    }
+
+
+
+    // Setter
+
+    public void setPlaylistID(String id) { this.playlistID = id; }
+
     public void setPartyName(String partyName) {
         this.partyName = partyName;
     }
+
+    public void setSpotifyPlayerCallback(SpotifyPlayerCallback spotifyPlayerCallback) {
+        this.spotifyPlayerCallback = spotifyPlayerCallback;
+    }
+
+
+
+
+    // HTTP Requests
 
     private void getUserID() {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("me")
                 .build();
@@ -322,20 +372,12 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
-    public List<Track> getPlaylist() {
-        return tracks;
-    }
-
-    public boolean getPause() {
-        return pause;
-    }
-
     private void createPlaylist(String name) throws JSONException {
         if (userID == null ) return;
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("users")
                 .addPathSegment(userID)
@@ -345,7 +387,7 @@ public class ServerService extends Service implements Parcelable {
                 .put("name", name)
                 .put("public", false)
                 .put("description", getString(R.string.service_playlistDescription, partyName));
-        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
+        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
         Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
@@ -376,7 +418,6 @@ public class ServerService extends Service implements Parcelable {
                 try {
                     playlist.add(new Track("600HVBpzF1WfBdaRwbEvLz", "Frozen", new Artist[]{new Artist("tsads", "Disney")}, "test", 0, "Disner"));
                     addItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen");
-                    //addItem("spotify:track:76nqCfJOcFFWBJN32PAksn", "Kings and Queens");
                 } catch (JSONException e) {
                     Log.e(TAG, e.getMessage(), e);
                 }
@@ -389,7 +430,7 @@ public class ServerService extends Service implements Parcelable {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("me")
                 .addPathSegment("player")
@@ -404,7 +445,6 @@ public class ServerService extends Service implements Parcelable {
                 .addHeader("Authorization", "Bearer " + token)
                 .addHeader("Content-Type", "application/json")
                 .build();
-        Log.d(TAG, request.headers().toString());
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -426,18 +466,17 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
-    private void getQueFromPlaylist(String id, AfterExtractCallback afterExtractCallback) {
+    public void getQueFromPlaylist(String id) {
         tracks.clear();
         playlist.clear();
-        getQueFromPlaylist(id, 0, afterExtractCallback);
+        getQueFromPlaylist(id, 0);
     }
 
-    private void getQueFromPlaylist(String id, int page, AfterExtractCallback afterExtractCallback) {
-        List<Track> tempTracks = new ArrayList<>();
+    private void getQueFromPlaylist(String id, int page) {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(id)
@@ -484,17 +523,22 @@ public class ServerService extends Service implements Parcelable {
                                     .getJSONArray("images")
                                     .getJSONObject(2)
                                     .getString("url");
-                            tempTracks.add(
+                            Track tmpTrack =
                                     new Track(
                                             track.getString("id"),
                                             track.getString("name"),
                                             array,
                                             image,
                                             track.getInt("duration_ms"),
-                                            track.getJSONObject("album").getString("name")));
-                            Log.d(TAG, tempTracks.get(i).toString());
+                                            track.getJSONObject("album").getString("name"));
+                            tracks.add(tmpTrack);
+                            playlist.add(tmpTrack);
                         }
-                        afterExtractCallback.useTracks(tempTracks, count);
+                        Log.d(TAG, "onResponse: added " + tracks.size() + " elements" );
+                        if(page == 0 && tracks.size() > 0)
+                            tracks.remove(0);
+                        if(count > 100 * page)
+                            getQueFromPlaylist(id, page + 1);
                     } catch (JSONException e) {
                         Log.e(TAG, e.getMessage(), e);
                     }
@@ -504,12 +548,52 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
+    public void checkPlaylistFollowStatus(String id) throws JSONException {
+        String token = getToken();
+        if(token == null) return;
+        OkHttpClient client = new OkHttpClient();
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(Constants.HOST)
+                .addPathSegment("v1")
+                .addPathSegment("playlists")
+                .addPathSegment(id)
+                .addPathSegment("followers")
+                .build();
+        Log.d(TAG, "Follow playlist with id:  " + id + ": " + completeURL.toString());
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("public", false);
+        RequestBody body = RequestBody.create(jsonObject.toString(), Constants.JSON);
+        Request request = new Request.Builder()
+                .url(completeURL)
+                .put(body)
+                .addHeader("Authorization", "Bearer " + token)
+                .addHeader("Content-Type", "application/json")
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                e.printStackTrace();
+                Log.d(TAG, "onFailure: failed to follow playlist with id: " + id);
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                if (!response.isSuccessful()) {
+                    throw new IOException("Error : " + response);
+                } else {
+                    Log.d(TAG, "onResponse: followed successfully playlist: " + id);
+                }
+            }
+        });
+    }
+
     public void deletePlaylist(String id) {
         if(id == null) return;
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(id)
@@ -546,17 +630,13 @@ public class ServerService extends Service implements Parcelable {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(playlistID)
                 .addPathSegment("tracks")
                 .addQueryParameter("uris", uri)
                 .build();
-        //String [] uris = {uri};
-        //JSONObject sampleObject = new JSONObject()
-        //        .put("uris", uris);
-        //RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
         RequestBody body = RequestBody.create(new byte[]{}, null);
         Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
@@ -581,11 +661,6 @@ public class ServerService extends Service implements Parcelable {
                 }else {
                     Log.d(TAG,"Request Successful. Track " + name + " has been added.");
                     size++;
-//                    try {
-//                        deleteItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen", 0);
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
                     if (size == 1) {
                         mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:" + playlistID);
                         mSpotifyAppRemote.getPlayerApi().setRepeat(2);
@@ -604,11 +679,11 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
-    public void deleteItem(String uri, String name, int position, AfterDeleteCallback callback) throws JSONException {
+    public void deleteItem(String uri, String name, int position, AfterCallback callback) throws JSONException {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(playlistID)
@@ -623,11 +698,8 @@ public class ServerService extends Service implements Parcelable {
         ;
         JSONObject sampleObject = new JSONObject()
                .put("tracks", new JSONArray().put(uris));
-        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
-        //RequestBody body = RequestBody.create(new byte[]{}, null);
-        Log.d(TAG, "Try to delete track " + name);
+        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
         Log.d(TAG, "Making request to " + completeURL.toString());
-        Log.d(TAG, "JSON Body: " +  sampleObject.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
                 .delete(body)
@@ -668,7 +740,7 @@ public class ServerService extends Service implements Parcelable {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(playlistID)
@@ -678,7 +750,7 @@ public class ServerService extends Service implements Parcelable {
         JSONObject sampleObject = new JSONObject()
                 .put("range_start", from)
                 .put("insert_before", to);
-        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
+        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
         Request request = new Request.Builder()
                 .url(completeURL)
                 .put(body)
@@ -706,7 +778,7 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
-    public void updatePlaylistCover(String id, Bitmap image, ShowSavedPlaylistsFragment.FavoritePlaylistsCallback callback) {
+    public void updatePlaylistCover(String id, Bitmap image, ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback callback) {
         OkHttpClient client = new OkHttpClient();
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
 
@@ -717,7 +789,7 @@ public class ServerService extends Service implements Parcelable {
         byte[] encoded = Base64.encode(byteArray, Base64.NO_WRAP);
         HttpUrl completeUrl = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("users")
                 .addPathSegment(userID)
@@ -746,7 +818,7 @@ public class ServerService extends Service implements Parcelable {
                     Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(TAG,"Request Successful. Playlist name changed.");
+                    Log.d(TAG,"Request Successful. Playlist cover changed to " + response.body().string());
                     callback.reloadFavoritePlaylistsFragment();
                 }
                 response.close();
@@ -759,7 +831,7 @@ public class ServerService extends Service implements Parcelable {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
-                .host(HOST)
+                .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
                 .addPathSegment(id)
@@ -767,7 +839,7 @@ public class ServerService extends Service implements Parcelable {
         Log.d(TAG, "Making request to " + completeURL.toString());
         JSONObject sampleObject = new JSONObject()
                 .put("name", name);
-        RequestBody body = RequestBody.create(sampleObject.toString(), JSON);
+        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
         Request request = new Request.Builder()
                 .url(completeURL)
                 .put(body)
@@ -785,7 +857,6 @@ public class ServerService extends Service implements Parcelable {
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(!response.isSuccessful()){
-                    Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
                     Log.d(TAG,"Request Successful. Playlist name changed.");
@@ -795,14 +866,40 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
+
+
+    // Parcel
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) { }
+
+    public static final Creator<ServerService> CREATOR = new Creator<ServerService>() {
+        @Override
+        public ServerService createFromParcel(Parcel in) {
+            return new ServerService();
+        }
+
+        @Override
+        public ServerService[] newArray(int size) {
+            return new ServerService[size];
+        }
+    };
+
+
+    // In-App Lists
+
     public void addItemToPlaylist(Track track) {
         playlist.add(track);
         tracks.add(track);
+        spotifyPlayerCallback.reloadPlaylistFragment();
     }
 
-    public void addItemToTrackList(Track track) {
-        tracks.add(track);
-    }
+    public void addItemToTrackList(Track track) { tracks.add(track); }
 
     public void togglePlayback() {
         if (pause && getmSpotifyAppRemote() != null) {
@@ -821,20 +918,6 @@ public class ServerService extends Service implements Parcelable {
             getmSpotifyAppRemote().getPlayerApi().pause();
     }
 
-    private void stopAll() throws IOException {
-        Log.d(TAG, "Stopping server");
-        for(CommunicationThread client : clientThreads) {
-            client.sendMessage(Commands.QUIT, "Session has been closed");
-            client.close();
-        }
-    }
-
-    public void sendToAll(Commands command, String message) throws IOException {
-        for(CommunicationThread client : clientThreads) {
-            if (client.login)
-                client.sendMessage(command, message);
-        }
-    }
 
     private void printPlaylist(List<Track> list) {
         StringBuilder output = new StringBuilder();
@@ -907,9 +990,7 @@ public class ServerService extends Service implements Parcelable {
                 });
     }
 
-    public void setSpotifyPlayerCallback(SpotifyPlayerCallback spotifyPlayerCallback) {
-        this.spotifyPlayerCallback = spotifyPlayerCallback;
-    }
+    // Interaction with Server
 
     private void startServer(){
         Log.d(TAG, "Try to start server");
@@ -917,28 +998,27 @@ public class ServerService extends Service implements Parcelable {
         this.serverThread.start();
     }
 
-    public Track getNowPlaying(){
-        return nowPlaying != null ? new Track(
-                nowPlaying.uri.split(":")[2],
-                nowPlaying.name,
-                nowPlaying.artists,
-                nowPlaying.imageUri.raw.split(":")[2],
-                nowPlaying.duration,
-                nowPlaying.album.name
-        ) : null;
+    public void updateServiceNotifaction() {
+        String text = getString(R.string.service_serverMsg, partyName);
+        NotificationManagerCompat mNotificationManager = NotificationManagerCompat.from(this);
+        Notification notificationUpdate = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
+                .setContentTitle(getString(R.string.service_name))
+                .setContentText(text)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentIntent(pendingIntent)
+                .addAction(R.drawable.ic_exit_button, getString(R.string.text_end),pendingIntentButton)
+                .build();
+        mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
     }
 
-    public String getToken() {
-        return token;
-    }
 
     class ServerThread implements Runnable {
 
         @Override
         public void run() {
             try {
-                serverSocket = new ServerSocket(PORT);
-                Log.d(TAG, "Server Started on port " + PORT);
+                serverSocket = new ServerSocket(Constants.PORT);
+                Log.d(TAG, "Server Started on port " + Constants.PORT);
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
@@ -955,8 +1035,24 @@ public class ServerService extends Service implements Parcelable {
         }
     }
 
-    public class CommunicationThread extends Thread {
 
+    // Interaction with Clients
+
+    private void stopAll() throws IOException {
+        for(CommunicationThread client : clientThreads) {
+            client.sendMessage(Commands.QUIT, "Session has been closed");
+            client.close();
+        }
+    }
+
+    public void sendToAll(Commands command, String message) throws IOException {
+        for(CommunicationThread client : clientThreads) {
+            if (client.login)
+                client.sendMessage(command, message);
+        }
+    }
+
+    class CommunicationThread extends Thread {
         private Socket clientSocket;
         private BufferedReader input;
         private DataOutputStream out;
@@ -965,7 +1061,6 @@ public class ServerService extends Service implements Parcelable {
         private final long createdTime;
 
         public CommunicationThread(Socket socket) {
-            Log.d(TAG, "New client request");
             this.clientSocket = socket;
             this.createdTime = System.currentTimeMillis();
         }
@@ -1038,7 +1133,6 @@ public class ServerService extends Service implements Parcelable {
                                     }
                                     break;
                                 case PLAYLIST:
-                                    Log.d(TAG, "Show Playlist for user " + username);
                                     StringBuilder response = new StringBuilder();
                                     if(nowPlaying != null) {
                                         response.append("~");
