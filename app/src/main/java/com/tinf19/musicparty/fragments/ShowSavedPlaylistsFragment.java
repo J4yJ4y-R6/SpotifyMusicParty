@@ -108,7 +108,7 @@ public class ShowSavedPlaylistsFragment extends Fragment {
         super.onStart();
         savePlaylistMemory = getContext().getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
         idList = new ArrayList<>();
-        for(int i = 0; i < headers.size(); i++) {
+        for(int i = 0; i < savePlaylistMemory.getAll().size(); i++) {
             try {
                 JSONObject playlist = new JSONObject(savePlaylistMemory.getString("" + i, ""));
                 String id = playlist.getString("id");

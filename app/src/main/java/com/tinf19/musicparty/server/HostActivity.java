@@ -24,6 +24,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import com.spotify.android.appremote.api.error.SpotifyConnectionTerminatedException;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
@@ -98,6 +99,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     public interface ConnectionCallback {
         void afterConnection(SpotifyAppRemote appRemote);
+        void afterFailure();
     }
 
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
@@ -120,10 +122,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 startService(serviceIntent);
             });*/
             // Tell the user about this for our demo.
-            if(mBoundService != null)
-                Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected, mBoundService.getPartyName()), Toast.LENGTH_SHORT).show();
-            else
-                Toast.makeText(HostActivity.this, getString(R.string.service_serverConnected, "MusicParty"), Toast.LENGTH_SHORT).show();
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -206,8 +204,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     serviceIntent.putExtra(Constants.PASSWORD, generatePassword());
                     serviceIntent.putExtra(Constants.PARTYNAME, getString(R.string.text_partyName));
                     startService(serviceIntent);
-                    if(mBoundService != null)
+                    if(mBoundService != null) {
                         mBoundService.setSpotifyPlayerCallback(HostActivity.this);
+                        HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.service_serverMsg), Toast.LENGTH_SHORT).show());
+                    }
                     break;
                 default:
                     // Handle other cases
@@ -497,9 +497,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
                         @Override
                         public void onFailure(Throwable throwable) {
-                            Log.e(TAG, throwable.getMessage(), throwable);
+                            if(throwable instanceof SpotifyConnectionTerminatedException) {
+                                Log.d(TAG, "onFailure: Connection lost");
+                                connectionCallback.afterFailure();
+                            } else
 
-                            // Something went wrong when attempting to connect! Handle errors here
+                                Log.e(TAG, throwable.getMessage(), throwable);
+
                         }
                     });
         });
@@ -513,7 +517,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         new Thread(() -> {
             try {
                 Log.d(TAG, "Trying to send message to server");
-                if (mBoundService != null) {
+                if (mBoundService != null && (mBoundService.getTracks().size() == 0 || !mBoundService.getTracks().get(mBoundService.getTracks().size()-1).getId().equals(track.getId()))) {
                     mBoundService.addItem(track.getURI(), track.getName());
                     mBoundService.addItemToPlaylist(track);
                 }
