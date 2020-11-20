@@ -369,7 +369,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void reloadFavoritePlaylistsFragment() {
         Fragment frg = getSupportFragmentManager().findFragmentByTag("ShowSavedPlaylistFragment");
-        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.detach(frg);
         ft.attach(frg);
         ft.commit();
@@ -378,10 +378,12 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void reloadPlaylistFragment() {
         Fragment frg = getSupportFragmentManager().findFragmentByTag("HostPlaylistFragment");
-        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.detach(frg);
-        ft.attach(frg);
-        ft.commit();
+        if(frg != null) {
+            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+            ft.detach(frg);
+            ft.attach(frg);
+            ft.commit();
+        }
     }
 
     @Override
