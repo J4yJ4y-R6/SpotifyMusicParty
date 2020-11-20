@@ -10,8 +10,10 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
+import android.graphics.ColorSpace;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.GradientDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +27,7 @@ import android.widget.ViewSwitcher;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.ColorUtils;
 import androidx.palette.graphics.Palette;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -132,8 +135,15 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
                 public void run() {
                     try {
                         int color = convertToBitmap(new URL(coverURL));
-                        Log.d(TAG, "onBindViewHolder: " + color);
-                        ((HostActivity) context).runOnUiThread( () -> holder.itemView.setBackgroundColor(color));
+                        GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[] {color, Color.rgb((int)(Color.red(color) * 0.4), (int)(Color.green(color) * 0.4), (int)(Color.blue(color) * 0.4))});
+                        gradientDrawable.setCornerRadius(20);
+                        ((HostActivity) context).runOnUiThread( () -> {
+                            holder.itemView.setBackground(gradientDrawable);
+                            int textColor = 0.2126 * Color.red(color) + 0.7152 * Color.green(color) + 0.0722 * Color.blue(color) > 130 ? Color.BLACK : Color.WHITE;
+                            holder.headerTextView.setTextColor(textColor);
+                            holder.headerEditText.setTextColor(textColor);
+                        });
+
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
