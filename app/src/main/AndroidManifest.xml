@@ -36,7 +36,8 @@
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="portrait"
             tools:replace="screenOrientation"/>
-        <activity android:name="com.tinf19.musicparty.client.PartyActivity"/>
+        <activity android:name="com.tinf19.musicparty.client.PartyActivity"
+            android:screenOrientation="portrait"/>
         <activity android:name="com.tinf19.musicparty.client.ClientActivity">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -50,7 +51,8 @@
         <activity
             android:name="com.spotify.sdk.android.auth.LoginActivity"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
-        <activity android:name="com.tinf19.musicparty.server.HostActivity"/>
+        <activity android:name="com.tinf19.musicparty.server.HostActivity"
+            android:screenOrientation="portrait"/>
         <activity android:name="com.tinf19.musicparty.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

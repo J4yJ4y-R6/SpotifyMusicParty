@@ -104,6 +104,7 @@ public class ShowSongHostFragment extends Fragment {
         currentPlayingArtistTextView = view.findViewById(R.id.artistHostTextView);
         currentPlayingAlbumTextView = view.findViewById(R.id.albumHostTextView);
         currentPlayingCoverTextView = view.findViewById(R.id.songCoverHostImageView);
+        Log.d(TAG, "onCreateView: CREATE VIEW " + currentPlayingTitleTextView);
 
         ImageButton openPlaylistButton = view.findViewById(R.id.playlistButtonHostImageButton);
         if(openPlaylistButton != null) {
@@ -185,7 +186,9 @@ public class ShowSongHostFragment extends Fragment {
     }
 
     public void setNowPlaying(Track nowPlaying) {
-        if(currentPlayingTitleTextView != null) currentPlayingTitleTextView.setText(nowPlaying.getName());
+        if(currentPlayingTitleTextView != null) {
+            currentPlayingTitleTextView.setText(nowPlaying.getName());
+        } else Log.d(TAG, "setNowPlaying: " + nowPlaying.getName());
         if(currentPlayingArtistTextView != null) currentPlayingArtistTextView.setText(nowPlaying.getArtist(0).getName());
         if(currentPlayingAlbumTextView != null) currentPlayingAlbumTextView.setText(nowPlaying.getAlbum());
         if(currentPlayingCoverTextView != null) {

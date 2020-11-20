@@ -275,6 +275,7 @@ public class ServerService extends Service implements Parcelable {
     }
 
     public void setSpotifyPlayerCallback(SpotifyPlayerCallback spotifyPlayerCallback) {
+        Log.d(TAG, "setSpotifyPlayerCallback: " + spotifyPlayerCallback);
         this.spotifyPlayerCallback = spotifyPlayerCallback;
     }
 
@@ -933,8 +934,9 @@ public class ServerService extends Service implements Parcelable {
                         pause = playerState.isPaused;
                         if(tracks.size() > 0 && nowPlaying.uri.equals(tracks.get(0).getURI()))
                             tracks.remove(0);
+                        Log.d(TAG, "addEventListener: " + track + " - " + spotifyPlayerCallback);
                         if (track != null && spotifyPlayerCallback != null) {
-                            //Log.d(NAME, track.name + " by " + track.artist.name);
+                            Log.d(TAG, track.name + " by " + track.artist.name);
                             //if (playerState.playbackPosition == 0)
                             //nextSong();
                             spotifyPlayerCallback.setNowPlaying(getNowPlaying());

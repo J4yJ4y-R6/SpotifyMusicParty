@@ -3,6 +3,7 @@ package com.tinf19.musicparty.server;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.content.BroadcastReceiver;
@@ -97,6 +98,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mBoundService = ((ServerService.LocalBinder) service).getService();
+            mBoundService.setSpotifyPlayerCallback(HostActivity.this);
             if(mBoundService.isFirst())
                 loginToSpotify();
             /*connect(appRemote -> {
@@ -188,7 +190,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     serviceIntent.putExtra(Constants.PARTYNAME, getString(R.string.text_partyName));
                     startService(serviceIntent);
                     if(mBoundService != null) {
-                        mBoundService.setSpotifyPlayerCallback(HostActivity.this);
                         HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.service_serverMsg, getString(R.string.text_partyName)), Toast.LENGTH_SHORT).show());
                     }
                     break;
@@ -396,7 +397,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void setNowPlaying(Track nowPlaying) {
-        showSongFragment.setNowPlaying(nowPlaying);
+        this.runOnUiThread(() ->showSongFragment.setNowPlaying(nowPlaying));
     }
 
     @Override
