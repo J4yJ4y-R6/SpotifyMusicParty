@@ -45,6 +45,7 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import id.zelory.compressor.Compressor;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
@@ -110,8 +111,16 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
         for(int i = 0; i < savePlaylistMemory.getAll().size(); i++) {
             setPlaylists(i);
         }
-        while(counter < savePlaylistMemory.getAll().size());
-        showSavedPlaylistRecycAdapter.setPlaylists(new ArrayList<Playlist>(Arrays.asList(playlists)), idList);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(counter < savePlaylistMemory.getAll().size());
+                getActivity().runOnUiThread(() -> {
+                    showSavedPlaylistRecycAdapter.setPlaylists(new ArrayList<Playlist>(Arrays.asList(playlists)), idList);
+                    showSavedPlaylistRecycAdapter.notifyDataSetChanged();
+                });
+            }
+        }).start();
     }
 
     @Override
@@ -231,10 +240,29 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
             try {
                 final Uri imageUri = data.getData();
                 final InputStream imageStream = getContext().getContentResolver().openInputStream(imageUri);
-                final Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
-
+                Bitmap selectedImage = BitmapFactory.decodeStream(imageStream);
+                int imgWidth = selectedImage.getWidth();
+                int imgHeight = selectedImage.getHeight();
+                if(imgWidth > imgHeight) {
+                    int dif = (imgWidth - imgHeight) / 2;
+                    selectedImage = Bitmap.createBitmap(selectedImage, dif, 0, imgWidth - dif, imgHeight);
+                }
+                else {
+                    int dif = (imgHeight - imgWidth) / 2;
+                    selectedImage = Bitmap.createBitmap(selectedImage, 0, dif, imgWidth, imgHeight - dif);
+                }
                 if(selectedImage.getByteCount() > 250000) {
-                    Toast.makeText(getActivity(), "Dein Bild ist zu groß. Die Maximalgröße für Playlist-Cover ist 250KB", Toast.LENGTH_LONG).show();
+                    Bitmap scaledBitmap = Bitmap.createScaledBitmap(selectedImage, 250, 250, false);
+                    if(scaledBitmap.getByteCount() > 250000)
+                        Toast.makeText(getActivity(), "Dein Bild ist zu groß. Die Maximalgröße für Playlist-Cover ist 250KB", Toast.LENGTH_LONG).show();
+                    else {
+                        if(playlistID != null) {
+                            favoritePlaylistsCallback.changePlaylistCover(playlistID, scaledBitmap);
+                            playlistID = "";
+                        }
+                        else
+                            Log.d(TAG, "onActivityResult: Image could not be updated because no playlist attached");
+                    }
                 } else {
                     if(playlistID != null) {
                         favoritePlaylistsCallback.changePlaylistCover(playlistID, selectedImage);

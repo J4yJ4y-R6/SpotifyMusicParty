@@ -134,7 +134,7 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
                 @Override
                 public void run() {
                     try {
-                        int color = convertToBitmap(new URL(coverURL));
+                        int color = convertToBitmap(new URL(coverURL), name);
                         GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[] {color, Color.rgb((int)(Color.red(color) * 0.4), (int)(Color.green(color) * 0.4), (int)(Color.blue(color) * 0.4))});
                         gradientDrawable.setCornerRadius(20);
                         ((HostActivity) context).runOnUiThread( () -> {
@@ -269,7 +269,7 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
         }
     }
 
-    public static int convertToBitmap(URL url_value) throws IOException {
+    public static int convertToBitmap(URL url_value, String name) throws IOException {
         Bitmap mIcon1 =
                 BitmapFactory.decodeStream(url_value.openConnection().getInputStream());
         Palette palette = Palette.from(mIcon1).maximumColorCount(30).generate();
