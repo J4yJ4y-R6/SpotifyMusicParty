@@ -15,6 +15,15 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
+import com.spotify.protocol.client.CallResult;
+import com.spotify.protocol.client.Subscription;
+import com.spotify.protocol.types.CrossfadeState;
+import com.spotify.protocol.types.Empty;
+import com.spotify.protocol.types.PlayerContext;
+import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
+
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.util.ActionReceiver;
@@ -69,6 +78,7 @@ public class ServerService extends Service implements Parcelable {
     private List<Track> playlist = new ArrayList<>();
     private SpotifyAppRemote mSpotifyAppRemote;
     private boolean pause = true;
+    private boolean newSong;
     private SpotifyPlayerCallback spotifyPlayerCallback;
     private  com.spotify.protocol.types.Track nowPlaying;
     private com.spotify.protocol.types.Track lastSongTitle;
@@ -114,13 +124,34 @@ public class ServerService extends Service implements Parcelable {
                     Log.d(TAG, "afterConnection: Token has been " + token);
                     ServerService.this.token = token;
                     if(spotifyPlayerCallback != null) {
-                        spotifyPlayerCallback.connect(appRemote -> {
-                            mSpotifyAppRemote = appRemote;
-                            Log.d(TAG, "afterConnection: App remote" + (appRemote != null));
-                            getUserID();
-                            addEventListener();
-                            if (spotifyPlayerCallback != null)
-                                spotifyPlayerCallback.showDefault();
+                        HostActivity.ConnectionCallback callback = new HostActivity.ConnectionCallback() {
+                            @Override
+                            public void afterConnection(SpotifyAppRemote appRemote) {
+                                mSpotifyAppRemote = appRemote;
+                                addEventListener();
+                                Log.d(TAG, "afterConnection: App remote" + (appRemote != null));
+                            }
+
+                            @Override
+                            public void afterFailure() {
+                                if(spotifyPlayerCallback != null) spotifyPlayerCallback.connect(this);
+                            }
+                        };
+                        spotifyPlayerCallback.connect( new HostActivity.ConnectionCallback() {
+                            @Override
+                            public void afterConnection(SpotifyAppRemote appRemote) {
+                                mSpotifyAppRemote = appRemote;
+                                Log.d(TAG, "afterConnection: App remote" + (appRemote != null));
+                                getUserID();
+                                addEventListener();
+                                if (spotifyPlayerCallback != null)
+                                    spotifyPlayerCallback.showDefault();
+                            }
+
+                            @Override
+                            public void afterFailure() {
+                                if(spotifyPlayerCallback != null) spotifyPlayerCallback.connect(callback);
+                            }
                         });
                     }
                 }
@@ -252,6 +283,8 @@ public class ServerService extends Service implements Parcelable {
     public String getPartyName() {
         return partyName;
     }
+
+    public List<Track> getTracks() { return tracks;}
 
     public String getToken() {
         return token;
@@ -630,11 +663,13 @@ public class ServerService extends Service implements Parcelable {
                     size++;
                     if (size == 1) {
                         mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:" + playlistID);
+                        mSpotifyAppRemote.getPlayerApi().setRepeat(2);
+
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
                                 while(pause);
-                                repeatMode("context");
+                                //repeatMode("context");
                             }
                         }).start();
                     }
@@ -884,7 +919,76 @@ public class ServerService extends Service implements Parcelable {
     }
 
 
+    private void printPlaylist(List<Track> list) {
+        StringBuilder output = new StringBuilder();
+        for(Track x : list) {
+            if(x.getURI().equals(nowPlaying.uri))
+                output.append(" [").append(x.getName()).append("]");
+            else
+                output.append(" ").append(x.getName());
+        }
+        Log.d(TAG, "printPlaylist: " + output.toString());
+    }
 
+    public void addEventListener() {
+        mSpotifyAppRemote.getPlayerApi()
+                .subscribeToPlayerState()
+                .setEventCallback(playerState -> {
+                    final com.spotify.protocol.types.Track track = playerState.track;
+                    if(playlistID != null) {
+                        nowPlaying = track;
+
+                        if((lastSongTitle == null && !playerState.isPaused) || (nowPlaying != null && !nowPlaying.uri.equals(lastSongTitle.uri))) {
+                            //printPlaylist(playlist);
+                            //printPlaylist(tracks);
+                            Log.d(TAG, "addEventListener: " + (playlist.size() - 2 - tracks.size()));
+                            //if(playlist.size() > 1 && playlist.get(playlist.size() - 2 - tracks.size()).getURI().equals(nowPlaying.uri));
+                                //tracks.add(0, playlist.get(playlist.size() - 2 - tracks.size()));
+
+                            if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
+                                stopped = true;
+                                Log.d(TAG, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
+                                mSpotifyAppRemote.getPlayerApi().skipPrevious();
+                                mSpotifyAppRemote.getPlayerApi().pause();
+                                pause = true;
+//                            long postion = lastSongTitle.duration - 10000;
+//                            Log.d(NAME, "SEEK TO: " + postion);
+//                            mSpotifyAppRemote.getPlayerApi().seekTo(postion);
+                                if(spotifyPlayerCallback != null)
+                                    spotifyPlayerCallback.setPlayImage(true);
+                                return;
+                            } else if(tracks.size() == 0 && lastSongTitle != null) {
+                                return;
+                            }
+                            lastSongTitle = nowPlaying;
+                            Log.d(TAG, "New song has been started " + track.uri.split(":")[2]);
+                            stopped = false;
+                            new Thread(()->{
+                                try {
+                                    sendToAll(Commands.PLAYING, getNowPlaying().serialize());
+                                } catch (IOException | JSONException e) {
+                                    Log.e(TAG, e.getMessage(), e);
+                                }
+                            }).start();
+
+                            if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
+                                tracks.remove(0);
+                            }
+                        }
+                        pause = playerState.isPaused;
+                        if(tracks.size() > 0 && nowPlaying.uri.equals(tracks.get(0).getURI()))
+                            tracks.remove(0);
+                        if (track != null && spotifyPlayerCallback != null) {
+                            //Log.d(NAME, track.name + " by " + track.artist.name);
+                            //if (playerState.playbackPosition == 0)
+                            //nextSong();
+                            spotifyPlayerCallback.setNowPlaying(getNowPlaying());
+                        }
+
+                        if(spotifyPlayerCallback != null) spotifyPlayerCallback.setPlayImage(pause);
+                    }
+                });
+    }
 
     // Interaction with Server
 
@@ -932,7 +1036,6 @@ public class ServerService extends Service implements Parcelable {
     }
 
 
-
     // Interaction with Clients
 
     private void stopAll() throws IOException {
@@ -950,7 +1053,6 @@ public class ServerService extends Service implements Parcelable {
     }
 
     class CommunicationThread extends Thread {
-
         private Socket clientSocket;
         private BufferedReader input;
         private DataOutputStream out;
@@ -1018,12 +1120,15 @@ public class ServerService extends Service implements Parcelable {
                                     Log.d(TAG, "Added " + attribute + " to the queue");
                                     if(this.login) {
                                         Track track = new Track(attribute);
-                                        addItemToPlaylist(track);
-                                        addItem(track.getURI(), track.getName());
+                                        if(tracks.size() == 0 || !tracks.get(tracks.size()-1).getId().equals(track.getId())) {
+                                            addItemToPlaylist(track);
+                                            addItem(track.getURI(), track.getName());
+                                        }
+                                        //sendToAll(Commands.QUEUE, track.serialize());
                                     }
                                     break;
                                 case PLAYING:
-                                    if(nowPlaying != null) {
+                                    if(nowPlaying != null && this.login) {
                                         sendMessage(Commands.PLAYING, getNowPlaying().serialize());
                                     }
                                     break;
