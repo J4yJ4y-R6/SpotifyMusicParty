@@ -22,6 +22,7 @@ import android.widget.Toast;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
+import com.tinf19.musicparty.BuildConfig;
 import com.tinf19.musicparty.databinding.ActivityClientPartyBinding;
 import com.tinf19.musicparty.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.fragments.LoadingFragment;
@@ -151,7 +152,7 @@ public class PartyActivity extends AppCompatActivity implements ShowSongFragment
     public void loginToSpotify() {
         Log.d(TAG, "Trying to get auth token");
         AuthorizationRequest.Builder builder =
-                new AuthorizationRequest.Builder(Constants.CLIENT_ID, AuthorizationResponse.Type.CODE, Constants.REDIRECT_URI);
+                new AuthorizationRequest.Builder(BuildConfig.CLIENT_ID, AuthorizationResponse.Type.CODE, Constants.REDIRECT_URI);
         builder.setScopes(new String[]{});
         AuthorizationRequest request = builder.build();
         AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);

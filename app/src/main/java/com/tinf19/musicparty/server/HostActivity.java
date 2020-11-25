@@ -25,6 +25,7 @@ import com.spotify.android.appremote.api.error.SpotifyConnectionTerminatedExcept
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
+import com.tinf19.musicparty.BuildConfig;
 import com.tinf19.musicparty.fragments.HostClosePartyFragment;
 import com.tinf19.musicparty.fragments.HostPlaylistFragment;
 import com.tinf19.musicparty.fragments.HostSearchBarFragment;
@@ -155,7 +156,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     public void loginToSpotify() {
         Log.d(TAG, "Trying to get auth token");
         AuthorizationRequest.Builder builder =
-                new AuthorizationRequest.Builder(Constants.CLIENT_ID, AuthorizationResponse.Type.CODE, Constants.REDIRECT_URI);
+                new AuthorizationRequest.Builder(BuildConfig.CLIENT_ID, AuthorizationResponse.Type.CODE, Constants.REDIRECT_URI);
         builder.setScopes(new String[]{"streaming", "app-remote-control", "playlist-modify-private", "playlist-modify-public", "user-read-private", "ugc-image-upload"});
         AuthorizationRequest request = builder.build();
         AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);
@@ -453,7 +454,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         runOnUiThread(() -> {
             Log.d(TAG, "connect: Trying to connect");
             ConnectionParams connectionParams =
-                    new ConnectionParams.Builder(Constants.CLIENT_ID)
+                    new ConnectionParams.Builder(BuildConfig.CLIENT_ID)
                             .setRedirectUri(Constants.REDIRECT_URI)
                             .showAuthView(false)
                             .build();

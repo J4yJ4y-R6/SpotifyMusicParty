@@ -1,5 +1,7 @@
 package com.tinf19.musicparty.util;
 
+import com.tinf19.musicparty.BuildConfig;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -66,7 +68,7 @@ public class TokenRefresh implements Runnable {
         Request request = new Request.Builder()
                 .url(completeURL)
                 .post(body)
-                .header("Authorization", Credentials.basic(Constants.CLIENT_ID, Constants.CLIENT_SECRET))
+                .header("Authorization", Credentials.basic(BuildConfig.CLIENT_ID, BuildConfig.CLIENT_SECRET))
                 .build();
         Response response = client.newCall(request).execute();
         if(response.isSuccessful()) {
@@ -94,7 +96,7 @@ public class TokenRefresh implements Runnable {
         Request request = new Request.Builder()
                 .url(completeURL)
                 .post(body)
-                .header("Authorization", Credentials.basic(Constants.CLIENT_ID, Constants.CLIENT_SECRET))
+                .header("Authorization", Credentials.basic(BuildConfig.CLIENT_ID, BuildConfig.CLIENT_SECRET))
                 .build();
         Response response = client.newCall(request).execute();
         if(response.isSuccessful()) {

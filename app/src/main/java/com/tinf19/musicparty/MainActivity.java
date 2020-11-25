@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     public void loginToSpotify() {
         Log.d(TAG, "Trying to get auth token");
         AuthorizationRequest.Builder builder =
-                new AuthorizationRequest.Builder(Constants.CLIENT_ID, AuthorizationResponse.Type.TOKEN, Constants.REDIRECT_URI);
+                new AuthorizationRequest.Builder(BuildConfig.CLIENT_ID, AuthorizationResponse.Type.TOKEN, Constants.REDIRECT_URI);
         builder.setScopes(new String[]{"streaming", "app-remote-control", "playlist-modify-private", "playlist-modify-public", "user-read-private", "ugc-image-upload"});
         AuthorizationRequest request = builder.build();
         AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);
