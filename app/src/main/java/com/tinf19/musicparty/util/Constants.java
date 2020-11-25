@@ -22,8 +22,6 @@ public class Constants {
 
     
     public static final String CHANNEL_ID = "musicPartyChannel";
-    public static final String CLIENT_ID = "f4789369fed34bf4a880172871b7c4e4";
-    public static final String CLIENT_SECRET = "96d9594ec365400da04743695c036d59";
     public static final String REDIRECT_URI = "http://com.example.musicparty/callback";
     public static final int REQUEST_CODE = 1337;
     public static final MediaType JSON
