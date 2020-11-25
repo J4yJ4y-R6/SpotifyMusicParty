@@ -89,15 +89,15 @@
         <TextView
             android:id="@+id/songtitleHostTextView"
             android:layout_width="300dp"
-            android:layout_height="42dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
             android:layout_marginBottom="50dp"
             android:ellipsize="marquee"
             android:focusable="true"
             android:marqueeRepeatLimit="marquee_forever"
             android:scrollHorizontally="true"
-            android:singleLine="true"
-            android:text="@string/text_songtitel"
+            android:singleLine="false"
+            android:text="@string/text_songtitle_placeholder"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             android:textSize="30sp"
@@ -105,7 +105,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.495"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout" />
+            app:layout_constraintTop_toBottomOf="@+id/hostPlayBarLinearLayout" />
 
         <TextView
             android:id="@+id/albumHostTextView"
@@ -118,7 +118,6 @@
             android:paddingRight="5dp"
             android:scrollHorizontally="true"
             android:singleLine="true"
-            android:text="@string/text_albumname"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -139,7 +138,6 @@
             android:paddingRight="5dp"
             android:scrollHorizontally="true"
             android:singleLine="true"
-            android:text="@string/text_kuenstler"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             app:layout_constraintEnd_toEndOf="parent"
@@ -177,14 +175,14 @@
             android:id="@+id/songCoverHostImageView"
             android:layout_width="300dip"
             android:layout_height="300dip"
-            android:src="@android:color/darker_gray"
+            android:src="@drawable/ic_cover_placeholder"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.495"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/partyOverviewTextView" />
 
         <LinearLayout
-            android:id="@+id/linearLayout"
+            android:id="@+id/hostPlayBarLinearLayout"
             android:layout_width="300dp"
             android:layout_height="60dp"
             android:background="@drawable/host_show_song_playbar"
@@ -193,6 +191,7 @@
             android:paddingLeft="15dp"
             android:paddingTop="10dp"
             android:paddingRight="15dp"
+            android:visibility="invisible"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/songCoverHostImageView">

@@ -64,7 +64,6 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
     }
 
     public interface FavoritePlaylistCallback {
-        void reloadFavoritePlaylistsFragment();
         void playFavoritePlaylist(String id, ArrayList<String> idList);
         void changePlaylistName(String name, String id);
         void deletePlaylist(String id);
@@ -224,7 +223,7 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
                                                         }
                                                         String toastMessage = name + context.getString(R.string.text_toastPlaylistDeleted);
                                                         Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show();
-                                                        favoritePlaylistCallback.reloadFavoritePlaylistsFragment();
+                                                        notifyDataSetChanged();
                                                         favoritePlaylistCallback.deletePlaylist(id);
                                                     }
                                                 })

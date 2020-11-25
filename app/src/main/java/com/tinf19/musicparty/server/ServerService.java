@@ -32,6 +32,7 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.HostPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.ShowSavedPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.TokenRefresh;
 
@@ -371,52 +372,12 @@ public class ServerService extends Service implements Parcelable {
                 String [] uri = response.header("Location").split("/");
                 playlistID = uri[uri.length-1];
                 Log.d(TAG, playlistID);
-                try {
-                    playlist.add(new Track("600HVBpzF1WfBdaRwbEvLz", "Frozen", new Artist[]{new Artist("tsads", "Disney")}, "test", 0, "Disner"));
-                    addItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen");
-                } catch (JSONException e) {
-                    Log.e(TAG, e.getMessage(), e);
-                }
-                response.close();
-            }
-        });
-    }
-
-    private void repeatMode(String state) {
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("me")
-                .addPathSegment("player")
-                .addPathSegment("repeat")
-                .addQueryParameter("state", state)
-                .build();
-        Log.d(TAG, "Making request to " + completeURL.toString());
-        RequestBody body = RequestBody.create(new byte[]{}, null);
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .put(body)
-                .addHeader("Authorization", "Bearer " + token)
-                .addHeader("Content-Type", "application/json")
-                .build();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
-                Log.d(TAG, "Request Failed.");
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if(!response.isSuccessful()){
-                    Log.d(TAG, response.body().string());
-                    throw new IOException("Error : " + response);
-                }else {
-                    Log.d(TAG,"Request Successful. Repeat mode has set to " + state);
-                }
+//                try {
+//                    playlist.add(new Track("600HVBpzF1WfBdaRwbEvLz", "Frozen", new Artist[]{new Artist("tsads", "Disney")}, "test", 0, "Disner"));
+//                    addItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen");
+//                } catch (JSONException e) {
+//                    Log.e(TAG, e.getMessage(), e);
+//                }
                 response.close();
             }
         });
@@ -734,12 +695,9 @@ public class ServerService extends Service implements Parcelable {
         });
     }
 
-    public void updatePlaylistCover(String id, Bitmap image, ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback callback) {
+    public void updatePlaylistCover(String id, Bitmap image, ShowSavedPlaylistRecycAdapter adapter) {
         OkHttpClient client = new OkHttpClient();
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-
-        //TODO Bild irgendwie verkleinern (möglich?)
-
         image.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
         byte[] byteArray = byteArrayOutputStream.toByteArray();
         byte[] encoded = Base64.encode(byteArray, Base64.NO_WRAP);
@@ -775,7 +733,7 @@ public class ServerService extends Service implements Parcelable {
                     throw new IOException("Error : " + response);
                 }else {
                     Log.d(TAG,"Request Successful. Playlist cover changed to " + response.body().string());
-                    callback.reloadFavoritePlaylistsFragment();
+                    adapter.notifyDataSetChanged();
                 }
                 response.close();
             }

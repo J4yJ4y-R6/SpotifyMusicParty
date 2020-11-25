@@ -14,7 +14,7 @@
         android:layout_alignParentTop="true"
         android:layout_marginEnd="6dip"
         android:contentDescription="@string/text_songcover"
-        android:src="@color/purple_200" />
+        android:src="@color/transparent" />
 
 
     <TextView

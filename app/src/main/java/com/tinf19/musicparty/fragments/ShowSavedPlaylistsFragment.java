@@ -69,7 +69,7 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
     private int counter;
 
     public interface ShowSavedPlaylistCallback extends ForAllCallback {
-        void changePlaylistCover(String id, Bitmap image);
+        void changePlaylistCover(String id, Bitmap image, ShowSavedPlaylistRecycAdapter adapter);
     }
 
     public ShowSavedPlaylistsFragment(ShowSavedPlaylistCallback favoritePlaylistsCallback, ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback favoritePlaylistCallback) {
@@ -257,7 +257,7 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
                         Toast.makeText(getActivity(), "Dein Bild ist zu groß. Die Maximalgröße für Playlist-Cover ist 250KB", Toast.LENGTH_LONG).show();
                     else {
                         if(playlistID != null) {
-                            favoritePlaylistsCallback.changePlaylistCover(playlistID, scaledBitmap);
+                            favoritePlaylistsCallback.changePlaylistCover(playlistID, scaledBitmap, showSavedPlaylistRecycAdapter);
                             playlistID = "";
                         }
                         else
@@ -265,7 +265,7 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
                     }
                 } else {
                     if(playlistID != null) {
-                        favoritePlaylistsCallback.changePlaylistCover(playlistID, selectedImage);
+                        favoritePlaylistsCallback.changePlaylistCover(playlistID, selectedImage, showSavedPlaylistRecycAdapter);
                         playlistID = "";
                     }
                     else

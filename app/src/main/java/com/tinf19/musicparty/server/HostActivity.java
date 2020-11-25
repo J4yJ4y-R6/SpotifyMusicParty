@@ -368,23 +368,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void reloadFavoritePlaylistsFragment() {
-        Fragment frg = getSupportFragmentManager().findFragmentByTag("ShowSavedPlaylistFragment");
-        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.detach(frg);
-        ft.attach(frg);
-        ft.commit();
-    }
-
-    @Override
     public void reloadPlaylistFragment() {
-        Fragment frg = getSupportFragmentManager().findFragmentByTag("HostPlaylistFragment");
-        if(frg != null) {
-            FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-            ft.detach(frg);
-            ft.attach(frg);
-            ft.commit();
-        }
+        hostPlaylistFragment.updateRecyclerView();
     }
 
     @Override
@@ -631,13 +616,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void changePlaylistCover(String id, Bitmap image) {
+    public void changePlaylistCover(String id, Bitmap image, ShowSavedPlaylistRecycAdapter adapter) {
         if(mBoundService != null) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     Log.d(TAG, "run: " + id);
-                    mBoundService.updatePlaylistCover(id, image, HostActivity.this);
+                    mBoundService.updatePlaylistCover(id, image, adapter);
                 }
             }).start();
         }

@@ -109,4 +109,8 @@ public class HostPlaylistFragment extends Fragment {
             hostPlaylistRecycAdapter.notifyDataSetChanged();
         }
     }
+
+    public void updateRecyclerView() {
+        hostPlaylistRecycAdapter.notifyDataSetChanged();
+    }
 }

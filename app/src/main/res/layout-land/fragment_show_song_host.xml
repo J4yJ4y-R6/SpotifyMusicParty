@@ -73,7 +73,7 @@
             android:textColor="#FFFFFF"
             android:textSize="30sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/linearLayout"
+            app:layout_constraintStart_toEndOf="@+id/hostPlayBarLinearLayout"
             app:layout_constraintTop_toBottomOf="@+id/partyOverviewTextView" />
 
         <TextView
@@ -94,7 +94,7 @@
             android:textColor="#FFFFFF"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.495"
-            app:layout_constraintStart_toEndOf="@+id/linearLayout"
+            app:layout_constraintStart_toEndOf="@+id/hostPlayBarLinearLayout"
             app:layout_constraintTop_toBottomOf="@+id/songtitleHostTextView" />
 
         <TextView
@@ -115,7 +115,7 @@
             android:textColor="#FFFFFF"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.495"
-            app:layout_constraintStart_toEndOf="@+id/linearLayout"
+            app:layout_constraintStart_toEndOf="@+id/hostPlayBarLinearLayout"
             app:layout_constraintTop_toBottomOf="@+id/albumHostTextView" />
 
         <View
@@ -141,7 +141,7 @@
             android:textColor="#FFFFFF"
             android:textSize="24sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/linearLayout"
+            app:layout_constraintStart_toEndOf="@+id/hostPlayBarLinearLayout"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
@@ -155,7 +155,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <LinearLayout
-            android:id="@+id/linearLayout"
+            android:id="@+id/hostPlayBarLinearLayout"
             android:layout_width="70dip"
             android:layout_height="280dip"
             android:background="@drawable/host_show_song_playbar_land"

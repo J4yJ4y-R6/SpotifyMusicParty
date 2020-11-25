@@ -15,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
@@ -32,6 +33,7 @@ public class ShowSongHostFragment extends Fragment {
     private TextView currentPlayingArtistTextView;
     private ImageView currentPlayingCoverTextView;
     private TextView partyNameTextView;
+    private LinearLayout playBarLinearLayout;
 
 
     public interface OpenHostFragments {
@@ -104,6 +106,7 @@ public class ShowSongHostFragment extends Fragment {
         currentPlayingArtistTextView = view.findViewById(R.id.artistHostTextView);
         currentPlayingAlbumTextView = view.findViewById(R.id.albumHostTextView);
         currentPlayingCoverTextView = view.findViewById(R.id.songCoverHostImageView);
+        playBarLinearLayout = view.findViewById(R.id.hostPlayBarLinearLayout);
         Log.d(TAG, "onCreateView: CREATE VIEW " + currentPlayingTitleTextView);
 
         ImageButton openPlaylistButton = view.findViewById(R.id.playlistButtonHostImageButton);
@@ -186,6 +189,11 @@ public class ShowSongHostFragment extends Fragment {
     }
 
     public void setNowPlaying(Track nowPlaying) {
+        if(playBarLinearLayout != null && playBarLinearLayout.getVisibility() == View.INVISIBLE) {
+            playBarLinearLayout.setVisibility(View.VISIBLE);
+            currentPlayingTitleTextView.setSingleLine(true);
+            currentPlayingTitleTextView.setHeight(150);
+        }
         if(currentPlayingTitleTextView != null) {
             currentPlayingTitleTextView.setText(nowPlaying.getName());
         } else Log.d(TAG, "setNowPlaying: " + nowPlaying.getName());
