@@ -810,7 +810,6 @@ public class ServerService extends Service implements Parcelable {
     public void addItemToPlaylist(Track track) {
         playlist.add(track);
         tracks.add(track);
-        spotifyPlayerCallback.reloadPlaylistFragment();
     }
 
     public void addItemToTrackList(Track track) { tracks.add(track); }
@@ -1038,6 +1037,7 @@ public class ServerService extends Service implements Parcelable {
                                         if(tracks.size() == 0 || !tracks.get(tracks.size()-1).getId().equals(track.getId())) {
                                             addItemToPlaylist(track);
                                             addItem(track.getURI(), track.getName());
+                                            spotifyPlayerCallback.reloadPlaylistFragment();
                                         }
                                         //sendToAll(Commands.QUEUE, track.serialize());
                                     }
