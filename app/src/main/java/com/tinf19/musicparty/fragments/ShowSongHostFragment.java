@@ -189,6 +189,7 @@ public class ShowSongHostFragment extends Fragment {
     }
 
     public void setNowPlaying(Track nowPlaying) {
+        Log.d(TAG, "setNowPlaying: " + nowPlaying.getCover());
         if(playBarLinearLayout != null && playBarLinearLayout.getVisibility() == View.INVISIBLE) {
             playBarLinearLayout.setVisibility(View.VISIBLE);
             currentPlayingTitleTextView.setSingleLine(true);
@@ -201,6 +202,7 @@ public class ShowSongHostFragment extends Fragment {
         if(currentPlayingAlbumTextView != null) currentPlayingAlbumTextView.setText(nowPlaying.getAlbum());
         if(currentPlayingCoverTextView != null) {
             String coverURL = "https://i.scdn.co/image/"+nowPlaying.getCover();
+            //String coverURL = nowPlaying.getCover();
             new DownloadImageTask(currentPlayingCoverTextView).execute(coverURL);
         }
     }

@@ -92,6 +92,7 @@
     </string>
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="text_songtitle_placeholder">Willkommen zu deiner Music Party</string>
+    <string name="text_noSpotifyFound">Spotify wurde auf ihrem Gerät nicht gefunden. Bitte installieren sie sich die app.</string>
 
 
 </resources>

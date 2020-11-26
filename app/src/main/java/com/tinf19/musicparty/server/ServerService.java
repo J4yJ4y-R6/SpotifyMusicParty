@@ -26,6 +26,7 @@ import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
 
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
+import com.tinf19.musicparty.music.Que;
 import com.tinf19.musicparty.util.ActionReceiver;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.R;
@@ -60,7 +61,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class ServerService extends Service implements Parcelable {
+public class ServerService extends Service implements Parcelable, Que.CountDownCallback {
 
     private static final String TAG = ServerService.class.getName();
     private final IBinder mBinder = new LocalBinder();
@@ -75,7 +76,8 @@ public class ServerService extends Service implements Parcelable {
     private int size = 0;
     private boolean first = true;
     private String partyName;
-    private List<Track> tracks = new ArrayList<>();
+    //private List<Track> tracks = new ArrayList<>();
+    private Que que;
     private List<Track> playlist = new ArrayList<>();
     private SpotifyAppRemote mSpotifyAppRemote;
     private boolean pause = true;
@@ -86,6 +88,31 @@ public class ServerService extends Service implements Parcelable {
     private boolean stopped;
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
+
+    @Override
+    public void playSong(Track track) {
+        if(getmSpotifyAppRemote() != null) {
+            mSpotifyAppRemote.getPlayerApi().play(track.getURI());
+            Log.d(TAG, "New song has been started: " + track.getName());
+            new Thread(()->{
+                try {
+                    sendToAll(Commands.PLAYING, que.getNowPlaying().serialize());
+                } catch (IOException | JSONException e) {
+                    Log.e(TAG, e.getMessage(), e);
+                }
+            }).start();
+        }
+    }
+
+    @Override
+    public void setProgressBar(long timeRemaining) {
+
+    }
+
+    @Override
+    public void stopPlayback() {
+
+    }
 
     public interface SpotifyPlayerCallback {
         void setNowPlaying(Track nowPlaying);
@@ -109,6 +136,7 @@ public class ServerService extends Service implements Parcelable {
     @Override
     public void onCreate() {
         super.onCreate();
+        que = new Que(this);
         Log.d(TAG, "Stopped: " + stopped + " Lastsong: " + (lastSongTitle != null ? lastSongTitle.name : "Nichts"));
         startServer();
     }
@@ -193,7 +221,7 @@ public class ServerService extends Service implements Parcelable {
         super.onDestroy();
         Log.d(ServerService.class.getName(), "I have been destroyed " + clientThreads.size());
         lastSongTitle = null;
-        nowPlaying = null;
+        //nowPlaying = null;
         stopped = false;
 //        deletePlaylist(playlistID);
         new Thread(() -> {
@@ -210,6 +238,17 @@ public class ServerService extends Service implements Parcelable {
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
+    }
+
+    public void next() {
+        que.next();
+    }
+
+    public void back() {
+        if(playlist.size() - que.size() - 2 >= 0)
+            que.back(playlist.get(playlist.size() - que.size() - 2));
+        else
+            mSpotifyAppRemote.getPlayerApi().play(nowPlaying.uri);
     }
 
     // Getter
@@ -240,7 +279,7 @@ public class ServerService extends Service implements Parcelable {
         return partyName;
     }
 
-    public List<Track> getTracks() { return tracks;}
+    //public List<Track> getTracks() { return tracks;}
 
     public String getToken() {
         return token;
@@ -258,7 +297,7 @@ public class ServerService extends Service implements Parcelable {
     }
 
     public List<Track> getPlaylist() {
-        return tracks;
+        return que.getQueList();
     }
 
     public boolean getPause() {
@@ -320,7 +359,7 @@ public class ServerService extends Service implements Parcelable {
                 try {
                     userID = new JSONObject(data).getString("id");
                     Log.d(TAG, "UserID: " + userID);
-                    createPlaylist("MusicParty");
+                    //createPlaylist("MusicParty");
                 } catch (JSONException e) {
                     Log.e(TAG, e.getMessage(), e);
                 }
@@ -384,7 +423,7 @@ public class ServerService extends Service implements Parcelable {
     }
 
     public void getQueFromPlaylist(String id) {
-        tracks.clear();
+        que.clear();
         playlist.clear();
         getQueFromPlaylist(id, 0);
     }
@@ -448,12 +487,12 @@ public class ServerService extends Service implements Parcelable {
                                             image,
                                             track.getInt("duration_ms"),
                                             track.getJSONObject("album").getString("name"));
-                            tracks.add(tmpTrack);
+                            que.addItem(tmpTrack);
                             playlist.add(tmpTrack);
                         }
-                        Log.d(TAG, "onResponse: added " + tracks.size() + " elements" );
-                        if(page == 0 && tracks.size() > 0)
-                            tracks.remove(0);
+                        Log.d(TAG, "onResponse: added " + que.size() + " elements" );
+                        if(page == 0 && que.size() > 0)
+                            que.next();
                         if(count > 100 * page)
                             getQueFromPlaylist(id, page + 1);
                     } catch (JSONException e) {
@@ -580,7 +619,7 @@ public class ServerService extends Service implements Parcelable {
                     size++;
                     if (size == 1) {
                         mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:" + playlistID);
-                        mSpotifyAppRemote.getPlayerApi().setRepeat(2);
+                        mSpotifyAppRemote.getPlayerApi().setRepeat(0);
 
                         new Thread(new Runnable() {
                             @Override
@@ -606,7 +645,7 @@ public class ServerService extends Service implements Parcelable {
                 .addPathSegment(playlistID)
                 .addPathSegment("tracks")
                 .build();
-        int index = size - tracks.size() + position;
+        int index = size - que.size() + position;
         if(index < 0 || index >= size)
             return;
         JSONObject uris = new JSONObject()
@@ -640,7 +679,7 @@ public class ServerService extends Service implements Parcelable {
                     Log.d(TAG,"Request Successful. Track " + name + " has been deleted.");
                     callback.deleteFromDataset();
                     playlist.remove(index);
-                    tracks.remove(position);
+                    que.remove(position);
                     size--;
                 }
                 response.close();
@@ -649,7 +688,7 @@ public class ServerService extends Service implements Parcelable {
     }
 
     public void moveItem(int from, int to) throws JSONException {
-        int position = size - tracks.size();
+        int position = size - que.size();
         Log.d(TAG, "moveItem: From " + from + " To: " + to + " Position: " + position);
         from = from + position;
         to = to + position;
@@ -809,18 +848,20 @@ public class ServerService extends Service implements Parcelable {
 
     public void addItemToPlaylist(Track track) {
         playlist.add(track);
-        tracks.add(track);
+        que.addItem(track);
+        if(playlist.size() == 1)
+            que.next();
     }
 
-    public void addItemToTrackList(Track track) { tracks.add(track); }
+    public void addItemToTrackList(Track track) { que.addItem(track); }
 
     public void togglePlayback() {
         if (pause && getmSpotifyAppRemote() != null) {
-            Log.d(TAG, "Size: " + tracks.size() + " Playlist size: " + playlist.size());
-            if(stopped && tracks.size() == 0) {
+            Log.d(TAG, "Size: " + que.size() + " Playlist size: " + playlist.size());
+            if(stopped && que.size() == 0) {
                 lastSongTitle = null;
                 getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:" + playlistID);
-                tracks = new ArrayList<>(playlist);
+                que.setQueList(new ArrayList<>(playlist));
             } else if(stopped) {
                 getmSpotifyAppRemote().getPlayerApi().skipNext();
             } else {
@@ -831,24 +872,28 @@ public class ServerService extends Service implements Parcelable {
             getmSpotifyAppRemote().getPlayerApi().pause();
     }
 
-
-    private void printPlaylist(List<Track> list) {
-        StringBuilder output = new StringBuilder();
-        for(Track x : list) {
-            if(x.getURI().equals(nowPlaying.uri))
-                output.append(" [").append(x.getName()).append("]");
-            else
-                output.append(" ").append(x.getName());
-        }
-        Log.d(TAG, "printPlaylist: " + output.toString());
-    }
-
     public void addEventListener() {
         mSpotifyAppRemote.getPlayerApi()
                 .subscribeToPlayerState()
                 .setEventCallback(playerState -> {
                     final com.spotify.protocol.types.Track track = playerState.track;
-                    if(playlistID != null) {
+                    que.setTimer(track.duration - playerState.playbackPosition, !playerState.isPaused);
+                    if(playerState.isPaused != pause) {
+                        if(playerState.isPaused)
+                            que.pause();
+                        else
+                            que.resume();
+                    }
+
+                    pause = playerState.isPaused;
+                    nowPlaying = playerState.track;
+                    if(playlist.size() != 0 && (lastSongTitle == null || !nowPlaying.uri.equals(lastSongTitle.uri))) {
+                        if(spotifyPlayerCallback != null) {
+                            spotifyPlayerCallback.setNowPlaying(getNowPlaying());
+                        }
+                        lastSongTitle = nowPlaying;
+                    }
+                    /*if(playlistID != null) {
                         nowPlaying = track;
 
                         if((lastSongTitle == null && !playerState.isPaused) || (nowPlaying != null && !nowPlaying.uri.equals(lastSongTitle.uri))) {
@@ -900,7 +945,7 @@ public class ServerService extends Service implements Parcelable {
                         }
 
                         if(spotifyPlayerCallback != null) spotifyPlayerCallback.setPlayImage(pause);
-                    }
+                    }*/
                 });
     }
 
@@ -942,7 +987,7 @@ public class ServerService extends Service implements Parcelable {
                         clientThreads.add(new CommunicationThread(serverSocket.accept()));
                         clientThreads.get(clientThreads.size()-1).start();
                     } catch (IOException e) {
-                        Log.e(TAG, e.getMessage(), e);
+                        Log.d(TAG, "Server has been closed");
                     }
                 }
             }
@@ -1018,7 +1063,7 @@ public class ServerService extends Service implements Parcelable {
                                         Log.d(TAG, "New login attempt from user " + attribute +" with password: " + pass);
                                         if (login(pass)) {
                                             username = attribute;
-                                            if (nowPlaying == null)
+                                            if (getNowPlaying() == null)
                                                 sendMessage(Commands.LOGIN, partyName);
                                             else
                                                 sendMessage(Commands.LOGIN, partyName + "~" + getNowPlaying().serialize());
@@ -1034,26 +1079,24 @@ public class ServerService extends Service implements Parcelable {
                                     Log.d(TAG, "Added " + attribute + " to the queue");
                                     if(this.login) {
                                         Track track = new Track(attribute);
-                                        if(tracks.size() == 0 || !tracks.get(tracks.size()-1).getId().equals(track.getId())) {
-                                            addItemToPlaylist(track);
-                                            addItem(track.getURI(), track.getName());
-                                            spotifyPlayerCallback.reloadPlaylistFragment();
-                                        }
+                                        addItemToPlaylist(track);
+                                        //addItem(track.getURI(), track.getName());
+                                        spotifyPlayerCallback.reloadPlaylistFragment();
                                         //sendToAll(Commands.QUEUE, track.serialize());
                                     }
                                     break;
                                 case PLAYING:
-                                    if(nowPlaying != null && this.login) {
+                                    if(getNowPlaying() != null && this.login) {
                                         sendMessage(Commands.PLAYING, getNowPlaying().serialize());
                                     }
                                     break;
                                 case PLAYLIST:
                                     StringBuilder response = new StringBuilder();
-                                    if(nowPlaying != null) {
+                                    if(getNowPlaying() != null) {
                                         response.append("~");
                                         response.append(getNowPlaying().serialize());
                                     }
-                                    for (Track track: tracks) {
+                                    for (Track track: que.getQueList()) {
                                         response.append("~");
                                         response.append(track.serialize());
                                     }

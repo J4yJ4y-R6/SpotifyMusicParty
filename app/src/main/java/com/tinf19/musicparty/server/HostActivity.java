@@ -14,6 +14,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.spotify.android.appremote.api.error.CouldNotFindSpotifyApp;
 import com.spotify.android.appremote.api.error.SpotifyConnectionTerminatedException;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
@@ -71,6 +73,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private IntentFilter intentFilter;
     private ServerService mBoundService;
     private boolean mShouldUnbind;
+    private boolean stopped;
 
     private FragmentTransaction fragmentTransaction;
     private ShowSongHostFragment showSongFragment;
@@ -81,6 +84,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private HostPlaylistFragment hostPlaylistFragment;
     private PartyPeopleFragment partyPeopleFragment;
     private ShowSavedPlaylistsFragment showSavedPlaylistsFragment;
+    private ServerLoadingFragment serverLoadingFragment;
 
 
     public interface ConnectionCallback {
@@ -181,6 +185,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 case ERROR:
                     // Handle error response
                     Log.e(TAG, "Spotify login error");
+                    stopService();
                     break;
                 // Most likely auth flow was cancelled
                 case CODE:
@@ -190,9 +195,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                     serviceIntent.putExtra(Constants.PASSWORD, generatePassword());
                     serviceIntent.putExtra(Constants.PARTYNAME, getString(R.string.text_partyName));
                     startService(serviceIntent);
-                    if(mBoundService != null) {
-                        HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.service_serverMsg, getString(R.string.text_partyName)), Toast.LENGTH_SHORT).show());
-                    }
                     break;
                 default:
                     // Handle other cases
@@ -224,6 +226,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         hostPlaylistFragment = new HostPlaylistFragment(this, this);
         partyPeopleFragment = new PartyPeopleFragment(this);
         showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this, this);
+        serverLoadingFragment = new ServerLoadingFragment();
 
         if(savedInstanceState != null) {
             password = savedInstanceState.getString(Constants.PASSWORD, "0000");
@@ -236,7 +239,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             }
         } else {
             getSupportFragmentManager().beginTransaction().
-                    replace(R.id.showSongHostFragmentFrame, new ServerLoadingFragment(), "ServerLoadingFragment").commitAllowingStateLoss();
+                    replace(R.id.showSongHostFragmentFrame, serverLoadingFragment, "ServerLoadingFragment").commitAllowingStateLoss();
         }
 
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
@@ -307,6 +310,9 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     protected void onStart() {
         super.onStart();
+        if(stopped) {
+            stopService();
+        }
     }
 
     @Override
@@ -318,8 +324,9 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     public void onBackPressed() {
         if(showSongFragment.isVisible()) {
             animateFragmentChange(true, hostClosePartyFragment, "ExitConnectionFragment");
-        }
-        else {
+        } else if(serverLoadingFragment.isVisible()){
+          stopService();
+        } else {
             hostSearchBarFragment.clearSearch();
             animateFragmentChange(false, showSongFragment, "ShowSongFragment");
         }
@@ -405,15 +412,14 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void nextTrack() {
-        if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
-            mBoundService.getmSpotifyAppRemote().getPlayerApi().skipNext();
+        if (mBoundService != null)
+            mBoundService.next();
     }
 
     @Override
     public void lastTrack() {
-        if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null) {
-            mBoundService.addItemToTrackList(mBoundService.getNowPlaying());
-            mBoundService.getmSpotifyAppRemote().getPlayerApi().skipPrevious();
+        if(mBoundService != null) {
+            mBoundService.back();
         }
     }
 
@@ -451,6 +457,9 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                             Log.d(TAG, "Connected! Yay!");
                             // Now you can start interacting with App Remote
                             connectionCallback.afterConnection(spotifyAppRemote);
+                            if(mBoundService != null && mBoundService.isFirst()) {
+                                HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.service_serverMsg, getString(R.string.text_partyName)), Toast.LENGTH_SHORT).show());
+                            }
                             //if(mBoundService!= null) mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
                         }
 
@@ -459,7 +468,17 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                             if(throwable instanceof SpotifyConnectionTerminatedException) {
                                 Log.d(TAG, "onFailure: Connection lost");
                                 connectionCallback.afterFailure();
-                            } else
+                            } else if(throwable instanceof CouldNotFindSpotifyApp) {
+                                final String appPackageName = "com.spotify.music";
+                                stopped = true;
+                                HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.text_noSpotifyFound), Toast.LENGTH_SHORT).show());
+                                try {
+                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                                } catch (android.content.ActivityNotFoundException anfe) {
+                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                                }
+                            }
+                            else
                                 Log.e(TAG, throwable.getMessage(), throwable);
                         }
                     });
@@ -472,13 +491,9 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     public void addSong(Track track) {
         this.runOnUiThread(() -> Toast.makeText(HostActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
         new Thread(() -> {
-            try {
-                if (mBoundService != null && (mBoundService.getTracks().size() == 0 || !mBoundService.getTracks().get(mBoundService.getTracks().size()-1).getId().equals(track.getId()))) {
-                    mBoundService.addItem(track.getURI(), track.getName());
-                    mBoundService.addItemToPlaylist(track);
-                }
-            } catch (JSONException e) {
-                Log.e(TAG, e.getMessage(), e);
+            if (mBoundService != null && (mBoundService.getPlaylist().size() == 0 || !mBoundService.getPlaylist().get(mBoundService.getPlaylist().size()-1).getId().equals(track.getId()))) {
+                //mBoundService.addItem(track.getURI(), track.getName());
+                mBoundService.addItemToPlaylist(track);
             }
         }).start();
     }
