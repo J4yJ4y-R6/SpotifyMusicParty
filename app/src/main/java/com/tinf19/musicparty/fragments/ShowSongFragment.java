@@ -25,6 +25,7 @@ import com.tinf19.musicparty.music.Track;
 
 public class ShowSongFragment extends Fragment {
 
+    private static final String TAG = ShowSongFragment.class.getName();
     public PartyButtonClicked partyButtonClicked;
     private ImageView songCover;
     private TextView songTitle;
@@ -123,19 +124,19 @@ public class ShowSongFragment extends Fragment {
     }
 
     public void showSongs(Track track) {
+
+        if(track != null && songTitle.getHeight() > 150) {
+            songTitle.setSingleLine(true);
+            songTitle.setHeight(150);
+        }
+        Log.d(TAG, "showSongs: " + track);
         if(songCover != null) {
             String coverURL = "https://i.scdn.co/image/"+track.getCoverFull();
             new DownloadImageTask(songCover).execute(coverURL);
         }
-        if(songTitle != null) {
-            songTitle.setText(track.getName());
-        }
-        if(songArtist != null) {
-            songArtist.setText(track.getArtist(0).getName());
-        }
-        if(songAlbum != null) {
-            songAlbum.setText(track.getAlbum());
-        }
+        if(songTitle != null) songTitle.setText(track.getName());
+        if(songArtist != null) songArtist.setText(track.getArtist(0).getName());
+        if(songAlbum != null) songAlbum.setText(track.getAlbum());
     }
 
     public void setPartyName(String name) {

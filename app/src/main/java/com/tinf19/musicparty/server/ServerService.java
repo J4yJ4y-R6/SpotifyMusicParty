@@ -188,16 +188,14 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         }
 
         Intent notificationIntent = new Intent(this, HostActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+        pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
         Intent intentAction = new Intent(this, ActionReceiver.class);
-        PendingIntent pendingIntentButton = PendingIntent.getBroadcast(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
-
-        //TODO Title ändern: Guidelines
+        pendingIntentButton = PendingIntent.getBroadcast(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
-                .setContentTitle(getString(R.string.service_name))
-                .setContentText(getString(R.string.service_serverMsg, getPartyName()))
+                .setContentTitle(getString(R.string.service_serverMsg, partyName))
+                .setContentText(getString(R.string.service_serverPeople, clientThreads.size()))
                 .setSmallIcon(R.drawable.ic_service_notification_icon)
                 .setContentIntent(pendingIntent)
                 .addAction(R.drawable.ic_exit_button, getString(R.string.text_end),pendingIntentButton)
@@ -892,8 +890,8 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                     }
 
                     pause = playerState.isPaused;
-                    nowPlaying = playerState.track;
                     if(playlist.size() != 0 && (lastSongTitle == null || !nowPlaying.uri.equals(lastSongTitle.uri))) {
+                        nowPlaying = playerState.track;
                         if(spotifyPlayerCallback != null) {
                             spotifyPlayerCallback.setNowPlaying(getNowPlaying());
                         }
@@ -965,13 +963,14 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
 
     public void updateServiceNotifaction() {
         String text = getString(R.string.service_serverMsg, partyName);
+        String peopleCount = getString(R.string.service_serverPeople, clientThreads.size());
         NotificationManagerCompat mNotificationManager = NotificationManagerCompat.from(this);
         Notification notificationUpdate = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
-                .setContentTitle(getString(R.string.service_name))
-                .setContentText(text)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setContentTitle(text)
+                .setContentText(peopleCount)
+                .setSmallIcon(R.drawable.ic_service_notification_icon)
                 .setContentIntent(pendingIntent)
-                .addAction(R.drawable.ic_exit_button, getString(R.string.text_end),pendingIntentButton)
+                .addAction(R.drawable.ic_exit_button, getString(R.string.text_end), pendingIntentButton)
                 .build();
         mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
     }
@@ -992,6 +991,7 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                     try {
                         clientThreads.add(new CommunicationThread(serverSocket.accept()));
                         clientThreads.get(clientThreads.size()-1).start();
+                        updateServiceNotifaction();
                     } catch (IOException e) {
                         Log.d(TAG, "Server has been closed");
                     }
@@ -1061,6 +1061,7 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                                     clientThreads.remove(this);
                                     if(spotifyPlayerCallback!= null) spotifyPlayerCallback.setPeopleCount(clientThreads.size());
                                     Log.d(TAG, "User " + username + " has left the party");
+                                    updateServiceNotifaction();
                                     close();
                                     return;
                                 case LOGIN:

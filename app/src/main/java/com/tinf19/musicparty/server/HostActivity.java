@@ -377,7 +377,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void reloadPlaylistFragment() {
-        hostPlaylistFragment.updateRecyclerView();
+        if(hostPlaylistFragment.isVisible())
+            hostPlaylistFragment.updateRecyclerView();
     }
 
     @Override

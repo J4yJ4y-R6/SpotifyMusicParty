@@ -63,16 +63,18 @@ public class ClientPlaylistFragment extends Fragment {
     }
 
     public void setCurrentPlaying(Track track) {
-        Log.d(TAG, track.getName());
-        if(currentSongTitleTextView != null) {
-            currentSongTitleTextView.setText(track.getName());
-        }
-        if(currentSongArtistTextView != null) {
-            currentSongArtistTextView.setText(track.getArtist(0).getName());
-        }
-        if(currentSongCoverImageView != null) {
-            String coverURL = "https://i.scdn.co/image/"+track.getCoverFull();
-            new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
+        if(track != null) {
+            Log.d(TAG, track.getName());
+            if (currentSongTitleTextView != null) {
+                currentSongTitleTextView.setText(track.getName());
+            }
+            if (currentSongArtistTextView != null) {
+                currentSongArtistTextView.setText(track.getArtist(0).getName());
+            }
+            if (currentSongCoverImageView != null) {
+                String coverURL = "https://i.scdn.co/image/" + track.getCoverFull();
+                new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
+            }
         }
     }
 
