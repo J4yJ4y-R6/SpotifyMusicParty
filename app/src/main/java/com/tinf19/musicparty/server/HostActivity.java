@@ -383,8 +383,8 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void deletePlaylist(String id) {
-        if(mBoundService != null)
-            mBoundService.deletePlaylist(id);
+        //if(mBoundService != null)
+        //    mBoundService.deletePlaylist(id);
     }
 
     //    Methods for ShowSongFragment
@@ -492,7 +492,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     public void addSong(Track track) {
         this.runOnUiThread(() -> Toast.makeText(HostActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
         new Thread(() -> {
-            if (mBoundService != null && (mBoundService.getPlaylist().size() == 0 || !mBoundService.getPlaylist().get(mBoundService.getPlaylist().size()-1).getId().equals(track.getId()))) {
+            if (mBoundService != null) {
                 //mBoundService.addItem(track.getURI(), track.getName());
                 mBoundService.addItemToPlaylist(track);
             }
@@ -518,23 +518,19 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void swapPlaylistItems(int from, int to) {
-        if (mBoundService != null) {
+        /*if (mBoundService != null) {
             try {
                 mBoundService.moveItem(from, to);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        }
+        }*/
     }
 
     @Override
     public void removeItem(Track toRemove, int position, ServerService.AfterCallback callback) {
         if(mBoundService != null) {
-            try {
-                mBoundService.deleteItem(toRemove.getURI(), toRemove.getName(), position, () -> runOnUiThread(callback::deleteFromDataset));
-            } catch (JSONException e) {
-                Log.d(TAG, e.getMessage(), e);
-            }
+            mBoundService.deleteFromQue( position, () -> runOnUiThread(callback::deleteFromDataset));
         }
     }
 
@@ -601,10 +597,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void playFavoritePlaylist(String id, ArrayList<String> idList) {
         if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)  {
-            String playlistID = mBoundService.getPlaylistID();
-            if(!idList.contains(playlistID))
-                mBoundService.deletePlaylist(playlistID);
-            mBoundService.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:"+id);
+            //mBoundService.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:"+id);
             mBoundService.setPlaylistID(id);
             mBoundService.getQueFromPlaylist(id);
             try {
@@ -613,7 +606,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
                 e.printStackTrace();
             }
         }
-        //TODO: Spotify App geschlossen -> neue Verbindung
     }
 
     @Override

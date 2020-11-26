@@ -61,7 +61,7 @@ public class HostPlaylistFragment extends Fragment {
             if (currentSongArtistTextView != null)
                 currentSongArtistTextView.setText(currentPlaying.getArtist(0).getName());
             if (currentSongCoverImageView != null) {
-                String coverURL = "https://i.scdn.co/image/" + currentPlaying.getCover();
+                String coverURL = "https://i.scdn.co/image/" + currentPlaying.getCoverFull();
                 new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
             }
         }

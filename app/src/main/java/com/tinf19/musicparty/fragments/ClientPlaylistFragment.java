@@ -72,7 +72,7 @@ public class ClientPlaylistFragment extends Fragment {
                 currentSongArtistTextView.setText(track.getArtist(0).getName());
             }
             if (currentSongCoverImageView != null) {
-                String coverURL = "https://i.scdn.co/image/" + track.getCover();
+                String coverURL = "https://i.scdn.co/image/" + track.getCoverFull();
                 new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
             }
         }

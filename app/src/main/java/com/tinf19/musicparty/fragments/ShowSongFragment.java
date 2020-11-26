@@ -131,7 +131,7 @@ public class ShowSongFragment extends Fragment {
         }
         Log.d(TAG, "showSongs: " + track);
         if(songCover != null) {
-            String coverURL = track.getCover();
+            String coverURL = "https://i.scdn.co/image/"+track.getCoverFull();
             new DownloadImageTask(songCover).execute(coverURL);
         }
         if(songTitle != null) songTitle.setText(track.getName());
