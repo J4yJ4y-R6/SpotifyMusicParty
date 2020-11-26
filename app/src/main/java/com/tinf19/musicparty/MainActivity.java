@@ -1,6 +1,7 @@
 package com.tinf19.musicparty;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 
 import com.tinf19.musicparty.client.ClientActivity;
 import com.tinf19.musicparty.databinding.ActivityMainBinding;
@@ -9,10 +10,16 @@ import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.graphics.drawable.AnimatedVectorDrawable;
+import android.graphics.drawable.Drawable;
+import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
+
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.tinf19.musicparty.util.Constants;
 
@@ -22,6 +29,36 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getName();
     private static String token;
 
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        ImageView imageView = findViewById(R.id.animatedLogo);
+        animate(imageView);
+    }
+
+    public void animate(ImageView v) {
+        Drawable d = v.getDrawable();
+        if(d instanceof AnimatedVectorDrawableCompat) {
+            AnimatedVectorDrawableCompat avd = (AnimatedVectorDrawableCompat) d;
+            avd.start();
+        } else if(d instanceof AnimatedVectorDrawable) {
+            AnimatedVectorDrawable avd = (AnimatedVectorDrawable) d;
+            avd.start();
+        }
+    }
+
+    public void animateClick(View view) {
+        ImageView v = (ImageView) view;
+        Drawable d = v.getDrawable();
+        if(d instanceof AnimatedVectorDrawableCompat) {
+            AnimatedVectorDrawableCompat avd = (AnimatedVectorDrawableCompat) d;
+            avd.start();
+        } else if(d instanceof AnimatedVectorDrawable) {
+            AnimatedVectorDrawable avd = (AnimatedVectorDrawable) d;
+            avd.start();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
