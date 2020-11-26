@@ -35,8 +35,10 @@
     <string name="service_channelName">Music Party Service Channel</string>
     <string name="service_name">MusicParty</string>
     <string name="service_clientMsg">Du bist Teil einer %1$s</string>
+    <string name="service_clientContent"></string>
     <string name="service_clientConnectionError">Die Verbindung zum Host ist fehlgeschlagen</string>
     <string name="service_serverMsg">Du hostest die Party: %1$s</string>
+    <string name="service_serverPeople">Aktuell sind %1$d Menschen Teil deiner Party.</string>
     <string name="service_serverClosed">Der Host hat die Party beendet</string>
     <string name="service_serverConnected">Du bist Teil der %1$s</string>
     <string name="service_serverDisconnected">Du hast die %1$s verlassen</string>
@@ -93,6 +95,7 @@
     <string name="attachment_summary_off">Only download attachments when manually requested</string>
     <string name="text_songtitle_placeholder">Willkommen zu deiner Music Party</string>
     <string name="text_noSpotifyFound">Spotify wurde auf ihrem Gerät nicht gefunden. Bitte installieren sie sich die app.</string>
+    <string name="text_currentSongPlaylistFragment_placeholder">Hier wird das aktuelle Lied angezeigt</string>
 
 
 </resources>

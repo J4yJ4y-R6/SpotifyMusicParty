@@ -9,6 +9,7 @@ import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import com.tinf19.musicparty.util.ActionReceiver;
 import com.tinf19.musicparty.util.Commands;
@@ -41,6 +42,8 @@ public class ClientService extends Service {
     private boolean stopped;
     private boolean first = true;
     private String token;
+    private PendingIntent pendingIntent;
+    private PendingIntent pendingIntentButton;
 
 
     public interface PartyCallback {
@@ -73,21 +76,31 @@ public class ClientService extends Service {
     public void onCreate() {
         super.onCreate();
         Intent notificationIntent = new Intent(this, PartyActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
+        pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
         Intent intentAction = new Intent(this, ActionReceiver.class);
-        PendingIntent pendingIntentButton = PendingIntent.getBroadcast(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
+        pendingIntentButton = PendingIntent.getBroadcast(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
 
 
-        //TODO: Service Text später Namen hinzufügen
         Notification notification = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
-                .setContentTitle(getString(R.string.service_name))
-                .setContentText(getString(R.string.service_clientMsg, "MusicParty"))
+                .setContentTitle("Verbindung wird hergestellt")
                 .setSmallIcon(R.drawable.ic_service_notification_icon)
                 .setContentIntent(pendingIntent)
                 .addAction(R.drawable.ic_exit_button, getString(R.string.text_leave),pendingIntentButton)
                 .build();
         startForeground(1, notification);
+    }
+
+    public void updateServiceNotifaction() {
+        String text = getString(R.string.service_clientMsg, clientThread.getPartyName());
+        NotificationManagerCompat mNotificationManager = NotificationManagerCompat.from(this);
+        Notification notificationUpdate = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
+                .setContentTitle(text)
+                .setSmallIcon(R.drawable.ic_service_notification_icon)
+                .setContentIntent(pendingIntent)
+                .addAction(R.drawable.ic_exit_button, getString(R.string.text_end), pendingIntentButton)
+                .build();
+        mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
     }
 
     @Override
@@ -217,6 +230,7 @@ public class ClientService extends Service {
                                     if(partyCallback != null) {
                                         partyCallback.setPartyName(partyName);
                                     }
+                                    updateServiceNotifaction();
                                     break;
                                 case QUIT:
                                     Log.d(TAG, "Server has been closed");
@@ -237,9 +251,11 @@ public class ClientService extends Service {
                                         if(!parts[i].equals(""))
                                         tracks.add(new Track(parts[i]));
                                     }
-                                    Log.d(TAG, tracks.get(0).getName());
-                                    partyCallback.setCurrentTrack(tracks.get(0));
-                                    tracks.remove(0);
+                                    if(tracks.size() > 0) {
+                                        Log.d(TAG, tracks.get(0).getName());
+                                        partyCallback.setCurrentTrack(tracks.get(0));
+                                        tracks.remove(0);
+                                    }
                                     partyCallback.setPlaylist(tracks);
                                     break;
                             }

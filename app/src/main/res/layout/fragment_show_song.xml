@@ -13,17 +13,16 @@
 
         <TextView
             android:id="@+id/songtitleTextView"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_marginTop="30dp"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="50dp"
             android:ellipsize="marquee"
             android:focusable="true"
             android:marqueeRepeatLimit="marquee_forever"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
             android:scrollHorizontally="true"
-            android:singleLine="true"
-            android:text="@string/text_songtitel"
+            android:singleLine="false"
+            android:text="@string/text_songtitle_placeholder"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             android:textSize="30sp"
@@ -44,7 +43,6 @@
             android:paddingRight="5dp"
             android:scrollHorizontally="true"
             android:singleLine="true"
-            android:text="@string/text_albumname"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -64,7 +62,6 @@
             android:paddingRight="5dp"
             android:scrollHorizontally="true"
             android:singleLine="true"
-            android:text="@string/text_kuenstler"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -103,11 +100,11 @@
             android:id="@+id/songCoverImageView"
             android:layout_width="300dip"
             android:layout_height="300dip"
-            app:srcCompat="@android:color/darker_gray"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.495"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/connectedTo" />
+            app:layout_constraintTop_toBottomOf="@+id/connectedTo"
+            app:srcCompat="@drawable/ic_cover_placeholder" />
 
         <ImageButton
             android:id="@+id/playlistButtonImageButton"
