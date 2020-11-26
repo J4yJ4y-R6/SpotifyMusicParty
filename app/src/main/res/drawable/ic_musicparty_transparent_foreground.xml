@@ -13,11 +13,6 @@
           android:translateY="-203">
           <clip-path
               android:pathData="M597 203H720V334H597V203Z" />
-          <path
-              android:pathData="M598.5 265.5C598.5 232.363 625.587 205.5 659 205.5 692.413 205.5 719.5 232.363 719.5 265.5 719.5 298.637 692.413 325.5 659 325.5 625.587 325.5 598.5 298.637 598.5 265.5Z"
-              android:strokeColor="#061808"
-              android:strokeWidth="1.33333"
-              android:strokeMiterLimit="8" />
           <group
               android:translateX="619"
               android:translateY="238">
