@@ -232,17 +232,23 @@ public class HostSearchBarFragment extends Fragment {
                     JSONObject artist = artists.getJSONObject(j);
                     array[j] = new Artist(artist.getString("id"), artist.getString("name"));
                 }
-                String image = track
+                String [] image = track
                         .getJSONObject("album")
                         .getJSONArray("images")
                         .getJSONObject(2)
-                        .getString("url");
+                        .getString("url").split("/");
+                String [] imageFull = track
+                        .getJSONObject("album")
+                        .getJSONArray("images")
+                        .getJSONObject(2)
+                        .getString("url").split("/");
                 tracks.add(
                         new Track(
                                 track.getString("id"),
                                 track.getString("name"),
                                 array,
-                                image,
+                                image[image.length-1],
+                                imageFull[imageFull.length-1],
                                 track.getInt("duration_ms"),
                                 track.getJSONObject("album").getString("name")));
                 Log.d(TAG, tracks.get(i).toString());

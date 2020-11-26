@@ -78,7 +78,7 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         String name = mDataset.get(position).getName();
         String artist = mDataset.get(position).getArtist(0).getName();
-        String cover = mDataset.get(position).getCover();
+        String cover = "https://i.scdn.co/image/" + mDataset.get(position).getCover();
         TextView songTitleTV = holder.songTitleTextView;
         if(songTitleTV != null)
             songTitleTV.setText(name);

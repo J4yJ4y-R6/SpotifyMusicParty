@@ -283,6 +283,7 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                 nowPlaying.uri.split(":")[2],
                 nowPlaying.name,
                 nowPlaying.artists,
+                "0",
                 nowPlaying.imageUri.raw.split(":")[2],
                 nowPlaying.duration,
                 nowPlaying.album.name
@@ -467,17 +468,23 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                                 JSONObject artist = artists.getJSONObject(j);
                                 array[j] = new Artist(artist.getString("id"), artist.getString("name"));
                             }
-                            String image = track
+                            String[] image = track
                                     .getJSONObject("album")
                                     .getJSONArray("images")
                                     .getJSONObject(2)
-                                    .getString("url");
+                                    .getString("url").split("/");
+                            String[] imageFull = track
+                                    .getJSONObject("album")
+                                    .getJSONArray("images")
+                                    .getJSONObject(1)
+                                    .getString("url").split("/");
                             Track tmpTrack =
                                     new Track(
                                             track.getString("id"),
                                             track.getString("name"),
                                             array,
-                                            image,
+                                            image[image.length-1],
+                                            imageFull[imageFull.length-1],
                                             track.getInt("duration_ms"),
                                             track.getJSONObject("album").getString("name"));
                             que.addItem(tmpTrack);
@@ -626,6 +633,12 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                 response.close();
             }
         });
+    }
+
+    public void deleteFromQue(int position, AfterCallback callback) {
+        callback.deleteFromDataset();
+        playlist.remove(position);
+        que.remove(position);
     }
 
     public void deleteItem(String uri, String name, int position, AfterCallback callback) throws JSONException {
