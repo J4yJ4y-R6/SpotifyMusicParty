@@ -1,5 +1,6 @@
 package com.tinf19.musicparty.server;
 
+import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -11,18 +12,10 @@ import android.os.Parcelable;
 import android.util.Base64;
 import android.os.IBinder;
 import android.util.Log;
+import android.util.TypedValue;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
-import com.spotify.protocol.client.CallResult;
-import com.spotify.protocol.client.Subscription;
-import com.spotify.protocol.types.CrossfadeState;
-import com.spotify.protocol.types.Empty;
-import com.spotify.protocol.types.PlayerContext;
-import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
 
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
@@ -32,7 +25,6 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
-import com.tinf19.musicparty.util.HostPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.ShowSavedPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.TokenRefresh;
 
@@ -173,11 +165,12 @@ public class ServerService extends Service implements Parcelable {
         Intent intentAction = new Intent(this, ActionReceiver.class);
         PendingIntent pendingIntentButton = PendingIntent.getBroadcast(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
 
+        //TODO Title ändern: Guidelines
 
         Notification notification = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_name))
                 .setContentText(getString(R.string.service_serverMsg, getPartyName()))
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
+                .setSmallIcon(R.drawable.ic_service_notification_icon)
                 .setContentIntent(pendingIntent)
                 .addAction(R.drawable.ic_exit_button, getString(R.string.text_end),pendingIntentButton)
                 .build();

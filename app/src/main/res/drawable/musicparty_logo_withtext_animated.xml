@@ -1,0 +1,427 @@
+<animated-vector xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    tools:ignore="MissingDefaultResource">
+    <aapt:attr name="android:drawable">
+        <vector
+            android:name="vector"
+            android:width="648dp"
+            android:height="187dp"
+            android:viewportWidth="648"
+            android:viewportHeight="187">
+            <path
+                android:name="path_7"
+                android:pathData="M 188.827 3.973 L 188.827 184"
+                android:fillColor="#000"
+                android:strokeColor="#073709"
+                android:strokeAlpha="0"
+                android:strokeWidth="6"
+                android:strokeLineCap="round"
+                android:strokeMiterLimit="8"/>
+            <group android:name="text">
+                <path
+                    android:name="m"
+                    android:pathData="M 232 117 L 232 65 L 249 100 L 266 65 L 266 117"
+                    android:strokeColor="#073709"
+                    android:strokeAlpha="0"
+                    android:strokeWidth="10"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+                <path
+                    android:name="u"
+                    android:pathData="M 281 82 L 281 105 L 285 114 L 297 118 L 306 114 L 311 105 L 311 82"
+                    android:strokeColor="#073709"
+                    android:strokeAlpha="0"
+                    android:strokeWidth="10"
+                    android:strokeLineCap="square"
+                    android:strokeLineJoin="round"/>
+                <path
+                    android:name="s"
+                    android:pathData="M 355 88 L 348 82 L 329 82 L 326 90 L 329 99 L 348 99 L 353 104 L 353 110 L 349 117 L 329 117 L 325 111"
+                    android:strokeColor="#073709"
+                    android:strokeAlpha="0"
+                    android:strokeWidth="10"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+                <path
+                    android:name="i1"
+                    android:pathData="M 369 120 L 369 81"
+                    android:strokeColor="#073709"
+                    android:strokeAlpha="0"
+                    android:strokeWidth="10"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+                <path
+                    android:name="i2"
+                    android:pathData="M 369 67 L 369 65"
+                    android:strokeColor="#073709"
+                    android:strokeAlpha="0"
+                    android:strokeWidth="10"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+                <path
+                    android:name="c"
+                    android:pathData="M 412 87 L 405 82 L 393 83 L 387 93 L 388 110 L 398 117 L 410 115"
+                    android:strokeColor="#073709"
+                    android:strokeAlpha="0"
+                    android:strokeWidth="10"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+                <path
+                    android:name="p"
+                    android:pathData="M 428 122 L 428 65 L 446 65 L 458 73 L 459 85 L 453 96 L 445 100 L 428 100"
+                    android:strokeColor="#073709"
+                    android:strokeAlpha="0"
+                    android:strokeWidth="10"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+                <path
+                    android:name="a"
+                    android:pathData="M 502 120 L 502 88 L 490 81 L 480 83 L 475 88 L 473 95 L 473 106 L 482 116 L 490 117 L 500 112"
+                    android:strokeColor="#073709"
+                    android:strokeAlpha="0"
+                    android:strokeWidth="10"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+                <path
+                    android:name="r"
+                    android:pathData="M 522 120 L 522 92 L 530 83 L 540 82"
+                    android:strokeColor="#073709"
+                    android:strokeAlpha="0"
+                    android:strokeWidth="10"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+                <path
+                    android:name="t"
+                    android:pathData="M 554 65 L 554 105 L 560 117 L 571 117 M 555 82 L 565 82"
+                    android:strokeColor="#073709"
+                    android:strokeAlpha="0"
+                    android:strokeWidth="10"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+                <path
+                    android:name="y"
+                    android:pathData="M 587 77 L 587 107 L 594 116 L 602 118 L 616 111 L 616 77 L 616 125 L 608 135 L 593 135"
+                    android:strokeColor="#073709"
+                    android:strokeAlpha="0"
+                    android:strokeWidth="10"
+                    android:strokeLineCap="round"
+                    android:strokeLineJoin="round"/>
+            </group>
+            <group android:name="group_2">
+                <path
+                    android:name="path_1"
+                    android:pathData="M 1.337 94.879 C 1.337 52.078 36.035 17.379 78.837 17.379 C 121.639 17.379 156.337 52.078 156.337 94.879 C 156.337 137.681 121.639 172.379 78.837 172.379 C 36.035 172.379 1.337 137.681 1.337 94.879 Z"
+                    android:fillColor="#073709"
+                    android:strokeColor="#061808"
+                    android:strokeWidth="1.33333"
+                    android:strokeMiterLimit="8"
+                    android:fillType="evenOdd"/>
+                <group android:name="group_1">
+                    <path
+                        android:name="path_3"
+                        android:pathData="M 76.213 99.117 C 76.213 102.775 73.284 105.74 69.672 105.74 C 66.06 105.74 63.132 102.775 63.132 99.117 C 63.132 95.459 66.06 92.493 69.672 92.493 C 73.284 92.493 76.213 95.459 76.213 99.117 Z M 110.004 88.078 C 110.004 91.736 107.076 94.701 103.464 94.701 C 99.852 94.701 96.924 91.736 96.924 88.078 C 96.924 84.42 99.852 81.454 103.464 81.454 C 107.076 81.454 110.004 84.42 110.004 88.078 Z M 133.986 94.701 C 132.678 93.376 130.716 93.376 129.408 94.701 L 124.829 99.337 L 118.289 94.48 C 117.417 93.818 116.327 93.597 115.455 94.039 L 100.194 98.454 C 99.758 98.675 99.104 98.896 98.886 99.337 L 93.218 105.078 L 85.805 105.078 C 84.061 105.078 82.535 106.623 82.535 108.389 C 82.535 110.156 84.061 111.701 85.805 111.701 L 94.526 111.701 C 95.398 111.701 96.27 111.259 96.924 110.818 L 102.81 104.857 L 107.388 118.545 L 97.142 125.389 C 96.052 126.052 95.616 127.376 95.616 128.701 L 97.796 144.155 C 98.014 145.701 99.322 147.025 101.066 147.025 L 101.502 147.025 C 103.246 146.805 104.554 145.038 104.336 143.272 L 102.374 129.805 L 111.313 123.844 L 108.914 129.142 C 108.696 129.805 108.478 130.246 108.696 130.909 L 110.877 146.363 C 111.095 147.909 112.403 149.233 114.147 149.233 L 114.583 149.233 C 116.327 149.012 117.635 147.246 117.417 145.48 L 115.455 130.688 L 120.469 119.207 C 120.469 119.207 120.905 117.662 120.905 117 C 120.905 116.117 120.469 114.792 120.469 114.792 L 116.981 101.545 L 123.085 106.182 C 124.393 107.065 126.137 107.065 127.445 105.961 L 133.986 99.337 C 135.294 98.013 135.294 96.026 133.986 94.701 Z"
+                        android:fillColor="#000"
+                        android:strokeWidth="1"/>
+                    <path
+                        android:name="path_4"
+                        android:pathData="M 89.947 117.662 C 89.075 116.117 87.113 115.454 85.587 116.117 L 79.483 119.207 L 74.469 110.818 C 74.032 110.156 73.378 109.493 72.506 109.272 L 57.246 104.857 C 56.156 104.636 54.847 104.857 53.975 105.74 L 47.871 111.922 L 43.511 106.182 C 42.857 104.636 40.677 104.415 39.151 105.298 C 37.842 106.402 37.624 108.61 38.496 109.935 L 45.037 118.766 C 45.691 119.428 46.563 120.091 47.435 120.091 C 48.307 120.091 49.397 119.87 50.051 119.207 L 56.373 112.805 L 52.449 127.818 C 52.231 128.48 52.013 129.363 52.013 130.026 C 52.013 131.35 52.449 132.675 53.321 133.779 L 59.426 143.714 L 55.501 157.844 C 55.065 159.61 55.938 161.376 57.681 162.038 C 57.9 162.038 58.336 162.259 58.554 162.259 C 60.08 162.259 61.388 161.376 61.606 159.831 L 65.966 144.376 C 66.184 143.493 66.184 142.389 65.53 141.727 L 61.824 135.766 L 70.544 141.064 L 70.544 156.96 C 70.544 158.727 72.07 160.272 73.814 160.272 C 75.559 160.272 77.085 158.727 77.085 156.96 L 77.085 139.298 C 77.085 138.194 76.431 137.09 75.559 136.428 L 66.184 130.688 L 70.326 117 L 75.341 125.389 C 75.995 126.493 77.085 126.935 78.175 126.935 C 78.611 126.935 79.265 126.714 79.701 126.493 L 88.421 122.078 C 90.165 121.194 90.819 119.207 89.947 117.662 Z"
+                        android:fillColor="#000"
+                        android:strokeWidth="1"/>
+                </group>
+                <group android:name="group">
+                    <path
+                        android:name="path_2"
+                        android:pathData="M 85.612 50.064 L 68.59 55.804 L 69.819 70.538 C 68.832 70.426 67.836 70.601 66.944 71.045 C 64.915 72.009 63.781 73.913 64.382 75.299 C 64.984 76.687 67.158 77.05 69.186 76.069 C 71.019 75.201 71.952 73.336 71.861 72.238 L 70.671 57.968 L 83.911 53.516 L 84.947 65.93 C 83.94 65.813 82.921 65.992 82.009 66.446 C 79.934 67.441 78.765 69.402 79.41 70.835 C 80.054 72.268 82.257 72.623 84.337 71.634 C 86.097 70.806 87.188 69.322 87.143 68.024 L 85.612 50.064 Z M 62.53 43.476 C 62.082 43.229 61.695 42.879 61.4 42.454 L 61.324 41.544 C 61.279 40.997 60.81 40.593 60.276 40.639 C 59.743 40.686 59.348 41.166 59.394 41.712 L 60.639 56.646 C 59.691 56.559 58.739 56.736 57.882 57.16 C 55.853 58.12 54.718 60.024 55.319 61.416 C 55.922 62.807 58.1 63.165 60.128 62.186 C 61.531 61.514 62.516 60.387 62.77 59.294 L 61.901 48.862 C 62.039 48.956 62.185 49.039 62.334 49.113 C 65.718 50.809 64.208 54.091 65.783 53.968 C 67.806 53.805 67.249 46.136 62.53 43.476 Z"
+                        android:fillColor="#000"
+                        android:strokeWidth="1"/>
+                </group>
+                <path
+                    android:name="path_5"
+                    android:pathData="M 72.689 95.505 C 72.689 99.163 69.761 102.129 66.149 102.129 C 62.536 102.129 59.608 99.163 59.608 95.505 C 59.608 91.847 62.536 88.882 66.149 88.882 C 69.761 88.882 72.689 91.847 72.689 95.505 Z M 106.481 84.466 C 106.481 88.124 103.553 91.09 99.941 91.09 C 96.328 91.09 93.4 88.124 93.4 84.466 C 93.4 80.808 96.328 77.843 99.941 77.843 C 103.553 77.843 106.481 80.808 106.481 84.466 Z M 130.462 91.09 C 129.154 89.765 127.192 89.765 125.884 91.09 L 121.306 95.726 L 114.765 90.869 C 113.893 90.207 112.803 89.986 111.931 90.427 L 96.67 94.843 C 96.234 95.064 95.58 95.285 95.362 95.726 L 89.694 101.466 L 82.282 101.466 C 80.537 101.466 79.011 103.012 79.011 104.778 C 79.011 106.544 80.537 108.09 82.282 108.09 L 91.002 108.09 C 91.874 108.09 92.746 107.648 93.4 107.207 L 99.287 101.246 L 103.865 114.934 L 93.618 121.778 C 92.528 122.44 92.092 123.765 92.092 125.09 L 94.272 140.544 C 94.49 142.089 95.798 143.414 97.542 143.414 L 97.978 143.414 C 99.722 143.193 101.031 141.427 100.813 139.661 L 98.85 126.193 L 107.789 120.232 L 105.391 125.531 C 105.173 126.193 104.955 126.635 105.173 127.297 L 107.353 142.752 C 107.571 144.297 108.879 145.622 110.623 145.622 L 111.059 145.622 C 112.803 145.401 114.111 143.635 113.893 141.869 L 111.931 127.077 L 116.945 115.596 C 116.945 115.596 117.381 114.051 117.381 113.388 C 117.381 112.505 116.945 111.181 116.945 111.181 L 113.457 97.934 L 119.562 102.57 C 120.87 103.453 122.614 103.453 123.922 102.349 L 130.462 95.726 C 131.77 94.401 131.77 92.414 130.462 91.09 Z"
+                    android:fillColor="#ffffff"
+                    android:strokeWidth="1"/>
+                <path
+                    android:name="path_6"
+                    android:pathData="M 86.424 114.051 C 85.552 112.505 83.59 111.843 82.064 112.505 L 75.959 115.596 L 70.945 107.207 C 70.509 106.544 69.855 105.882 68.983 105.661 L 53.722 101.246 C 52.632 101.025 51.324 101.246 50.452 102.129 L 44.347 108.311 L 39.987 102.57 C 39.333 101.025 37.153 100.804 35.627 101.687 C 34.319 102.791 34.101 104.999 34.973 106.323 L 41.513 115.155 C 42.167 115.817 43.039 116.479 43.911 116.479 C 44.783 116.479 45.874 116.258 46.528 115.596 L 52.85 109.194 L 48.926 124.207 C 48.708 124.869 48.49 125.752 48.49 126.414 C 48.49 127.739 48.926 129.064 49.798 130.167 L 55.902 140.103 L 51.978 154.232 C 51.542 155.998 52.414 157.765 54.158 158.427 C 54.376 158.427 54.812 158.648 55.03 158.648 C 56.556 158.648 57.864 157.765 58.082 156.219 L 62.442 140.765 C 62.66 139.882 62.66 138.778 62.006 138.115 L 58.3 132.154 L 67.021 137.453 L 67.021 153.349 C 67.021 155.115 68.547 156.661 70.291 156.661 C 72.035 156.661 73.561 155.115 73.561 153.349 L 73.561 135.687 C 73.561 134.583 72.907 133.479 72.035 132.817 L 62.66 127.077 L 66.803 113.388 L 71.817 121.778 C 72.471 122.882 73.561 123.323 74.651 123.323 C 75.087 123.323 75.741 123.103 76.177 122.882 L 84.898 118.466 C 86.642 117.583 87.296 115.596 86.424 114.051 Z M 83.717 47.884 L 66.694 53.625 L 67.924 68.36 C 66.937 68.246 65.941 68.423 65.049 68.866 C 63.019 69.831 61.886 71.733 62.487 73.12 C 63.089 74.508 65.263 74.87 67.291 73.891 C 69.123 73.023 70.056 71.157 69.966 70.059 L 68.776 55.79 L 82.016 51.337 L 83.051 63.751 C 82.045 63.633 81.026 63.813 80.114 64.268 C 78.038 65.261 76.87 67.222 77.515 68.655 C 78.159 70.089 80.362 70.444 82.442 69.454 C 84.201 68.628 85.292 67.142 85.248 65.846 L 83.717 47.884 Z M 60.635 41.297 C 60.186 41.05 59.8 40.7 59.505 40.275 L 59.429 39.364 C 59.384 38.818 58.914 38.413 58.381 38.46 C 57.848 38.506 57.453 38.988 57.499 39.534 L 58.744 54.466 C 57.796 54.379 56.844 54.557 55.987 54.982 C 53.957 55.942 52.822 57.844 53.424 59.236 C 54.027 60.629 56.205 60.985 58.233 60.006 C 59.636 59.336 60.621 58.207 60.875 57.114 L 60.006 46.683 C 60.144 46.776 60.29 46.86 60.439 46.934 C 63.823 48.63 62.313 51.911 63.888 51.789 C 65.911 51.627 65.354 43.957 60.635 41.297 Z"
+                    android:fillColor="#ffffff"
+                    android:strokeWidth="1"/>
+            </group>
+        </vector>
+    </aapt:attr>
+    <target android:name="group_2">
+        <aapt:attr name="android:animation">
+            <objectAnimator
+                android:propertyName="translateX"
+                android:duration="500"
+                android:valueFrom="570"
+                android:valueTo="10"
+                android:valueType="floatType"
+                android:interpolator="@android:interpolator/fast_out_slow_in"/>
+        </aapt:attr>
+    </target>
+    <target android:name="path_7">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="500"
+                    android:duration="1000"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="500"
+                    android:duration="1000"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="m">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="500"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="500"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="u">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="600"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="600"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="s">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="700"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="700"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="i1">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="800"
+                    android:duration="80"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="800"
+                    android:duration="80"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="i2">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="880"
+                    android:duration="20"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="880"
+                    android:duration="20"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="c">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="900"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="900"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="p">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="1000"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="1000"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="a">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="1100"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="1100"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="r">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="1200"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="1200"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="t">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="1300"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="1300"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+    <target android:name="y">
+        <aapt:attr name="android:animation">
+            <set>
+                <objectAnimator
+                    android:propertyName="trimPathEnd"
+                    android:startOffset="1400"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+                <objectAnimator
+                    android:propertyName="strokeAlpha"
+                    android:startOffset="1400"
+                    android:duration="100"
+                    android:valueFrom="0"
+                    android:valueTo="1"
+                    android:valueType="floatType"
+                    android:interpolator="@android:interpolator/fast_out_slow_in"/>
+            </set>
+        </aapt:attr>
+    </target>
+</animated-vector>

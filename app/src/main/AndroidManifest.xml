@@ -15,9 +15,9 @@
     <application
         android:name="com.tinf19.musicparty.App"
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_musicparty_green"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@mipmap/ic_musicparty_green_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicParty">
         <receiver android:name="com.tinf19.musicparty.util.ActionReceiver" />
