@@ -78,6 +78,7 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
     private  com.spotify.protocol.types.Track nowPlaying;
     private com.spotify.protocol.types.Track lastSongTitle;
     private boolean stopped;
+    private boolean previous;
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
 
@@ -103,7 +104,8 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
 
     @Override
     public void stopPlayback() {
-
+        mSpotifyAppRemote.getPlayerApi().seekTo(0);
+        mSpotifyAppRemote.getPlayerApi().pause();
     }
 
     public interface SpotifyPlayerCallback {
@@ -231,11 +233,26 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         return mBinder;
     }
 
+    public boolean isPlaylistEnded() {
+        return que.isPlaylistEnded();
+    }
+
+    public void restartQue() {
+        if(que.size() == 0) {
+            lastSongTitle = null;
+            nowPlaying = null;
+            que.setQueList(new ArrayList<>(playlist));
+        }
+        que.setPlaylistEnded(false);
+        que.next();
+    }
+
     public void next() {
         que.next();
     }
 
     public void back() {
+        previous = true;
         if(playlist.size() - que.size() - 2 >= 0)
             que.back(playlist.get(playlist.size() - que.size() - 2));
         else
@@ -862,12 +879,8 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
     public void togglePlayback() {
         if (pause && getmSpotifyAppRemote() != null) {
             Log.d(TAG, "Size: " + que.size() + " Playlist size: " + playlist.size());
-            if(stopped && que.size() == 0) {
-                lastSongTitle = null;
-                getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:" + playlistID);
-                que.setQueList(new ArrayList<>(playlist));
-            } else if(stopped) {
-                getmSpotifyAppRemote().getPlayerApi().skipNext();
+            if(que.isPlaylistEnded()) {
+                restartQue();
             } else {
                 getmSpotifyAppRemote().getPlayerApi().resume();
             }
@@ -881,21 +894,32 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                 .subscribeToPlayerState()
                 .setEventCallback(playerState -> {
                     final com.spotify.protocol.types.Track track = playerState.track;
-                    que.setTimer(track.duration - playerState.playbackPosition, !playerState.isPaused);
                     if(playerState.isPaused != pause) {
                         if(playerState.isPaused)
                             que.pause();
                         else
                             que.resume();
+                    } else if(playlist.size() != 0 && !playerState.isPaused && (track.duration - playerState.playbackPosition) > Constants.CROSSFADE * 1000) {
+                        que.setTimer(track.duration - playerState.playbackPosition, true);
                     }
 
                     pause = playerState.isPaused;
-                    if(playlist.size() != 0 && (lastSongTitle == null || !nowPlaying.uri.equals(lastSongTitle.uri))) {
-                        nowPlaying = playerState.track;
-                        if(spotifyPlayerCallback != null) {
-                            spotifyPlayerCallback.setNowPlaying(getNowPlaying());
+                    if(playlist.size() != 0) {
+                        nowPlaying = track;
+                        if(lastSongTitle == null || !nowPlaying.uri.equals(lastSongTitle.uri)) {
+                            //if(que.size() > 0 && !nowPlaying.uri.equals(que.getQueList().get(0).getURI()) && !previous);
+                                //que.next();
+                            //else if(previous)
+                             //   previous = false;
+
+                            if(spotifyPlayerCallback != null) {
+                                spotifyPlayerCallback.setNowPlaying(getNowPlaying());
+                            }
+                            lastSongTitle = track;
                         }
-                        lastSongTitle = nowPlaying;
+
+                        if(spotifyPlayerCallback != null)
+                            spotifyPlayerCallback.setPlayImage(pause);
                     }
                     /*if(playlistID != null) {
                         nowPlaying = track;

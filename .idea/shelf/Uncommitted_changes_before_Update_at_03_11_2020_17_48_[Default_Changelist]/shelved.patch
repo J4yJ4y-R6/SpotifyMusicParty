@@ -1,0 +1,229 @@
+Index: app/src/main/java/com/tinf19/musicparty/client/PartyActivity.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tinf19.musicparty.client;\r\n\r\nimport androidx.appcompat.app.AppCompatActivity;\r\n\r\n\r\nimport android.content.ComponentName;\r\nimport android.content.Context;\r\nimport android.content.Intent;\r\nimport android.content.ServiceConnection;\r\nimport android.os.Bundle;\r\nimport android.os.IBinder;\r\nimport android.util.Log;\r\n\r\nimport android.widget.Toast;\r\n\r\n\r\nimport com.tinf19.musicparty.util.Commands;\r\nimport com.tinf19.musicparty.util.Constants;\r\nimport com.tinf19.musicparty.fragments.ExitConnectionFragment;\r\nimport com.tinf19.musicparty.MainActivity;\r\nimport com.tinf19.musicparty.R;\r\nimport com.tinf19.musicparty.fragments.SearchBarFragment;\r\nimport com.tinf19.musicparty.fragments.SearchSongsOutputFragment;\r\nimport com.tinf19.musicparty.fragments.ShowSongFragment;\r\nimport com.tinf19.musicparty.databinding.ActivityPartyBinding;\r\nimport com.tinf19.musicparty.music.Track;\r\n\r\nimport org.json.JSONException;\r\n\r\nimport java.io.IOException;\r\nimport java.util.List;\r\n\r\n\r\npublic class PartyActivity extends AppCompatActivity implements ShowSongFragment.ExitButtonClicked, ExitConnectionFragment.ConfirmExit, SearchBarFragment.SearchForSongs, SearchSongsOutputFragment.AddSongCallback, ClientService.PartyCallback {\r\n\r\n\r\n    ActivityPartyBinding binding;\r\n    private static final String NAME = PartyActivity.class.getName();\r\n    private static String token;\r\n    private boolean mShouldUnbind;\r\n    private ClientService mBoundService;\r\n    private SearchSongsOutputFragment searchSongsOutputFragment;\r\n    private ShowSongFragment showSongFragment;\r\n\r\n    private ServiceConnection mConnection = new ServiceConnection() {\r\n        public void onServiceConnected(ComponentName className, IBinder service) {\r\n            mBoundService = ((ClientService.LocalBinder)service).getService();\r\n            mBoundService.setPartyCallback(PartyActivity.this);\r\n            String partyName = mBoundService.getClientThread().getPartyName();\r\n            if(partyName != null) {\r\n                setPartyName(partyName);\r\n            }\r\n            if(mBoundService.isStopped()) {\r\n                exitService(getString(R.string.service_serverClosed));\r\n            }\r\n        }\r\n\r\n        public void onServiceDisconnected(ComponentName className) {\r\n            mBoundService = null;\r\n        }\r\n    };\r\n\r\n    void doBindService() {\r\n        if (bindService(new Intent(this, ClientService.class),\r\n                mConnection, Context.BIND_AUTO_CREATE)) {\r\n            mShouldUnbind = true;\r\n        } else {\r\n            Log.e(NAME, \"Error: The requested service doesn't \" +\r\n                    \"exist, or this client isn't allowed access to it.\");\r\n        }\r\n    }\r\n\r\n    void doUnbindService() {\r\n        if (mShouldUnbind) {\r\n            // Release information about the service's state.\r\n            unbindService(mConnection);\r\n            mShouldUnbind = false;\r\n        }\r\n    }\r\n\r\n    @Override\r\n    protected void onStart() {\r\n        super.onStart();\r\n    }\r\n\r\n    @Override\r\n    protected void onDestroy() {\r\n        super.onDestroy();\r\n        doUnbindService();\r\n    }\r\n\r\n    @Override\r\n    protected void onCreate(Bundle savedInstanceState) {\r\n        super.onCreate(savedInstanceState);\r\n        token = getIntent().getStringExtra(Constants.TOKEN);\r\n        binding = ActivityPartyBinding.inflate(getLayoutInflater());\r\n        setContentView(binding.getRoot());\r\n        searchSongsOutputFragment = new SearchSongsOutputFragment(this);\r\n        showSongFragment = new ShowSongFragment(this);\r\n\r\n        getSupportFragmentManager().beginTransaction().\r\n                replace(R.id.searchBarFragmentFrame, new SearchBarFragment(this, token), \"SearchBarFragment\").commitAllowingStateLoss();\r\n\r\n        getSupportFragmentManager().beginTransaction().\r\n                replace(R.id.showSongFragmentFrame, showSongFragment , \"ShowSongFragment\").commitAllowingStateLoss();\r\n\r\n      \r\n        Intent serviceIntent = new Intent(this, ClientService.class);\r\n        serviceIntent.putExtra(Constants.TOKEN, token);\r\n        serviceIntent.putExtra(Constants.ADDRESS, getIntent().getStringExtra(Constants.ADDRESS));\r\n        serviceIntent.putExtra(Constants.PASSWORD, getIntent().getStringExtra(Constants.PASSWORD));\r\n        serviceIntent.putExtra(Constants.USERNAME, getIntent().getStringExtra(Constants.USERNAME));\r\n        startService(serviceIntent);\r\n        doBindService();\r\n\r\n    }\r\n\r\n    @Override\r\n    public void exitConnection() {\r\n        getSupportFragmentManager().beginTransaction().\r\n               replace(R.id.showSongFragmentFrame, new ExitConnectionFragment(this), \"ExitConnectionFragment\").commitAllowingStateLoss();\r\n    }\r\n\r\n\r\n\r\n    @Override\r\n    public void denyExit() {\r\n        showShowSongFragment();\r\n    }\r\n\r\n    @Override\r\n    public void acceptExit() {\r\n        new Thread(()->{\r\n            Log.d(NAME, \"User tries to leave the party\");\r\n            try {\r\n                if(mBoundService != null)\r\n                mBoundService.getClientThread().sendMessage(Commands.QUIT, \"User left the channel\");\r\n            } catch (IOException e) {\r\n                Log.e(NAME, e.getMessage(), e);\r\n            }\r\n            exitService(getString(R.string.service_serverDisconnected));\r\n        }).start();\r\n    }\r\n\r\n    @Override\r\n    public String getPartyName() {\r\n        if(mBoundService != null)\r\n            return mBoundService.getClientThread().getPartyName();\r\n        else\r\n            return getString(R.string.text_hintPartyName);\r\n    }\r\n\r\n    @Override\r\n    public void searchForSongs(List<Track> tracks) {\r\n        Log.d(\"ShowSongFragment\", \"back to show\");\r\n        getSupportFragmentManager().beginTransaction().\r\n                replace(R.id.showSongFragmentFrame, searchSongsOutputFragment, \"ShowSongFragment\").commitAllowingStateLoss();\r\n        this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));\r\n    }\r\n\r\n    private void showShowSongFragment() {\r\n        getSupportFragmentManager().beginTransaction().\r\n                replace(R.id.showSongFragmentFrame, showSongFragment , \"ShowSongFragment\").commitAllowingStateLoss();\r\n        new Thread(()->{\r\n            while(!showSongFragment.getStarted());\r\n            if(mBoundService != null) {\r\n                mBoundService.setTrack();\r\n                Log.d(NAME, \"Hidden: \" + showSongFragment.isHidden());\r\n                Log.d(NAME, \"Partyname: \" + mBoundService.getClientThread().getPartyName());\r\n                setPartyName(mBoundService.getClientThread().getPartyName());\r\n            }\r\n        }).start();\r\n    }\r\n\r\n    @Override\r\n    public void onBackPressed() {\r\n        showShowSongFragment();\r\n    }\r\n\r\n    @Override\r\n    public void addSong(Track track) {\r\n            new Thread(() -> {\r\n                try {\r\n                    Log.d(NAME, \"Trying to send message to server\");\r\n                    if(mBoundService != null)\r\n                        mBoundService.getClientThread().sendMessage(Commands.QUEUE, track.serialize());\r\n                } catch (IOException | JSONException e) {\r\n                    Log.e(NAME, e.getMessage(), e);\r\n                }\r\n            }).start();\r\n\r\n    }\r\n\r\n    @Override\r\n    public void setTrack(Track track) {\r\n        Log.d(NAME, \"Now Playing: \" + track.toString());\r\n        runOnUiThread(new Runnable() {\r\n            @Override\r\n            public void run() {\r\n                showSongFragment.showSongs(track);\r\n            }\r\n        });\r\n    }\r\n\r\n    @Override\r\n    public void setPartyName(String partyName) {\r\n        showSongFragment.setPartyName(partyName);\r\n    }\r\n\r\n    @Override\r\n    public void exitService(String text) {\r\n        doUnbindService();\r\n        stopService(new Intent(this, ClientService.class));\r\n        this.runOnUiThread(new Runnable() {\r\n            @Override\r\n            public void run() {\r\n                Toast.makeText(PartyActivity.this, text, Toast.LENGTH_SHORT).show();\r\n            }\r\n        });\r\n        startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/tinf19/musicparty/client/PartyActivity.java	(revision 735d8461249e22d6331518026b4d0ac697a4bb3e)
++++ app/src/main/java/com/tinf19/musicparty/client/PartyActivity.java	(date 1604420460195)
+@@ -14,6 +14,7 @@
+ import android.widget.Toast;
+ 
+ 
++import com.tinf19.musicparty.fragments.LoadingFragment;
+ import com.tinf19.musicparty.util.Commands;
+ import com.tinf19.musicparty.util.Constants;
+ import com.tinf19.musicparty.fragments.ExitConnectionFragment;
+@@ -99,10 +100,7 @@
+         showSongFragment = new ShowSongFragment(this);
+ 
+         getSupportFragmentManager().beginTransaction().
+-                replace(R.id.searchBarFragmentFrame, new SearchBarFragment(this, token), "SearchBarFragment").commitAllowingStateLoss();
+-
+-        getSupportFragmentManager().beginTransaction().
+-                replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
++                replace(R.id.showSongFragmentFrame, new LoadingFragment(), "LoadingFragment").commitAllowingStateLoss();
+ 
+       
+         Intent serviceIntent = new Intent(this, ClientService.class);
+@@ -121,7 +119,13 @@
+                replace(R.id.showSongFragmentFrame, new ExitConnectionFragment(this), "ExitConnectionFragment").commitAllowingStateLoss();
+     }
+ 
++    public void setFragments() {
++        getSupportFragmentManager().beginTransaction().
++                replace(R.id.searchBarFragmentFrame, new SearchBarFragment(this, token), "SearchBarFragment").commitAllowingStateLoss();
+ 
++        getSupportFragmentManager().beginTransaction().
++                replace(R.id.showSongFragmentFrame, showSongFragment , "ShowSongFragment").commitAllowingStateLoss();
++    }
+ 
+     @Override
+     public void denyExit() {
+@@ -209,6 +213,7 @@
+ 
+     @Override
+     public void exitService(String text) {
++        mBoundService.getClientThread().interrupt();
+         doUnbindService();
+         stopService(new Intent(this, ClientService.class));
+         this.runOnUiThread(new Runnable() {
+Index: app/src/main/java/com/tinf19/musicparty/fragments/ExitConnectionFragment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tinf19.musicparty.fragments;\r\n\r\nimport android.graphics.Typeface;\r\nimport android.os.Bundle;\r\n\r\nimport androidx.fragment.app.Fragment;\r\n\r\nimport android.text.Spannable;\r\nimport android.text.Spanned;\r\nimport android.text.style.StyleSpan;\r\nimport android.util.Log;\r\nimport android.view.LayoutInflater;\r\nimport android.view.View;\r\nimport android.view.ViewGroup;\r\nimport android.widget.Button;\r\nimport android.widget.TextView;\r\n\r\nimport com.tinf19.musicparty.R;\r\n\r\npublic class ExitConnectionFragment extends Fragment {\r\n\r\n    public ConfirmExit confirmExit;\r\n    private TextView partyNameTextView;\r\n    private static final String NAME = ExitConnectionFragment.class.getName();\r\n\r\n    public interface ConfirmExit {\r\n        void denyExit();\r\n        void acceptExit();\r\n        String getPartyName();\r\n    }\r\n\r\n    public ExitConnectionFragment(ConfirmExit confirmExit) {\r\n        this.confirmExit = confirmExit;\r\n    }\r\n\r\n    @Override\r\n    public void onCreate(Bundle savedInstanceState) {\r\n        super.onCreate(savedInstanceState);\r\n        if (getArguments() != null) {\r\n        }\r\n    }\r\n\r\n    @Override\r\n    public void onStart() {\r\n        super.onStart();\r\n        setPartyName(confirmExit.getPartyName());\r\n    }\r\n\r\n    @Override\r\n    public View onCreateView(LayoutInflater inflater, ViewGroup container,\r\n                             Bundle savedInstanceState) {\r\n        View view = inflater.inflate(R.layout.fragment_exit_connection, container, false);\r\n        //binding = ActivityPartyBinding.inflate(getLayoutInflater());\r\n\r\n        partyNameTextView = view.findViewById(R.id.leavePartyNameTextView);\r\n        Button denyButton = view.findViewById(R.id.denyLeavePartyButton);\r\n        Button acceptButton = view.findViewById(R.id.acceptLeavePartyButton);\r\n        denyButton.setOnClickListener(v -> confirmExit.denyExit());\r\n        acceptButton.setOnClickListener(v -> confirmExit.acceptExit());\r\n\r\n        return view;\r\n    }\r\n\r\n    public void setPartyName(String name) {\r\n        if(partyNameTextView != null) {\r\n            Log.d(NAME, name);\r\n            partyNameTextView.setText(name, TextView.BufferType.SPANNABLE);\r\n            Spannable spannable = (Spannable)partyNameTextView.getText();\r\n            int start = 0;\r\n            int end = name.length();\r\n            spannable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);\r\n        }\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/tinf19/musicparty/fragments/ExitConnectionFragment.java	(revision 735d8461249e22d6331518026b4d0ac697a4bb3e)
++++ app/src/main/java/com/tinf19/musicparty/fragments/ExitConnectionFragment.java	(date 1604417324947)
+@@ -62,7 +62,7 @@
+     }
+ 
+     public void setPartyName(String name) {
+-        if(partyNameTextView != null) {
++        if(partyNameTextView != null && name != null) {
+             Log.d(NAME, name);
+             partyNameTextView.setText(name, TextView.BufferType.SPANNABLE);
+             Spannable spannable = (Spannable)partyNameTextView.getText();
+Index: app/src/main/java/com/tinf19/musicparty/client/ClientService.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.tinf19.musicparty.client;\r\n\r\nimport android.app.Notification;\r\nimport android.app.PendingIntent;\r\nimport android.app.Service;\r\nimport android.content.Intent;\r\nimport android.os.Binder;\r\nimport android.os.IBinder;\r\nimport android.util.Log;\r\n\r\nimport androidx.core.app.NotificationCompat;\r\n\r\nimport com.tinf19.musicparty.util.Commands;\r\nimport com.tinf19.musicparty.util.Constants;\r\nimport com.tinf19.musicparty.R;\r\nimport com.tinf19.musicparty.music.Track;\r\n\r\nimport org.json.JSONException;\r\n\r\nimport java.io.BufferedReader;\r\nimport java.io.DataOutputStream;\r\nimport java.io.IOException;\r\nimport java.io.InputStreamReader;\r\nimport java.net.Socket;\r\nimport java.nio.charset.StandardCharsets;\r\nimport java.util.ArrayList;\r\nimport java.util.List;\r\n\r\nimport static com.tinf19.musicparty.App.CHANNEL_ID;\r\n\r\npublic class ClientService extends Service {\r\n\r\n\r\n    private static final String NAME = ClientService.class.getName();\r\n    private static final int PORT = 1403;\r\n    private boolean stopped;\r\n    private final IBinder mBinder = new LocalBinder();\r\n    private ClientThread clientThread;\r\n    private Socket clientSocket;\r\n    private boolean first = true;\r\n    private List<Track> queue = new ArrayList<>();\r\n    private PartyCallback partyCallback;\r\n    private Track nowPlaying;\r\n\r\n    public interface PartyCallback {\r\n        void setTrack(Track track);\r\n        void setPartyName(String partyName);\r\n        void exitService(String text);\r\n    }\r\n\r\n    public class LocalBinder extends Binder {\r\n        ClientService getService() {\r\n            return ClientService.this;\r\n        }\r\n    }\r\n\r\n    public ClientService() {\r\n    }\r\n\r\n    public boolean isStopped() {\r\n        return stopped;\r\n    }\r\n\r\n    public void setPartyCallback(PartyCallback partyCallback) {\r\n        this.partyCallback = partyCallback;\r\n    }\r\n\r\n    @Override\r\n    public void onCreate() {\r\n        super.onCreate();\r\n        Intent notificationIntent = new Intent(this, PartyActivity.class);\r\n        PendingIntent pendingIntent = PendingIntent.getActivity(this,\r\n                0, notificationIntent, 0);\r\n\r\n        Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)\r\n                .setContentTitle(getString(R.string.service_name))\r\n                .setContentText(getString(R.string.service_clientMsg))\r\n                .setSmallIcon(R.drawable.ic_launcher_foreground)\r\n                .setContentIntent(pendingIntent)\r\n                .build();\r\n        startForeground(1, notification);\r\n    }\r\n\r\n    @Override\r\n    public int onStartCommand(Intent intent, int flags, int startId) {\r\n\r\n        if(first) connect(intent.getStringExtra(Constants.ADDRESS), intent.getStringExtra(Constants.PASSWORD), intent.getStringExtra(Constants.USERNAME));\r\n        //password = intent.getStringExtra(\"password\");\r\n\r\n        return START_NOT_STICKY;\r\n    }\r\n\r\n    public void connect(String ipAddress, String password, String username){\r\n        clientThread = new ClientThread(ipAddress, password, username);\r\n        clientThread.start();\r\n    }\r\n\r\n    public ClientThread getClientThread() {\r\n        return clientThread;\r\n    }\r\n\r\n    @Override\r\n    public IBinder onBind(Intent intent) {\r\n        return mBinder;\r\n    }\r\n\r\n\r\n    public void exit() throws IOException {\r\n        stopped = true;\r\n        clientThread.out.close();\r\n        clientThread.input.close();\r\n        clientSocket.close();\r\n        partyCallback.exitService(getString(R.string.service_serverClosed));\r\n    }\r\n\r\n    public void setTrack() {\r\n        new Thread(()->{\r\n            if(nowPlaying != null)\r\n                partyCallback.setTrack(nowPlaying);\r\n        }).start();\r\n    }\r\n\r\n\r\n    class ClientThread extends Thread {\r\n\r\n        private String address;\r\n        private BufferedReader input;\r\n        private DataOutputStream out;\r\n        private String password;\r\n        private String line;\r\n        private String username;\r\n        private String partyName;\r\n\r\n\r\n        public ClientThread(String address, String password, String username) {\r\n            this.address = address;\r\n            this.password = password;\r\n            this.username = username;\r\n        }\r\n\r\n        public String getPartyName() {\r\n            return partyName;\r\n        }\r\n\r\n        public void sendMessage(Commands commands, String message) throws IOException {\r\n            Log.d(NAME, String.format(\"~%s~%s\\n\\r\" , commands.toString(), message));\r\n            out.writeBytes(String.format(\"~%s~%s\\n\\r\" , commands.toString(), message));\r\n            out.flush();\r\n        }\r\n\r\n        @Override\r\n        public void run() {\r\n            try {\r\n                Log.d(NAME, \"Try to login to \" + address + \":\" + PORT + \" with password \" + this.password);\r\n                clientSocket = new Socket(this.address, PORT);\r\n                input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.ISO_8859_1));\r\n                out = new DataOutputStream(clientSocket.getOutputStream());\r\n                sendMessage(Commands.LOGIN, this.username + \"~\" + this.password);\r\n                Log.d(NAME, \"Connect successful\");\r\n                while (!this.isInterrupted() && !clientSocket.isClosed())  {\r\n                    line = input.readLine();\r\n                    if (line != null) {\r\n                        String [] parts = line.split(\"~\");\r\n                        String attribute = \"\";\r\n                        if (parts.length > 2)\r\n                            attribute = parts[2];\r\n                        if (parts.length > 1) {\r\n                            Commands command = Commands.valueOf(parts[1]);\r\n                            switch (command) {\r\n                                case LOGIN:\r\n                                    partyName = attribute;\r\n                                    if (parts.length > 3) {\r\n                                        nowPlaying = new Track(parts[3]);\r\n                                        partyCallback.setTrack(nowPlaying);\r\n                                    }\r\n                                    Log.d(NAME, partyName);\r\n                                    if(partyCallback != null) {\r\n                                        partyCallback.setPartyName(partyName);\r\n                                    }\r\n                                    break;\r\n                                case QUIT:\r\n                                    Log.d(NAME, \"Server has been closed\");\r\n                                    exit();\r\n                                    return;\r\n                                case QUEUE:\r\n                                    queue.add(new Track(attribute));\r\n                                    Log.d(NAME, attribute);\r\n                                    break;\r\n                                case PLAYING:\r\n                                     Log.d(NAME, \"Playing: \" + attribute);\r\n                                     nowPlaying = new Track(attribute);\r\n                                     partyCallback.setTrack(nowPlaying);\r\n                                     break;\r\n                            }\r\n                        }\r\n                    }\r\n                }\r\n            } catch (IOException | JSONException e) {\r\n                Log.e(NAME, e.getMessage(), e);\r\n                stopped = true;\r\n            }\r\n        }\r\n    }\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/tinf19/musicparty/client/ClientService.java	(revision 735d8461249e22d6331518026b4d0ac697a4bb3e)
++++ app/src/main/java/com/tinf19/musicparty/client/ClientService.java	(date 1604420460201)
+@@ -33,6 +33,7 @@
+ 
+     private static final String NAME = ClientService.class.getName();
+     private static final int PORT = 1403;
++    private static final short LOADING_TIME = 5;
+     private boolean stopped;
+     private final IBinder mBinder = new LocalBinder();
+     private ClientThread clientThread;
+@@ -152,6 +153,16 @@
+         public void run() {
+             try {
+                 Log.d(NAME, "Try to login to " + address + ":" + PORT + " with password " + this.password);
++                new Thread(() -> {
++                    try {
++                        Thread.sleep(LOADING_TIME * 1000);
++                    } catch (InterruptedException e) {
++                        e.printStackTrace();
++                    }
++                    Log.d(NAME, LOADING_TIME + " Seconds are over");
++                    if(clientSocket == null)
++                        partyCallback.exitService(getString(R.string.service_clientConnectionError));
++                }).start();
+                 clientSocket = new Socket(this.address, PORT);
+                 input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.ISO_8859_1));
+                 out = new DataOutputStream(clientSocket.getOutputStream());
+@@ -198,6 +209,7 @@
+             } catch (IOException | JSONException e) {
+                 Log.e(NAME, e.getMessage(), e);
+                 stopped = true;
++                partyCallback.exitService(getString(R.string.service_serverDisconnected));
+             }
+         }
+     }
+Index: app/src/main/res/values/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><resources>\r\n    <string name=\"app_name\">MusicParty</string>\r\n    <string name=\"text_ip_address\">IP Addresse</string>\r\n    <string name=\"app_password\">Passwort</string>\r\n    <string name=\"text_connect\">Verbinden</string>\r\n    <string name=\"app_username\">Benutzername</string>\r\n    <string name=\"text_playbutton\">Lied stoppen/spielen</string>\r\n    <string name=\"text_next\">Next</string>\r\n    <string name=\"text_stopServer\">Server stoppen</string>\r\n    <string name=\"text_server\">Server</string>\r\n    <string name=\"text_client\">Client</string>\r\n    <!-- TODO: leaveParty mit formatString-->\r\n    <string name=\"text_leaveParty\">Möchtest du die Party verlassen von</string>\r\n    <string name=\"text_hintPartyName\">Party Name</string>\r\n    <string name=\"text_leave\">Verlassen</string>\r\n    <string name=\"text_stay\">Bleiben</string>\r\n    <string name=\"text_songtitel\">Songtitel</string>\r\n    <string name=\"text_albumname\">Albumname</string>\r\n    <string name=\"text_kuenstler\">Künstler*in</string>\r\n    <string name=\"text_verbunden_mit\">Verbunden mit</string>\r\n    <string name=\"text_songcover\">SongCover</string>\r\n\r\n    <string name=\"service_channelName\">Music Party Service Channel</string>\r\n    <string name=\"service_name\">MusicParty</string>\r\n    <string name=\"service_clientMsg\">Du bist Teil einer MusicParty</string>\r\n    <string name=\"service_serverMsg\">Du hostest eine MusicParty</string>\r\n    <string name=\"service_serverClosed\">Der Host hat die Party beendet</string>\r\n    <string name=\"service_serverConnected\">Du bist Teil einer MusicParty</string>\r\n    <string name=\"service_serverDisconnected\">Du hast die MusicParty verlassen</string>\r\n    <string name=\"service_playlistDescription\">Deine Playlist aus der MusicParty.</string>\r\n\r\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/values/strings.xml	(revision 735d8461249e22d6331518026b4d0ac697a4bb3e)
++++ app/src/main/res/values/strings.xml	(date 1604418499371)
+@@ -19,14 +19,18 @@
+     <string name="text_kuenstler">Künstler*in</string>
+     <string name="text_verbunden_mit">Verbunden mit</string>
+     <string name="text_songcover">SongCover</string>
++    <string name="text_loadingConnection">Verbindung zum Server wird hergestellt</string>
+ 
+     <string name="service_channelName">Music Party Service Channel</string>
+     <string name="service_name">MusicParty</string>
+     <string name="service_clientMsg">Du bist Teil einer MusicParty</string>
++    <string name="service_clientConnectionError">Es konnte keine Verbindung zum Host hergestellt werden</string>
+     <string name="service_serverMsg">Du hostest eine MusicParty</string>
+     <string name="service_serverClosed">Der Host hat die Party beendet</string>
+     <string name="service_serverConnected">Du bist Teil einer MusicParty</string>
+     <string name="service_serverDisconnected">Du hast die MusicParty verlassen</string>
+     <string name="service_playlistDescription">Deine Playlist aus der MusicParty.</string>
++    <!-- TODO: Remove or change this placeholder text -->
++    <string name="hello_blank_fragment">Hello blank fragment</string>
+ 
+ </resources>
+\ No newline at end of file
+Index: app/src/main/res/layout/fragment_loading.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/fragment_loading.xml	(date 1604418261041)
++++ app/src/main/res/layout/fragment_loading.xml	(date 1604418261041)
+@@ -0,0 +1,37 @@
++<?xml version="1.0" encoding="utf-8"?>
++<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
++    xmlns:app="http://schemas.android.com/apk/res-auto"
++    xmlns:tools="http://schemas.android.com/tools"
++    android:id="@+id/loadingPanel"
++    android:layout_width="match_parent"
++    android:layout_height="match_parent"
++    android:gravity="center" >
++
++    <androidx.constraintlayout.widget.ConstraintLayout
++        android:layout_width="match_parent"
++        android:layout_height="match_parent">
++
++        <ProgressBar
++            android:id="@+id/progressBar"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:indeterminate="true"
++            app:layout_constraintBottom_toBottomOf="parent"
++            app:layout_constraintEnd_toEndOf="parent"
++            app:layout_constraintStart_toStartOf="parent"
++            app:layout_constraintTop_toTopOf="parent" />
++
++        <TextView
++            android:id="@+id/textView2"
++            android:layout_width="wrap_content"
++            android:layout_height="wrap_content"
++            android:layout_marginBottom="40dp"
++            android:text="@string/text_loadingConnection"
++            android:textAlignment="center"
++            android:textSize="24sp"
++            app:layout_constraintBottom_toTopOf="@+id/progressBar"
++            app:layout_constraintEnd_toEndOf="parent"
++            app:layout_constraintStart_toStartOf="parent" />
++    </androidx.constraintlayout.widget.ConstraintLayout>
++
++</RelativeLayout>
+Index: app/src/main/java/com/tinf19/musicparty/fragments/LoadingFragment.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/java/com/tinf19/musicparty/fragments/LoadingFragment.java	(date 1604417677422)
++++ app/src/main/java/com/tinf19/musicparty/fragments/LoadingFragment.java	(date 1604417677422)
+@@ -0,0 +1,35 @@
++package com.tinf19.musicparty.fragments;
++
++import android.os.Bundle;
++
++import androidx.fragment.app.Fragment;
++
++import android.view.LayoutInflater;
++import android.view.View;
++import android.view.ViewGroup;
++
++import com.tinf19.musicparty.R;
++
++/**
++ * A simple {@link Fragment} subclass.
++ * Use the {@link LoadingFragment#newInstance} factory method to
++ * create an instance of this fragment.
++ */
++public class LoadingFragment extends Fragment {
++
++    public LoadingFragment() {
++        // Required empty public constructor
++    }
++
++    @Override
++    public void onCreate(Bundle savedInstanceState) {
++        super.onCreate(savedInstanceState);
++    }
++
++    @Override
++    public View onCreateView(LayoutInflater inflater, ViewGroup container,
++                             Bundle savedInstanceState) {
++        // Inflate the layout for this fragment
++        return inflater.inflate(R.layout.fragment_loading, container, false);
++    }
++}
+\ No newline at end of file

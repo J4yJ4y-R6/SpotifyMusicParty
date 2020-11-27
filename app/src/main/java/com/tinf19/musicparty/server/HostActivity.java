@@ -414,7 +414,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     public void nextTrack() {
         if (mBoundService != null)
-            mBoundService.next();
+            if(!mBoundService.isPlaylistEnded())
+                mBoundService.next();
+            else
+                mBoundService.restartQue();
     }
 
     @Override
