@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_margin="10dp"
-    android:background="@drawable/playlists_cards_background"
+    android:background="@color/transparent"
     android:orientation="vertical"
     android:paddingLeft="5dp"
     android:paddingRight="5dp">

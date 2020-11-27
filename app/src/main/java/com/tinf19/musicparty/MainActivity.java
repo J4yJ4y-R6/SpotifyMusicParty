@@ -48,26 +48,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void animateClick(View view) {
-        ImageView v = (ImageView) view;
-        Drawable d = v.getDrawable();
-        if(d instanceof AnimatedVectorDrawableCompat) {
-            AnimatedVectorDrawableCompat avd = (AnimatedVectorDrawableCompat) d;
-            avd.start();
-        } else if(d instanceof AnimatedVectorDrawable) {
-            AnimatedVectorDrawable avd = (AnimatedVectorDrawable) d;
-            avd.start();
-        }
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         //loginToSpotify();
-        binding.button.setEnabled(true);
-        binding.button2.setEnabled(true);
+        binding.createPartyCardView.setEnabled(true);
+        binding.joinPartyCardView.setEnabled(true);
     }
 
     public void changeHost(View view){
@@ -106,8 +94,8 @@ public class MainActivity extends AppCompatActivity {
                     token = response.getAccessToken();
                     Log.d(TAG, "Expires in: " + response.getExpiresIn());
                     Log.d(TAG, "Token gained successful: " + token);
-                    binding.button.setEnabled(true);
-                    binding.button2.setEnabled(true);
+                    binding.createPartyCardView.setEnabled(true);
+                    binding.joinPartyCardView.setEnabled(true);
                     break;
                 // Auth flow returned an error
                 case ERROR:
@@ -124,6 +112,14 @@ public class MainActivity extends AppCompatActivity {
                     Log.e(TAG, "Something went wrong");
             }
         }
+    }
+
+    public void showInfoText(View view) {
+        binding.infoCardView.setVisibility(View.VISIBLE);
+    }
+
+    public void hideInfoText(View view) {
+        binding.infoCardView.setVisibility(View.INVISIBLE);
     }
 
 

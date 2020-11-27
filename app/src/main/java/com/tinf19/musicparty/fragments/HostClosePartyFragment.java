@@ -18,6 +18,8 @@ import android.widget.Toast;
 
 import com.tinf19.musicparty.R;
 
+import org.json.JSONException;
+
 public class HostClosePartyFragment extends Fragment {
 
     private static final String TAG = HostClosePartyFragment.class.getName();
@@ -27,8 +29,8 @@ public class HostClosePartyFragment extends Fragment {
 
     public interface ClosePartyCallback {
         void denyEndParty();
-        void acceptEndParty(boolean save);
-        boolean savePlaylistInSharedPreferences(String name);
+        void acceptEndParty();
+        void createPlaylistFromArrayList(String name) throws JSONException;
     }
 
     public HostClosePartyFragment(ClosePartyCallback closePartyCallback) {
@@ -75,15 +77,16 @@ public class HostClosePartyFragment extends Fragment {
                     if(savePlaylistNameEditText != null) {
                         String playlistName = savePlaylistNameEditText.getText().toString();
                         if(!playlistName.equals("")) {
-                            if(!closePartyCallback.savePlaylistInSharedPreferences(playlistName))
-                                Toast.makeText(getContext(), getString(R.string.text_toastPlaylistNotSaved), Toast.LENGTH_SHORT).show();
-                            else
-                                closePartyCallback.acceptEndParty(true);
+                            try {
+                                closePartyCallback.createPlaylistFromArrayList(playlistName);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         } else {
                             if(savePlaylist) {
                                 Toast.makeText(getContext(), getString(R.string.text_toastPlaylistNameNeeded), Toast.LENGTH_SHORT).show();
                             } else {
-                                closePartyCallback.acceptEndParty(false);
+                                closePartyCallback.acceptEndParty();
                             }
                         }
                     }

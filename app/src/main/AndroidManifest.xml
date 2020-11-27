@@ -38,7 +38,8 @@
             tools:replace="screenOrientation"/>
         <activity android:name="com.tinf19.musicparty.client.PartyActivity"
             android:screenOrientation="portrait"/>
-        <activity android:name="com.tinf19.musicparty.client.ClientActivity">
+        <activity android:name="com.tinf19.musicparty.client.ClientActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -50,10 +51,12 @@
         </activity>
         <activity
             android:name="com.spotify.sdk.android.auth.LoginActivity"
+            android:screenOrientation="portrait"
             android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
         <activity android:name="com.tinf19.musicparty.server.HostActivity"
             android:screenOrientation="portrait"/>
-        <activity android:name="com.tinf19.musicparty.MainActivity">
+        <activity android:name="com.tinf19.musicparty.MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

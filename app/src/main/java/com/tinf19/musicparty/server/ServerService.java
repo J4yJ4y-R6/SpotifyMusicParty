@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Binder;
 import android.os.Parcel;
@@ -113,6 +115,9 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         void showDefault();
         void connect(HostActivity.ConnectionCallback connectionCallback);
         void reloadPlaylistFragment();
+        void addToSharedPreferances(String name, String id);
+        void acceptEndParty();
+        void notifyFavPlaylistAdapter();
     }
 
     public interface AfterCallback {
@@ -360,7 +365,7 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         });
     }
 
-    private void createPlaylist(String name) throws JSONException {
+    public void createPlaylist(String name, boolean exit) throws JSONException {
         if (userID == null ) return;
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
@@ -401,14 +406,16 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                     Log.d(TAG,"Request Successful. New playlist has been created.");
                 }
                 String [] uri = response.header("Location").split("/");
-                playlistID = uri[uri.length-1];
-                Log.d(TAG, playlistID);
-//                try {
-//                    playlist.add(new Track("600HVBpzF1WfBdaRwbEvLz", "Frozen", new Artist[]{new Artist("tsads", "Disney")}, "test", 0, "Disner"));
-//                    addItem("spotify:track:600HVBpzF1WfBdaRwbEvLz", "Frozen");
-//                } catch (JSONException e) {
-//                    Log.e(TAG, e.getMessage(), e);
-//                }
+                String id = uri[uri.length-1];
+                Log.d(TAG, id);
+                if(spotifyPlayerCallback != null) {
+                    spotifyPlayerCallback.addToSharedPreferances(name, id);
+                }
+                try {
+                    addItemsToPlaylist(id, 0, exit);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
                 response.close();
             }
         });
@@ -580,18 +587,24 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         });
     }
 
-    public void addItem(String uri, String name) throws JSONException {
+    public void addItemsToPlaylist(String id, int page, boolean exit) throws JSONException {
+        Log.d(TAG, "addItemsToPlaylist: " + page);
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
                 .scheme("https")
                 .host(Constants.HOST)
                 .addPathSegment("v1")
                 .addPathSegment("playlists")
-                .addPathSegment(playlistID)
+                .addPathSegment(id)
                 .addPathSegment("tracks")
-                .addQueryParameter("uris", uri)
                 .build();
-        RequestBody body = RequestBody.create(new byte[]{}, null);
+        JSONArray jsonArray = new JSONArray();
+        for(int i = page * 100; i < (Math.min(playlist.size(), (page + 1) * 100)); i++) {
+            jsonArray.put(playlist.get(i).getURI());
+        }
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("uris", jsonArray);
+        RequestBody body = RequestBody.create(jsonObject.toString(), Constants.JSON);
         Log.d(TAG, "Making request to " + completeURL.toString());
         Request request = new Request.Builder()
                 .url(completeURL)
@@ -613,19 +626,15 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                     Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(TAG,"Request Successful. Track " + name + " has been added.");
-                    size++;
-                    if (size == 1) {
-                        mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:" + playlistID);
-                        mSpotifyAppRemote.getPlayerApi().setRepeat(0);
-
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                while(pause);
-                                //repeatMode("context");
-                            }
-                        }).start();
+                    if(playlist.size() >= ((page+1) * 100)) {
+                        try {
+                            addItemsToPlaylist(id, page+1, exit);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        if(spotifyPlayerCallback != null && exit)
+                            spotifyPlayerCallback.acceptEndParty();
                     }
                 }
                 response.close();
@@ -738,7 +747,7 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         });
     }
 
-    public void updatePlaylistCover(String id, Bitmap image, ShowSavedPlaylistRecycAdapter adapter) {
+    public void updatePlaylistCover(String id, Bitmap image) {
         OkHttpClient client = new OkHttpClient();
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
@@ -775,8 +784,8 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                     Log.d(TAG, response.body().string());
                     throw new IOException("Error : " + response);
                 }else {
-                    Log.d(TAG,"Request Successful. Playlist cover changed to " + response.body().string());
-                    adapter.notifyDataSetChanged();
+                    Log.d(TAG,"Request Successful. Playlist cover changed");
+                    spotifyPlayerCallback.notifyFavPlaylistAdapter();
                 }
                 response.close();
             }

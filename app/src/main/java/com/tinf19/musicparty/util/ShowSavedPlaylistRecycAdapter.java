@@ -67,6 +67,7 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
         void playFavoritePlaylist(String id, ArrayList<String> idList);
         void changePlaylistName(String name, String id);
         void deletePlaylist(String id);
+        void copyPlaylistToSpotify(String name);
     }
 
     public ShowSavedPlaylistRecycAdapter(ArrayList<Playlist> playlists, GalleryCallback gCallback, FavoritePlaylistCallback fCallback) {
@@ -191,7 +192,6 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
                                 .setNegativeButton("", new DialogInterface.OnClickListener() {
                                     @Override
                                     public void onClick(DialogInterface dialog, int which) {
-
                                         new AlertDialog.Builder(context)
                                                 .setTitle(context.getString(R.string.text_delete))
                                                 .setMessage(context.getString(R.string.text_chooseDeleteOption_dialog))

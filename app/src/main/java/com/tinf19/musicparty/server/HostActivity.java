@@ -214,6 +214,12 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+/*        SharedPreferences savePlaylistMemory = this.getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = savePlaylistMemory.edit();
+        editor.clear();
+        editor.apply();*/
+
         setContentView(R.layout.activity_host_party);
 
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
@@ -382,9 +388,48 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
+    public void addToSharedPreferances(String name, String id) {
+        SharedPreferences savePlaylistMemory = this.getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
+        if(!savePlaylistMemory.getString("29", "").equals(""))
+            Toast.makeText(this, getString(R.string.text_toastPlaylistNotSaved), Toast.LENGTH_LONG).show();
+        SharedPreferences.Editor editor = savePlaylistMemory.edit();
+        JSONObject playlist = new JSONObject();
+        try {
+            playlist.put("name", name);
+            playlist.put("id", id);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        for(int i = 0; i < 30; i++) {
+            try {
+                if(savePlaylistMemory.getString("" + i, null) == null || id.equals(new JSONObject(savePlaylistMemory.getString("" + i, "")).getString("id"))) {
+                    editor.putString("" + i, playlist.toString());
+                    break;
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        editor.apply();
+    }
+
+    @Override
     public void deletePlaylist(String id) {
-        //if(mBoundService != null)
-        //    mBoundService.deletePlaylist(id);
+        notifyFavPlaylistAdapter();
+        if(mBoundService != null)
+            mBoundService.deletePlaylist(id);
+    }
+
+    @Override
+    public void copyPlaylistToSpotify(String name) {
+        if(mBoundService != null) {
+            try {
+                mBoundService.createPlaylist(name, false);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     //    Methods for ShowSongFragment
@@ -543,43 +588,27 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void acceptEndParty(boolean save) {
-        if(!save && mBoundService != null) mBoundService.deletePlaylist(mBoundService.getPlaylistID());
+    public void acceptEndParty() {
+//        if(!save && mBoundService != null) mBoundService.deletePlaylist(mBoundService.getPlaylistID());
         stopService();
     }
 
     @Override
-    public boolean savePlaylistInSharedPreferences(String name) {
-        SharedPreferences savePlaylistMemory = this.getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
-        if(!savePlaylistMemory.getString("29", "").equals(""))
-            return false;
-        SharedPreferences.Editor editor = savePlaylistMemory.edit();
-        JSONObject playlist = new JSONObject();
-        String id = "";
-        try {
-            playlist.put("name", name);
-            if(mBoundService != null) {
-                id = mBoundService.getPlaylistID();
-                playlist.put("id", id);
-                mBoundService.updatePlaylistName(name, id);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        for(int i = 0; i < 30; i++) {
-            try {
-                if(savePlaylistMemory.getString("" + i, null) == null || id.equals(new JSONObject(savePlaylistMemory.getString("" + i, "")).getString("id"))) {
-                    editor.putString("" + i, playlist.toString());
-                    break;
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        editor.apply();
-        return true;
+    public void notifyFavPlaylistAdapter() {
+        Fragment frg = null;
+        frg = getSupportFragmentManager().findFragmentByTag("ShowSavedPlaylistFragment");
+        final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.detach(frg);
+        ft.attach(frg);
+        ft.commit();
     }
+
+    @Override
+    public void createPlaylistFromArrayList(String name) throws JSONException {
+        if(mBoundService != null)
+            mBoundService.createPlaylist(name, true);
+    }
+
 
 
 //    Methods for PartyPeople
@@ -625,13 +654,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    public void changePlaylistCover(String id, Bitmap image, ShowSavedPlaylistRecycAdapter adapter) {
+    public void changePlaylistCover(String id, Bitmap image) {
         if(mBoundService != null) {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     Log.d(TAG, "run: " + id);
-                    mBoundService.updatePlaylistCover(id, image, adapter);
+                    mBoundService.updatePlaylistCover(id, image);
                 }
             }).start();
         }

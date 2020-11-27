@@ -65,11 +65,11 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
     private ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback favoritePlaylistCallback;
     private String playlistID;
     private String playlistCoverUrl;
-    private ShowSavedPlaylistRecycAdapter showSavedPlaylistRecycAdapter;
+    public ShowSavedPlaylistRecycAdapter showSavedPlaylistRecycAdapter;
     private int counter;
 
     public interface ShowSavedPlaylistCallback extends ForAllCallback {
-        void changePlaylistCover(String id, Bitmap image, ShowSavedPlaylistRecycAdapter adapter);
+        void changePlaylistCover(String id, Bitmap image);
     }
 
     public ShowSavedPlaylistsFragment(ShowSavedPlaylistCallback favoritePlaylistsCallback, ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback favoritePlaylistCallback) {
@@ -150,6 +150,21 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
         }
 
         return view;
+    }
+
+    public void updateRecyclerView() {
+        Log.d(TAG, "updateRecyclerView: notify");
+        getActivity().runOnUiThread( () -> {
+            Log.d(TAG, "updateRecyclerView: runonui");
+            try {
+                Thread.sleep(2000);
+                Log.d(TAG, "updateRecyclerView: wait over");
+                showSavedPlaylistRecycAdapter.notifyDataSetChanged();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        });
     }
 
     public int getScreenOrientation()
@@ -257,7 +272,7 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
                         Toast.makeText(getActivity(), "Dein Bild ist zu groß. Die Maximalgröße für Playlist-Cover ist 250KB", Toast.LENGTH_LONG).show();
                     else {
                         if(playlistID != null) {
-                            favoritePlaylistsCallback.changePlaylistCover(playlistID, scaledBitmap, showSavedPlaylistRecycAdapter);
+                            favoritePlaylistsCallback.changePlaylistCover(playlistID, scaledBitmap);
                             playlistID = "";
                         }
                         else
@@ -265,7 +280,7 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
                     }
                 } else {
                     if(playlistID != null) {
-                        favoritePlaylistsCallback.changePlaylistCover(playlistID, selectedImage, showSavedPlaylistRecycAdapter);
+                        favoritePlaylistsCallback.changePlaylistCover(playlistID, selectedImage);
                         playlistID = "";
                     }
                     else
