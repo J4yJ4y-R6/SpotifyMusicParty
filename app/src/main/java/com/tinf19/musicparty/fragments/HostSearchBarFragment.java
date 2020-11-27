@@ -240,7 +240,7 @@ public class HostSearchBarFragment extends Fragment {
                 String [] imageFull = track
                         .getJSONObject("album")
                         .getJSONArray("images")
-                        .getJSONObject(2)
+                        .getJSONObject(1)
                         .getString("url").split("/");
                 tracks.add(
                         new Track(
