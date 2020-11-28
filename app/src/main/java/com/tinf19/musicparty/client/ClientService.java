@@ -11,7 +11,7 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.tinf19.musicparty.util.ActionReceiver;
+import com.tinf19.musicparty.receiver.ActionReceiver;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.R;
@@ -33,12 +33,10 @@ public class ClientService extends Service {
 
     private static final String TAG = ClientService.class.getName();
     private final IBinder mBinder = new LocalBinder();
-    private PartyCallback partyCallback;
+    private ClientServiceCallback clientServiceCallback;
     private ClientThread clientThread;
-    private Thread tokenRefresh;
     private Socket clientSocket;
     private Track nowPlaying;
-    private List<Track> queue = new ArrayList<>();
     private boolean stopped;
     private boolean first = true;
     private String token;
@@ -46,7 +44,7 @@ public class ClientService extends Service {
     private PendingIntent pendingIntentButton;
 
 
-    public interface PartyCallback {
+    public interface ClientServiceCallback {
         void setTrack(Track track);
         void setPartyName(String partyName);
         void exitService(String text);
@@ -61,21 +59,14 @@ public class ClientService extends Service {
         }
     }
 
-    public ClientService() {
-    }
 
-    public boolean isStopped() {
-        return stopped;
-    }
 
-    public void setPartyCallback(PartyCallback partyCallback) {
-        this.partyCallback = partyCallback;
-    }
+    //Android lifecycle methods
 
     @Override
     public void onCreate() {
         super.onCreate();
-        Intent notificationIntent = new Intent(this, PartyActivity.class);
+        Intent notificationIntent = new Intent(this, ClientActivity.class);
         pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
         Intent intentAction = new Intent(this, ActionReceiver.class);
@@ -83,31 +74,20 @@ public class ClientService extends Service {
 
 
         Notification notification = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
-                .setContentTitle("Verbindung wird hergestellt")
+                .setContentTitle(getString(R.string.notification_clientServiceTitle))
                 .setSmallIcon(R.drawable.ic_service_notification_icon)
                 .setContentIntent(pendingIntent)
                 .addAction(R.drawable.ic_exit_button, getString(R.string.text_leave),pendingIntentButton)
                 .build();
+        Log.d(TAG, "starting ClientService-Notification");
         startForeground(1, notification);
-    }
-
-    public void updateServiceNotifaction() {
-        String text = getString(R.string.service_clientMsg, clientThread.getPartyName());
-        NotificationManagerCompat mNotificationManager = NotificationManagerCompat.from(this);
-        Notification notificationUpdate = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
-                .setContentTitle(text)
-                .setSmallIcon(R.drawable.ic_service_notification_icon)
-                .setContentIntent(pendingIntent)
-                .addAction(R.drawable.ic_exit_button, getString(R.string.text_end), pendingIntentButton)
-                .build();
-        mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         if(first) {
-            tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenCallback() {
+            Thread tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenCallback() {
                 @Override
                 public void afterConnection(String token) {
                     Log.d(TAG, "afterConnection: Token has been gained");
@@ -124,9 +104,47 @@ public class ClientService extends Service {
             tokenRefresh.start();
             first = false;
         }
-        //password = intent.getStringExtra("password");
-
         return START_NOT_STICKY;
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+
+
+
+    //Getter
+    public boolean isStopped() {
+        return stopped;
+    }
+
+    public String getToken() {
+        return token;
+    }
+
+
+
+    //Setter
+    public void setClientServiceCallback(ClientServiceCallback clientServiceCallback) {
+        this.clientServiceCallback = clientServiceCallback;
+    }
+
+
+
+    //Service methods
+
+    public void updateServiceNotifaction() {
+        Log.d(TAG, "update ClientService-Notification");
+        String text = getString(R.string.service_clientMsg, clientThread.getPartyName());
+        NotificationManagerCompat mNotificationManager = NotificationManagerCompat.from(this);
+        Notification notificationUpdate = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
+                .setContentTitle(text)
+                .setSmallIcon(R.drawable.ic_service_notification_icon)
+                .setContentIntent(pendingIntent)
+                .addAction(R.drawable.ic_exit_button, getString(R.string.text_end), pendingIntentButton)
+                .build();
+        mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
     }
 
     public void connect(String ipAddress, String password, String username){
@@ -138,39 +156,29 @@ public class ClientService extends Service {
         return clientThread;
     }
 
-    @Override
-    public IBinder onBind(Intent intent) {
-        return mBinder;
-    }
-
-
     public void exit() throws IOException {
+        Log.d(TAG, "ClientThread exits service");
         stopped = true;
         clientThread.out.close();
         clientThread.input.close();
         clientSocket.close();
-        partyCallback.exitService(getString(R.string.service_serverClosed));
+        clientServiceCallback.exitService(getString(R.string.service_serverClosed));
     }
 
     public void setTrack() {
-        new Thread(()->{
-            if(nowPlaying != null)
-                partyCallback.setTrack(nowPlaying);
-        }).start();
+        if(nowPlaying != null)
+            clientServiceCallback.setTrack(nowPlaying);
     }
 
-    public String getToken() {
-        return token;
-    }
+
 
     class ClientThread extends Thread {
 
-        private String address;
+        private final String address;
         private BufferedReader input;
         private DataOutputStream out;
-        private String password;
-        private String line;
-        private String username;
+        private final String password;
+        private final String username;
         private String partyName;
 
 
@@ -185,7 +193,7 @@ public class ClientService extends Service {
         }
 
         public void sendMessage(Commands commands, String message) throws IOException {
-            Log.d(TAG, String.format("~%s~%s\n\r" , commands.toString(), message));
+            Log.d(TAG, "sending command: " + commands.toString() + ", message: " + message);
             out.writeBytes(String.format("~%s~%s\n\r" , commands.toString(), message));
             out.flush();
         }
@@ -200,19 +208,19 @@ public class ClientService extends Service {
                     } catch (InterruptedException e) {
                         Log.e(TAG, e.getMessage(), e);
                     }
-                    if(clientSocket == null) partyCallback.exitService(getString(R.string.service_clientConnectionError));
+                    if(clientSocket == null) clientServiceCallback.exitService(getString(R.string.service_clientConnectionError));
                 }).start();
                 clientSocket = new Socket(this.address, Constants.PORT);
                 new Thread(() -> {
-                    while(partyCallback == null);
-                    partyCallback.showFragments();
+                    while(clientServiceCallback == null);
+                    clientServiceCallback.showFragments();
                 }).start();
                 input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.ISO_8859_1));
                 out = new DataOutputStream(clientSocket.getOutputStream());
                 sendMessage(Commands.LOGIN, this.username + "~" + this.password);
                 Log.d(TAG, "Connect successful");
                 while (!this.isInterrupted() && !clientSocket.isClosed())  {
-                    line = input.readLine();
+                    String line = input.readLine();
                     if (line != null) {
                         String [] parts = line.split("~");
                         String attribute = "";
@@ -222,13 +230,13 @@ public class ClientService extends Service {
                             Commands command = Commands.valueOf(parts[1]);
                             switch (command) {
                                 case LOGIN:
+                                    Log.d(TAG, "logged in to: " + partyName);
                                     partyName = attribute;
                                     if (parts.length > 3) {
                                         nowPlaying = new Track(parts[3]);
                                     }
-                                    Log.d(TAG, partyName);
-                                    if(partyCallback != null) {
-                                        partyCallback.setPartyName(partyName);
+                                    if(clientServiceCallback != null) {
+                                        clientServiceCallback.setPartyName(partyName);
                                     }
                                     updateServiceNotifaction();
                                     break;
@@ -236,14 +244,10 @@ public class ClientService extends Service {
                                     Log.d(TAG, "Server has been closed");
                                     exit();
                                     return;
-                                case QUEUE:
-                                    queue.add(new Track(attribute));
-                                    Log.d(TAG, attribute);
-                                    break;
                                 case PLAYING:
-                                     Log.d(TAG, "Playing: " + attribute);
-                                     nowPlaying = new Track(attribute);
-                                     partyCallback.setTrack(nowPlaying);
+                                    nowPlaying = new Track(attribute);
+                                     Log.d(TAG, "new track has been started: " + nowPlaying.getName());
+                                     clientServiceCallback.setTrack(nowPlaying);
                                      break;
                                 case PLAYLIST:
                                     List<Track> tracks = new ArrayList<>();
@@ -252,11 +256,11 @@ public class ClientService extends Service {
                                         tracks.add(new Track(parts[i]));
                                     }
                                     if(tracks.size() > 0) {
-                                        Log.d(TAG, tracks.get(0).getName());
-                                        partyCallback.setCurrentTrack(tracks.get(0));
+                                        clientServiceCallback.setCurrentTrack(tracks.get(0));
                                         tracks.remove(0);
                                     }
-                                    partyCallback.setPlaylist(tracks);
+                                    Log.d(TAG, "client got playlist with length: " + tracks.size());
+                                    clientServiceCallback.setPlaylist(tracks);
                                     break;
                             }
                         }

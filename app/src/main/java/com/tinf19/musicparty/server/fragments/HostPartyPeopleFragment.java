@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.fragments;
+package com.tinf19.musicparty.server.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -14,27 +14,26 @@ import android.view.ViewGroup;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.PartyPeople;
-import com.tinf19.musicparty.server.HostActivity;
-import com.tinf19.musicparty.util.PartyPeopleRecycAdapter;
+import com.tinf19.musicparty.server.Adapter.HostPartyPeopleAdapter;
 
 import java.util.ArrayList;
 
-public class PartyPeopleFragment extends Fragment {
+public class HostPartyPeopleFragment extends Fragment {
 
-    private static final String TAG = PartyPeopleFragment.class.getName();
+    private static final String TAG = HostPartyPeopleFragment.class.getName();
     private RecyclerView recyclerView;
-    private PartyPeopleRecycAdapter partyPeopleRecycAdapter;
+    private HostPartyPeopleAdapter hostPartyPeopleAdapter;
     private PartyPeopleList partyPeopleList;
 
     public interface PartyPeopleList {
         ArrayList<PartyPeople> getPartyPeopleList();
     }
 
-    public PartyPeopleFragment(PartyPeopleList partyPeopleList) {
+    public HostPartyPeopleFragment(PartyPeopleList partyPeopleList) {
         this.partyPeopleList = partyPeopleList;
     }
 
-    public PartyPeopleFragment() {
+    public HostPartyPeopleFragment() {
         // Required empty public constructor
     }
 
@@ -46,7 +45,7 @@ public class PartyPeopleFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        partyPeopleRecycAdapter.setDataset(partyPeopleList.getPartyPeopleList());
+        hostPartyPeopleAdapter.setDataset(partyPeopleList.getPartyPeopleList());
     }
 
     @Override
@@ -64,8 +63,8 @@ public class PartyPeopleFragment extends Fragment {
 
         recyclerView = view.findViewById(R.id.partyPeopleRecyclerView);
         if(recyclerView != null) {
-            partyPeopleRecycAdapter = new PartyPeopleRecycAdapter(new ArrayList<>());
-            recyclerView.setAdapter(partyPeopleRecycAdapter);
+            hostPartyPeopleAdapter = new HostPartyPeopleAdapter(new ArrayList<>());
+            recyclerView.setAdapter(hostPartyPeopleAdapter);
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(view.getContext());
             recyclerView.setLayoutManager(layoutManager);
         }

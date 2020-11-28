@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.util;
+package com.tinf19.musicparty.server.Adapter;
 
 import android.graphics.Color;
 import android.view.LayoutInflater;
@@ -20,9 +20,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistRecycAdapter.MyViewHolder> implements HostPlaylistItemMoveCallback.ItemTouchHelperContract {
+public class HostPlaylistAdapter extends RecyclerView.Adapter<HostPlaylistAdapter.MyViewHolder> implements HostPlaylistItemMoveCallback.ItemTouchHelperContract {
 
-    private static final String TAG = HostPlaylistRecycAdapter.class.getName();
+    private static final String TAG = HostPlaylistAdapter.class.getName();
     private List<Track> mdataset;
     private View view;
     private HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
@@ -46,7 +46,7 @@ public class HostPlaylistRecycAdapter extends RecyclerView.Adapter<HostPlaylistR
         }
     }
 
-    public HostPlaylistRecycAdapter(ArrayList<Track> mDataset, HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
+    public HostPlaylistAdapter(ArrayList<Track> mDataset, HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
         this.mdataset = mDataset;
         this.hostPlaylistAdapterCallback = hostPlaylistAdapterCallback;
     }

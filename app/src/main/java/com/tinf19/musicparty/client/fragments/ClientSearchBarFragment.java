@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.fragments;
+package com.tinf19.musicparty.client.fragments;
 
 import android.content.Context;
 import android.graphics.Point;
@@ -9,16 +9,13 @@ import androidx.fragment.app.Fragment;
 
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
 import android.widget.ImageButton;
 
 import com.tinf19.musicparty.R;
@@ -27,14 +24,10 @@ import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.ForAllCallback;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -47,49 +40,57 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class HostSearchBarFragment extends Fragment {
+public class ClientSearchBarFragment extends Fragment {
 
-    private static final String TAG = HostSearchBarFragment.class.getName();
-    private HostSearchForSongs searchForSongs;
+    private static final String TAG = ClientSearchBarFragment.class.getName();
+    private String token;
+    private SearchForSongs searchForSongs;
     private List<Track> tracks = new ArrayList<>();
     private AutoCompleteTextView searchText;
     private ImageButton searchButton;
     private ArrayAdapter<String> adapter;
 
-    public interface HostSearchForSongs extends ForAllCallback {
+    public interface SearchForSongs extends ForAllCallback {
         void searchForSongs(List<Track> tracks);
-        void openSavedPlaylistsFragment();
     }
 
-    public HostSearchBarFragment() {
-        // Required empty public constructor
+    public ClientSearchBarFragment() {
     }
 
-    public HostSearchBarFragment(HostSearchForSongs searchForSongs) {
+    public ClientSearchBarFragment(SearchForSongs searchForSongs) {
         this.searchForSongs = searchForSongs;
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(Constants.TOKEN, token);
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-    }
 
+    }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof HostSearchForSongs)
-            searchForSongs = (HostSearchForSongs) context;
+        if(context instanceof SearchForSongs)
+            searchForSongs = (SearchForSongs) context;
     }
-
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_host_search_bar, container, false);
+        View view = inflater.inflate(R.layout.fragment_client_search_bar, container, false);
 
-        searchText = view.findViewById(R.id.hostSearchEditText);
+        if(savedInstanceState != null)
+            token = savedInstanceState.getString(Constants.TOKEN, "");
+
+
+        searchText = view.findViewById(R.id.searchEditText);
         Point displaySize = new Point();
         getActivity().getWindowManager().getDefaultDisplay().getRealSize(displaySize);
         searchText.setDropDownWidth(displaySize.x);
@@ -98,19 +99,19 @@ public class HostSearchBarFragment extends Fragment {
         if(searchText != null) {
             searchText.addTextChangedListener(new TextWatcher() {
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if(!searchText.getText().toString().equals("")) search(s.toString(), false, "artist,track", "5");
+                    if(!searchText.getText().toString().equals(""))
+                        search(s.toString(), false, "artist,track", "5");
                 }
 
                 @Override
-                public void afterTextChanged(Editable s) {}
+                public void afterTextChanged(Editable s) { }
             });
         }
-
-        searchButton = view.findViewById(R.id.hostSearchImageButton);
+        searchButton = view.findViewById(R.id.searchButton);
         if(searchButton != null) {
             searchButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -125,13 +126,6 @@ public class HostSearchBarFragment extends Fragment {
                         searchButton.setEnabled(true);
                     }
                 }
-            });
-        }
-        ImageButton favoriteSavedPlaylistsImageButton = view.findViewById(R.id.hostSavedPlaylistsImageButton);
-        if (favoriteSavedPlaylistsImageButton != null) {
-            favoriteSavedPlaylistsImageButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) { searchForSongs.openSavedPlaylistsFragment(); }
             });
         }
 
@@ -206,7 +200,7 @@ public class HostSearchBarFragment extends Fragment {
                 adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, titles);
                 getActivity().runOnUiThread( () -> searchText.setAdapter(adapter));
             } else {
-                Log.d(TAG, "showAutofills: not able to show the hints under searchText");
+                Log.d(TAG, "showAutofills: not able to show hints under searchText");
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -260,5 +254,4 @@ public class HostSearchBarFragment extends Fragment {
             e.printStackTrace();
         }
     }
-
 }

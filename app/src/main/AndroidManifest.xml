@@ -20,7 +20,7 @@
         android:roundIcon="@mipmap/ic_music_party_greenbg_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MusicParty">
-        <receiver android:name="com.tinf19.musicparty.util.ActionReceiver" />
+        <receiver android:name="com.tinf19.musicparty.receiver.ActionReceiver" />
 
         <service
             android:name="com.tinf19.musicparty.client.ClientService"
@@ -36,9 +36,9 @@
             android:name="com.journeyapps.barcodescanner.CaptureActivity"
             android:screenOrientation="portrait"
             tools:replace="screenOrientation"/>
-        <activity android:name="com.tinf19.musicparty.client.PartyActivity"
-            android:screenOrientation="portrait"/>
         <activity android:name="com.tinf19.musicparty.client.ClientActivity"
+            android:screenOrientation="portrait"/>
+        <activity android:name="com.tinf19.musicparty.client.JoinActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />

@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.util;
+package com.tinf19.musicparty.server.Adapter;
 
 import android.content.Context;
 import android.content.DialogInterface;
@@ -7,14 +7,8 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.ColorFilter;
-import android.graphics.ColorSpace;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,16 +21,15 @@ import android.widget.ViewSwitcher;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
-import androidx.core.graphics.ColorUtils;
 import androidx.palette.graphics.Palette;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.tinf19.musicparty.R;
-import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
+import com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment;
 import com.tinf19.musicparty.music.Playlist;
 import com.tinf19.musicparty.server.HostActivity;
+import com.tinf19.musicparty.util.DownloadImageTask;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,9 +37,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Map;
 
-public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSavedPlaylistRecycAdapter.ViewHolder> {
+public class HostFavoritePlaylistsAdapter extends RecyclerView.Adapter<HostFavoritePlaylistsAdapter.ViewHolder> {
 
     private SharedPreferences savePlaylistMemory;
     private ArrayList<Playlist> playlists;
@@ -55,8 +47,8 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
     private GalleryCallback galleryCallback;
     private String playlistID;
     private FavoritePlaylistCallback favoritePlaylistCallback;
-    private static final String TAG = ShowSavedPlaylistRecycAdapter.class.getName();
-    private ShowSavedPlaylistsFragment showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment();
+    private static final String TAG = HostFavoritePlaylistsAdapter.class.getName();
+    private HostFavoritePlaylistsFragment hostFavoritePlaylistsFragment = new HostFavoritePlaylistsFragment();
     private View view;
 
     public interface GalleryCallback {
@@ -70,7 +62,7 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
         void copyPlaylistToSpotify(String name);
     }
 
-    public ShowSavedPlaylistRecycAdapter(ArrayList<Playlist> playlists, GalleryCallback gCallback, FavoritePlaylistCallback fCallback) {
+    public HostFavoritePlaylistsAdapter(ArrayList<Playlist> playlists, GalleryCallback gCallback, FavoritePlaylistCallback fCallback) {
         this.playlists = playlists;
         this.galleryCallback = gCallback;
         this.favoritePlaylistCallback = fCallback;
@@ -107,7 +99,7 @@ public class ShowSavedPlaylistRecycAdapter extends RecyclerView.Adapter<ShowSave
 
         view = inflater.inflate(R.layout.favorite_grid_cell_layout, parent, false);
         StaggeredGridLayoutManager.LayoutParams lp = (StaggeredGridLayoutManager.LayoutParams) view.getLayoutParams();
-        if(showSavedPlaylistsFragment.getScreenOrientation() == Configuration.ORIENTATION_PORTRAIT)
+        if(hostFavoritePlaylistsFragment.getScreenOrientation() == Configuration.ORIENTATION_PORTRAIT)
             lp.height = parent.getMeasuredHeight() / 2;
 
         else

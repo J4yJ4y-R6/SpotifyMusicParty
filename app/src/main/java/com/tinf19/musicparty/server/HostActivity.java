@@ -3,7 +3,6 @@ package com.tinf19.musicparty.server;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
 import android.content.BroadcastReceiver;
@@ -28,24 +27,24 @@ import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.tinf19.musicparty.BuildConfig;
-import com.tinf19.musicparty.fragments.HostClosePartyFragment;
-import com.tinf19.musicparty.fragments.HostPlaylistFragment;
-import com.tinf19.musicparty.fragments.HostSearchBarFragment;
-import com.tinf19.musicparty.fragments.PartyPeopleFragment;
-import com.tinf19.musicparty.fragments.SearchBarFragment;
+import com.tinf19.musicparty.server.fragments.HostClosePartyFragment;
+import com.tinf19.musicparty.server.fragments.HostPlaylistFragment;
+import com.tinf19.musicparty.server.fragments.HostSearchBarFragment;
+import com.tinf19.musicparty.server.fragments.HostPartyPeopleFragment;
+import com.tinf19.musicparty.client.fragments.ClientSearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.fragments.ServerLoadingFragment;
-import com.tinf19.musicparty.fragments.SettingsHostFragment;
-import com.tinf19.musicparty.fragments.ShowSavedPlaylistsFragment;
-import com.tinf19.musicparty.fragments.ShowSongHostFragment;
+import com.tinf19.musicparty.server.fragments.HostSettingsFragment;
+import com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment;
+import com.tinf19.musicparty.server.fragments.HostSongFragment;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
-import com.tinf19.musicparty.util.HostPlaylistRecycAdapter;
-import com.tinf19.musicparty.util.ShowSavedPlaylistRecycAdapter;
+import com.tinf19.musicparty.server.Adapter.HostPlaylistAdapter;
+import com.tinf19.musicparty.server.Adapter.HostFavoritePlaylistsAdapter;
 import com.tinf19.musicparty.util.WiFiDirectBroadcastReceiver;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
@@ -62,7 +61,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, SearchBarFragment.SearchForSongs, ShowSongHostFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, PartyPeopleFragment.PartyPeopleList, SettingsHostFragment.GetServerSettings, HostPlaylistRecycAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, ShowSavedPlaylistsFragment.ShowSavedPlaylistCallback, ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback {
+public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, ClientSearchBarFragment.SearchForSongs, HostSongFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, HostPartyPeopleFragment.PartyPeopleList, HostSettingsFragment.GetServerSettings, HostPlaylistAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, HostFavoritePlaylistsFragment.ShowSavedPlaylistCallback, HostFavoritePlaylistsAdapter.FavoritePlaylistCallback {
 
     private static final String TAG = HostActivity.class.getName();
     private String password;
@@ -76,14 +75,14 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private boolean stopped;
 
     private FragmentTransaction fragmentTransaction;
-    private ShowSongHostFragment showSongFragment;
+    private HostSongFragment showSongFragment;
     private HostSearchBarFragment hostSearchBarFragment;
     private SearchSongsOutputFragment searchSongsOutputFragment;
     private HostClosePartyFragment hostClosePartyFragment;
-    private SettingsHostFragment settingsHostFragment;
+    private HostSettingsFragment hostSettingsFragment;
     private HostPlaylistFragment hostPlaylistFragment;
-    private PartyPeopleFragment partyPeopleFragment;
-    private ShowSavedPlaylistsFragment showSavedPlaylistsFragment;
+    private HostPartyPeopleFragment hostPartyPeopleFragment;
+    private HostFavoritePlaylistsFragment hostFavoritePlaylistsFragment;
     private ServerLoadingFragment serverLoadingFragment;
 
 
@@ -225,13 +224,13 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
 
         hostSearchBarFragment = new HostSearchBarFragment(this);
-        showSongFragment = new ShowSongHostFragment(this);
+        showSongFragment = new HostSongFragment(this);
         searchSongsOutputFragment = new SearchSongsOutputFragment(this);
         hostClosePartyFragment = new HostClosePartyFragment(this);
-        settingsHostFragment = new SettingsHostFragment(this);
+        hostSettingsFragment = new HostSettingsFragment(this);
         hostPlaylistFragment = new HostPlaylistFragment(this, this);
-        partyPeopleFragment = new PartyPeopleFragment(this);
-        showSavedPlaylistsFragment = new ShowSavedPlaylistsFragment(this, this);
+        hostPartyPeopleFragment = new HostPartyPeopleFragment(this);
+        hostFavoritePlaylistsFragment = new HostFavoritePlaylistsFragment(this, this);
         serverLoadingFragment = new ServerLoadingFragment();
 
         if(savedInstanceState != null) {
@@ -274,16 +273,16 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         super.onSaveInstanceState(outState);
         outState.putString(Constants.PASSWORD, password);
         String tag = "";
-        if(showSavedPlaylistsFragment != null && showSavedPlaylistsFragment.isVisible())
-            tag = showSavedPlaylistsFragment.getTag();
+        if(hostFavoritePlaylistsFragment != null && hostFavoritePlaylistsFragment.isVisible())
+            tag = hostFavoritePlaylistsFragment.getTag();
         if(showSongFragment != null && showSongFragment.isVisible())
             tag = showSongFragment.getTag();
-        if(settingsHostFragment != null && settingsHostFragment.isVisible())
-            tag = settingsHostFragment.getTag();
+        if(hostSettingsFragment != null && hostSettingsFragment.isVisible())
+            tag = hostSettingsFragment.getTag();
         if(searchSongsOutputFragment != null && searchSongsOutputFragment.isVisible())
             tag = searchSongsOutputFragment.getTag();
-        if(partyPeopleFragment != null && partyPeopleFragment.isVisible())
-            tag = partyPeopleFragment.getTag();
+        if(hostPartyPeopleFragment != null && hostPartyPeopleFragment.isVisible())
+            tag = hostPartyPeopleFragment.getTag();
         if(hostPlaylistFragment != null && hostPlaylistFragment.isVisible())
             tag = hostPlaylistFragment.getTag();
         if(hostClosePartyFragment != null && hostClosePartyFragment.isVisible())
@@ -358,17 +357,17 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
 
     @Override
     public void openSavedPlaylistsFragment() {
-        animateFragmentChange(true, showSavedPlaylistsFragment, "ShowSavedPlaylistFragment");
+        animateFragmentChange(true, hostFavoritePlaylistsFragment, "ShowSavedPlaylistFragment");
     }
 
     @Override
     public void openSettingsFragment() {
-        animateFragmentChange(true, settingsHostFragment, "SettingsHostFragment");
+        animateFragmentChange(true, hostSettingsFragment, "SettingsHostFragment");
     }
 
     @Override
     public void openPeopleFragment() {
-        animateFragmentChange(true, partyPeopleFragment, "PartyPeopleFragment");
+        animateFragmentChange(true, hostPartyPeopleFragment, "PartyPeopleFragment");
     }
 
     @Override

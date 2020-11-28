@@ -1,12 +1,9 @@
 package com.tinf19.musicparty.server;
 
-import android.app.Activity;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Binder;
 import android.os.Parcel;
@@ -14,7 +11,6 @@ import android.os.Parcelable;
 import android.util.Base64;
 import android.os.IBinder;
 import android.util.Log;
-import android.util.TypedValue;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -22,13 +18,12 @@ import androidx.core.app.NotificationManagerCompat;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPeople;
 import com.tinf19.musicparty.music.Que;
-import com.tinf19.musicparty.util.ActionReceiver;
+import com.tinf19.musicparty.receiver.ActionReceiver;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
-import com.tinf19.musicparty.util.ShowSavedPlaylistRecycAdapter;
 import com.tinf19.musicparty.util.TokenRefresh;
 
 import org.jetbrains.annotations.NotNull;

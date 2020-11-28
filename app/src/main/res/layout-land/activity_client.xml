@@ -7,7 +7,7 @@
     android:background="@drawable/main_background_gradient"
     android:padding="5dp"
     android:visibility="visible"
-    tools:context=".client.ClientActivity">
+    tools:context=".client.JoinActivity">
 
     <EditText
         android:id="@+id/et_address"

@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.util;
+package com.tinf19.musicparty.adapter;
 
 import android.graphics.Canvas;
 
@@ -6,11 +6,13 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.tinf19.musicparty.util.Constants;
+
 public class SearchSongsOutputItemTouchHelperCallback extends ItemTouchHelper.Callback {
 
     private static final String TAG = SearchSongsOutputItemTouchHelperCallback.class.getName();
     private final ItemTouchHelperAdapter mAdapter;
-    private PartyAcRecycAdapter adapter;
+    private SearchSongsOutputAdapter adapter;
 
     public interface ItemTouchHelperAdapter {
         void sendToPlaylist(int position);
@@ -23,7 +25,7 @@ public class SearchSongsOutputItemTouchHelperCallback extends ItemTouchHelper.Ca
 
     public SearchSongsOutputItemTouchHelperCallback(ItemTouchHelperAdapter adapter) {
         mAdapter = adapter;
-        this.adapter = (PartyAcRecycAdapter) adapter;
+        this.adapter = (SearchSongsOutputAdapter) adapter;
     }
 
     @Override

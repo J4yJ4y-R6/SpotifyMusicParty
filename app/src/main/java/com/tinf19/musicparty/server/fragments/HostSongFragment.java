@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.fragments;
+package com.tinf19.musicparty.server.fragments;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -22,9 +22,9 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.DownloadImageTask;
 
-public class ShowSongHostFragment extends Fragment {
+public class HostSongFragment extends Fragment {
 
-    private static final String TAG = ShowSongHostFragment.class.getName();
+    private static final String TAG = HostSongFragment.class.getName();
     private OpenHostFragments openHostFragments;
     private String partyName;
     private ImageButton playTrackImageButton;
@@ -51,11 +51,11 @@ public class ShowSongHostFragment extends Fragment {
     }
 
 
-    public ShowSongHostFragment(OpenHostFragments openHostFragments) {
+    public HostSongFragment(OpenHostFragments openHostFragments) {
         this.openHostFragments = openHostFragments;
     }
 
-    public ShowSongHostFragment() {
+    public HostSongFragment() {
         // Required empty public constructor
     }
 

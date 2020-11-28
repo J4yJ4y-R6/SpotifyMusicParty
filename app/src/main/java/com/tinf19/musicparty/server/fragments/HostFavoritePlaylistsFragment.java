@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.fragments;
+package com.tinf19.musicparty.server.fragments;
 
 import android.content.Context;
 import android.content.Intent;
@@ -13,25 +13,20 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import android.text.BoringLayout;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Playlist;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.ForAllCallback;
-import com.tinf19.musicparty.util.ShowSavedPlaylistRecycAdapter;
+import com.tinf19.musicparty.server.Adapter.HostFavoritePlaylistsAdapter;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -41,11 +36,9 @@ import org.json.JSONObject;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import id.zelory.compressor.Compressor;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
@@ -55,29 +48,29 @@ import okhttp3.Response;
 
 import static android.app.Activity.RESULT_OK;
 
-public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPlaylistRecycAdapter.GalleryCallback {
+public class HostFavoritePlaylistsFragment extends Fragment implements HostFavoritePlaylistsAdapter.GalleryCallback {
 
-    private static final String TAG = ShowSavedPlaylistsFragment.class.getName();
+    private static final String TAG = HostFavoritePlaylistsFragment.class.getName();
     private String token;
     private SharedPreferences savePlaylistMemory;
     private Playlist[] playlists;
-    private ShowSavedPlaylistsFragment.ShowSavedPlaylistCallback favoritePlaylistsCallback;
-    private ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback favoritePlaylistCallback;
+    private HostFavoritePlaylistsFragment.ShowSavedPlaylistCallback favoritePlaylistsCallback;
+    private HostFavoritePlaylistsAdapter.FavoritePlaylistCallback favoritePlaylistCallback;
     private String playlistID;
     private String playlistCoverUrl;
-    public ShowSavedPlaylistRecycAdapter showSavedPlaylistRecycAdapter;
+    public HostFavoritePlaylistsAdapter hostFavoritePlaylistsAdapter;
     private int counter;
 
     public interface ShowSavedPlaylistCallback extends ForAllCallback {
         void changePlaylistCover(String id, Bitmap image);
     }
 
-    public ShowSavedPlaylistsFragment(ShowSavedPlaylistCallback favoritePlaylistsCallback, ShowSavedPlaylistRecycAdapter.FavoritePlaylistCallback favoritePlaylistCallback) {
+    public HostFavoritePlaylistsFragment(ShowSavedPlaylistCallback favoritePlaylistsCallback, HostFavoritePlaylistsAdapter.FavoritePlaylistCallback favoritePlaylistCallback) {
         this.favoritePlaylistsCallback = favoritePlaylistsCallback;
         this.favoritePlaylistCallback = favoritePlaylistCallback;
     }
 
-    public ShowSavedPlaylistsFragment() {
+    public HostFavoritePlaylistsFragment() {
         // Required empty public constructor
     }
 
@@ -116,8 +109,8 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
             public void run() {
                 while(counter < savePlaylistMemory.getAll().size());
                 getActivity().runOnUiThread(() -> {
-                    showSavedPlaylistRecycAdapter.setPlaylists(new ArrayList<Playlist>(Arrays.asList(playlists)), idList);
-                    showSavedPlaylistRecycAdapter.notifyDataSetChanged();
+                    hostFavoritePlaylistsAdapter.setPlaylists(new ArrayList<Playlist>(Arrays.asList(playlists)), idList);
+                    hostFavoritePlaylistsAdapter.notifyDataSetChanged();
                 });
             }
         }).start();
@@ -140,9 +133,9 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
             token = savedInstanceState.getString(Constants.TOKEN, "");
 
         RecyclerView recyclerView = view.findViewById(R.id.gridRecyclerview);
-        showSavedPlaylistRecycAdapter = new ShowSavedPlaylistRecycAdapter(new ArrayList<>(), this, favoritePlaylistCallback);
+        hostFavoritePlaylistsAdapter = new HostFavoritePlaylistsAdapter(new ArrayList<>(), this, favoritePlaylistCallback);
         if(recyclerView != null) {
-            recyclerView.setAdapter(showSavedPlaylistRecycAdapter);
+            recyclerView.setAdapter(hostFavoritePlaylistsAdapter);
             if(getScreenOrientation() == Configuration.ORIENTATION_PORTRAIT)
                 recyclerView.setLayoutManager(new StaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL));
             else
@@ -159,7 +152,7 @@ public class ShowSavedPlaylistsFragment extends Fragment implements ShowSavedPla
             try {
                 Thread.sleep(2000);
                 Log.d(TAG, "updateRecyclerView: wait over");
-                showSavedPlaylistRecycAdapter.notifyDataSetChanged();
+                hostFavoritePlaylistsAdapter.notifyDataSetChanged();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

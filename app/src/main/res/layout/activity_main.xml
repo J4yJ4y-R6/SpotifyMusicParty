@@ -72,7 +72,7 @@
                     android:layout_marginLeft="30dp"
                     android:layout_marginRight="30dp"
                     android:layout_marginBottom="20dp"
-                    android:text="Party beitreten"
+                    android:text="@string/text_joinParty"
                     android:textAlignment="center"
                     android:textColor="#FFFFFF"
                     android:textSize="24sp" />
@@ -119,7 +119,7 @@
                     android:layout_marginLeft="30dp"
                     android:layout_marginRight="30dp"
                     android:layout_marginBottom="20dp"
-                    android:text="Party erstellen"
+                    android:text="@string/text_createParty"
                     android:textAlignment="center"
                     android:textColor="#FFFFFF"
                     android:textSize="24sp" />
@@ -133,7 +133,7 @@
             android:layout_height="50dp"
             android:background="@color/button_green"
             android:paddingTop="5dp"
-            android:text="Party-Erwieterung für Spoitfy"
+            android:text="@string/text_appInfoMain"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             android:textSize="24sp"

@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.util;
+package com.tinf19.musicparty.adapter;
 
 
 import android.content.Context;
@@ -15,17 +15,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.util.DownloadImageTask;
 
 import java.util.List;
 
 
-public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapter.ViewHolder> implements SearchSongsOutputItemTouchHelperCallback.ItemTouchHelperAdapter{
+public class SearchSongsOutputAdapter extends RecyclerView.Adapter<SearchSongsOutputAdapter.ViewHolder> implements SearchSongsOutputItemTouchHelperCallback.ItemTouchHelperAdapter{
 
     public interface SongCallback{
         void returnSong(Track track);
     }
 
-    private static final String TAG = PartyAcRecycAdapter.class.getName();
+    private static final String TAG = SearchSongsOutputAdapter.class.getName();
     private SongCallback songCallback;
     private List<Track> mDataset;
     private View textView;
@@ -54,7 +55,7 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
         }
     }
 
-    public PartyAcRecycAdapter(List<Track> trackList, SongCallback songCallback) {
+    public SearchSongsOutputAdapter(List<Track> trackList, SongCallback songCallback) {
         this.songCallback = songCallback;
         mDataset = trackList;
     }
@@ -65,7 +66,7 @@ public class PartyAcRecycAdapter extends RecyclerView.Adapter<PartyAcRecycAdapte
 
     @NonNull
     @Override
-    public PartyAcRecycAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public SearchSongsOutputAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
 

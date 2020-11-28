@@ -30,6 +30,7 @@
     <string name="text_loadingClient">Verbindung zum Server wird hergestellt</string>
     <string name="text_loadingServer">Verbindung zu Spotify wird hergestellt</string>
     <string name="text_qrCodeNoResult">Kein Ergebnis gefunden</string>
+    <string name="text_qrCodeNotMusicParty">Scanne einen validen QR-Code</string>
 
     <string name="heading_settings">Einstellungen</string>
     <string name="service_channelName">Music Party Service Channel</string>
@@ -98,6 +99,11 @@
     <string name="text_songtitle_placeholder">Willkommen zu deiner Music Party</string>
     <string name="text_noSpotifyFound">Spotify wurde auf ihrem Gerät nicht gefunden. Bitte installieren sie sich die app.</string>
     <string name="text_currentSongPlaylistFragment_placeholder">Hier wird das aktuelle Lied angezeigt</string>
+    <string name="text_appInfoMain">Party-Erweiterung für Spotify</string>
+    <string name="text_createParty">Party erstellen</string>
+    <string name="text_joinParty">Party beitreten</string>
+
+    <string name="notification_clientServiceTitle">Verbindung wird hergestellt</string>
 
 
 </resources>

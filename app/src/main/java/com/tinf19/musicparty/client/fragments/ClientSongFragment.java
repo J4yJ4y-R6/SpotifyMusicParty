@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.fragments;
+package com.tinf19.musicparty.client.fragments;
 
 import android.content.Context;
 import android.graphics.Typeface;
@@ -23,9 +23,9 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 
 
-public class ShowSongFragment extends Fragment {
+public class ClientSongFragment extends Fragment {
 
-    private static final String TAG = ShowSongFragment.class.getName();
+    private static final String TAG = ClientSongFragment.class.getName();
     public PartyButtonClicked partyButtonClicked;
     private ImageView songCover;
     private TextView songTitle;
@@ -40,11 +40,11 @@ public class ShowSongFragment extends Fragment {
         void showPlaylist();
     }
 
-    public ShowSongFragment(PartyButtonClicked partyButtonClicked) {
+    public ClientSongFragment(PartyButtonClicked partyButtonClicked) {
         this.partyButtonClicked = partyButtonClicked;
     }
 
-    public ShowSongFragment() {
+    public ClientSongFragment() {
     }
 
     @Override

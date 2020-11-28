@@ -1,6 +1,4 @@
-package com.tinf19.musicparty.util;
-
-import android.util.Log;
+package com.tinf19.musicparty.server.Adapter;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,8 +11,8 @@ public class HostPlaylistItemMoveCallback extends ItemTouchHelper.Callback {
 
     public interface ItemTouchHelperContract {
         void onRowMoved(int fromPosition, int toPosition);
-        void onRowSelected(HostPlaylistRecycAdapter.MyViewHolder myViewHolder);
-        void onRowClear(HostPlaylistRecycAdapter.MyViewHolder myViewHolder);
+        void onRowSelected(HostPlaylistAdapter.MyViewHolder myViewHolder);
+        void onRowClear(HostPlaylistAdapter.MyViewHolder myViewHolder);
         void onRowDeleted(int position);
     }
 
@@ -48,8 +46,8 @@ public class HostPlaylistItemMoveCallback extends ItemTouchHelper.Callback {
     @Override
     public void onSelectedChanged(@Nullable RecyclerView.ViewHolder viewHolder, int actionState) {
         if(actionState != ItemTouchHelper.ACTION_STATE_IDLE) {
-            if(viewHolder instanceof HostPlaylistRecycAdapter.MyViewHolder) {
-                HostPlaylistRecycAdapter.MyViewHolder myViewHolder = (HostPlaylistRecycAdapter.MyViewHolder) viewHolder;
+            if(viewHolder instanceof HostPlaylistAdapter.MyViewHolder) {
+                HostPlaylistAdapter.MyViewHolder myViewHolder = (HostPlaylistAdapter.MyViewHolder) viewHolder;
                 mAdapter.onRowSelected(myViewHolder);
             }
         }
@@ -61,8 +59,8 @@ public class HostPlaylistItemMoveCallback extends ItemTouchHelper.Callback {
     public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
         super.clearView(recyclerView, viewHolder);
 
-        if(viewHolder instanceof HostPlaylistRecycAdapter.MyViewHolder) {
-            HostPlaylistRecycAdapter.MyViewHolder myViewHolder = (HostPlaylistRecycAdapter.MyViewHolder) viewHolder;
+        if(viewHolder instanceof HostPlaylistAdapter.MyViewHolder) {
+            HostPlaylistAdapter.MyViewHolder myViewHolder = (HostPlaylistAdapter.MyViewHolder) viewHolder;
             mAdapter.onRowClear(myViewHolder);
         }
     }

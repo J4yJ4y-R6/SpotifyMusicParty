@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.fragments;
+package com.tinf19.musicparty.client.fragments;
 
 import android.content.Context;
 import android.graphics.Typeface;
@@ -10,7 +10,6 @@ import androidx.fragment.app.Fragment;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,9 +18,9 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 
-public class ExitConnectionFragment extends Fragment {
+public class ClientExitConnectionFragment extends Fragment {
 
-    private static final String TAG = ExitConnectionFragment.class.getName();
+    private static final String TAG = ClientExitConnectionFragment.class.getName();
     public ConfirmExit confirmExit;
     private TextView leaveTextView;
 
@@ -31,11 +30,11 @@ public class ExitConnectionFragment extends Fragment {
         String getPartyName();
     }
 
-    public ExitConnectionFragment(ConfirmExit confirmExit) {
+    public ClientExitConnectionFragment(ConfirmExit confirmExit) {
         this.confirmExit = confirmExit;
     }
 
-    public ExitConnectionFragment() { }
+    public ClientExitConnectionFragment() { }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

@@ -14,20 +14,20 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.tinf19.musicparty.util.PartyAcRecycAdapter;
+import com.tinf19.musicparty.adapter.SearchSongsOutputAdapter;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
-import com.tinf19.musicparty.util.SearchSongsOutputItemTouchHelperCallback;
+import com.tinf19.musicparty.adapter.SearchSongsOutputItemTouchHelperCallback;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycAdapter.SongCallback {
+public class SearchSongsOutputFragment extends Fragment implements SearchSongsOutputAdapter.SongCallback {
 
     private static final String TAG = SearchSongsOutputFragment.class.getName();
     private RecyclerView recyclerView;
-    private PartyAcRecycAdapter mAdapter;
+    private SearchSongsOutputAdapter mAdapter;
     AddSongCallback addSongCallback;
 
     public interface AddSongCallback {
@@ -68,7 +68,7 @@ public class SearchSongsOutputFragment extends Fragment implements PartyAcRecycA
 
         recyclerView = view.findViewById(R.id.songsOutputRecyclerView);
         if(recyclerView != null) {
-            mAdapter = new PartyAcRecycAdapter(new ArrayList<Track>(), this);
+            mAdapter = new SearchSongsOutputAdapter(new ArrayList<Track>(), this);
             recyclerView.setAdapter(mAdapter);
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(view.getContext());
             recyclerView.setLayoutManager(layoutManager);

@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.fragments;
+package com.tinf19.musicparty.server.fragments;
 
 import android.content.Context;
 import android.content.Intent;
@@ -35,9 +35,9 @@ import org.json.JSONObject;
 
 import static android.graphics.Color.WHITE;
 
-public class SettingsHostFragment extends Fragment {
+public class HostSettingsFragment extends Fragment {
 
-    private static final String TAG = SettingsHostFragment.class.getName();
+    private static final String TAG = HostSettingsFragment.class.getName();
     private EditText changePartyName;
     private TextView ipAddressTextView;
     private TextView passwordTextView;
@@ -51,11 +51,11 @@ public class SettingsHostFragment extends Fragment {
         void setNewPartyName(String newPartyName);
     }
 
-    public SettingsHostFragment(GetServerSettings getServerSettings) {
+    public HostSettingsFragment(GetServerSettings getServerSettings) {
         this.getServerSettings = getServerSettings;
     }
 
-    public SettingsHostFragment() {
+    public HostSettingsFragment() {
         // Required empty public constructor
     }
 

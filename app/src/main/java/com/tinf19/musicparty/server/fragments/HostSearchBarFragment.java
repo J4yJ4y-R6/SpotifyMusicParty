@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.fragments;
+package com.tinf19.musicparty.server.fragments;
 
 import android.content.Context;
 import android.graphics.Point;
@@ -16,7 +16,6 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
 import android.widget.ImageButton;
 
 import com.tinf19.musicparty.R;
@@ -41,57 +40,49 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class SearchBarFragment extends Fragment {
+public class HostSearchBarFragment extends Fragment {
 
-    private static final String TAG = SearchBarFragment.class.getName();
-    private String token;
-    private SearchForSongs searchForSongs;
+    private static final String TAG = HostSearchBarFragment.class.getName();
+    private HostSearchForSongs searchForSongs;
     private List<Track> tracks = new ArrayList<>();
     private AutoCompleteTextView searchText;
     private ImageButton searchButton;
     private ArrayAdapter<String> adapter;
 
-    public interface SearchForSongs extends ForAllCallback {
+    public interface HostSearchForSongs extends ForAllCallback {
         void searchForSongs(List<Track> tracks);
+        void openSavedPlaylistsFragment();
     }
 
-    public SearchBarFragment() {
+    public HostSearchBarFragment() {
+        // Required empty public constructor
     }
 
-    public SearchBarFragment(SearchForSongs searchForSongs) {
+    public HostSearchBarFragment(HostSearchForSongs searchForSongs) {
         this.searchForSongs = searchForSongs;
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putString(Constants.TOKEN, token);
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
+
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof SearchForSongs)
-            searchForSongs = (SearchForSongs) context;
+        if(context instanceof HostSearchForSongs)
+            searchForSongs = (HostSearchForSongs) context;
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_client_search_bar, container, false);
+        View view = inflater.inflate(R.layout.fragment_host_search_bar, container, false);
 
-        if(savedInstanceState != null)
-            token = savedInstanceState.getString(Constants.TOKEN, "");
-
-
-        searchText = view.findViewById(R.id.searchEditText);
+        searchText = view.findViewById(R.id.hostSearchEditText);
         Point displaySize = new Point();
         getActivity().getWindowManager().getDefaultDisplay().getRealSize(displaySize);
         searchText.setDropDownWidth(displaySize.x);
@@ -100,19 +91,19 @@ public class SearchBarFragment extends Fragment {
         if(searchText != null) {
             searchText.addTextChangedListener(new TextWatcher() {
                 @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if(!searchText.getText().toString().equals(""))
-                        search(s.toString(), false, "artist,track", "5");
+                    if(!searchText.getText().toString().equals("")) search(s.toString(), false, "artist,track", "5");
                 }
 
                 @Override
-                public void afterTextChanged(Editable s) { }
+                public void afterTextChanged(Editable s) {}
             });
         }
-        searchButton = view.findViewById(R.id.searchButton);
+
+        searchButton = view.findViewById(R.id.hostSearchImageButton);
         if(searchButton != null) {
             searchButton.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -127,6 +118,13 @@ public class SearchBarFragment extends Fragment {
                         searchButton.setEnabled(true);
                     }
                 }
+            });
+        }
+        ImageButton favoriteSavedPlaylistsImageButton = view.findViewById(R.id.hostSavedPlaylistsImageButton);
+        if (favoriteSavedPlaylistsImageButton != null) {
+            favoriteSavedPlaylistsImageButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) { searchForSongs.openSavedPlaylistsFragment(); }
             });
         }
 
@@ -201,7 +199,7 @@ public class SearchBarFragment extends Fragment {
                 adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, titles);
                 getActivity().runOnUiThread( () -> searchText.setAdapter(adapter));
             } else {
-                Log.d(TAG, "showAutofills: not able to show hints under searchText");
+                Log.d(TAG, "showAutofills: not able to show the hints under searchText");
             }
         } catch (JSONException e) {
             e.printStackTrace();
@@ -255,4 +253,5 @@ public class SearchBarFragment extends Fragment {
             e.printStackTrace();
         }
     }
+
 }

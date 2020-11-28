@@ -3,18 +3,18 @@ package com.tinf19.musicparty;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 
-import com.tinf19.musicparty.client.ClientActivity;
+import com.tinf19.musicparty.client.JoinActivity;
 import com.tinf19.musicparty.databinding.ActivityMainBinding;
 import com.tinf19.musicparty.server.HostActivity;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 
 
-import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -56,6 +56,14 @@ public class MainActivity extends AppCompatActivity {
         //loginToSpotify();
         binding.createPartyCardView.setEnabled(true);
         binding.joinPartyCardView.setEnabled(true);
+
+        SharedPreferences firstConnection = this.getSharedPreferences("firstConnection", Context.MODE_PRIVATE);
+        if(firstConnection.getBoolean(Constants.FIRST_CONNECTION, true)) {
+            showInfoText(null);
+            SharedPreferences.Editor editor = firstConnection.edit();
+            editor.putBoolean(Constants.FIRST_CONNECTION, false);
+            editor.apply();
+        }
     }
 
     public void changeHost(View view){
@@ -65,7 +73,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void changeClient(View view){
-        Intent intent = new Intent(this, ClientActivity.class);
+        Intent intent = new Intent(this, JoinActivity.class);
         //intent.putExtra(Constants.TOKEN, token);
         startActivity(intent);
     }

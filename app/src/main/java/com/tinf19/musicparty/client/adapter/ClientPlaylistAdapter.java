@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.util;
+package com.tinf19.musicparty.client.adapter;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -14,9 +14,9 @@ import com.tinf19.musicparty.music.Track;
 
 import java.util.List;
 
-public class ClientPlaylistRecycAdapter extends RecyclerView.Adapter<ClientPlaylistRecycAdapter.ViewHolder> {
+public class ClientPlaylistAdapter extends RecyclerView.Adapter<ClientPlaylistAdapter.ViewHolder> {
 
-    private static final String TAG = ClientPlaylistRecycAdapter.class.getName();
+    private static final String TAG = ClientPlaylistAdapter.class.getName();
     private List<Track> mDataset;
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -31,7 +31,7 @@ public class ClientPlaylistRecycAdapter extends RecyclerView.Adapter<ClientPlayl
         }
     }
 
-    public ClientPlaylistRecycAdapter(List<Track> trackList) {
+    public ClientPlaylistAdapter(List<Track> trackList) {
         this.mDataset = trackList;
     }
 

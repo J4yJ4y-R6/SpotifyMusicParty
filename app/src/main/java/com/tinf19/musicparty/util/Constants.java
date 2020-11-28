@@ -11,6 +11,7 @@ public class Constants {
     public static final String PARTYNAME = "partyname";
     public static final String TAG = "tag";
     public static final String SERVICE = "service";
+    public static final String FIRST_CONNECTION = "first_connection";
 
 
     public static final String ID = "id";
