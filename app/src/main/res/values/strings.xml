@@ -17,7 +17,7 @@
     <string name="text_songtitel">Songtitel</string>
     <string name="text_albumname">Albumname</string>
     <string name="text_kuenstler">Künstler*in</string>
-    <string name="text_verbunden_mit">Verbunden mit</string>
+    <string name="text_connectedTo">Verbunden mit</string>
     <string name="text_songcover">SongCover</string>
     <string name="text_queAdded"> wurde zur Warteschlange hinzugefügt</string>
     <string name="text_partyNameCountPeople">Party Name    0</string>

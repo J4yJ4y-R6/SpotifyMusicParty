@@ -61,7 +61,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, ClientSearchBarFragment.SearchForSongs, HostSongFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, HostPartyPeopleFragment.PartyPeopleList, HostSettingsFragment.GetServerSettings, HostPlaylistAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, HostFavoritePlaylistsFragment.ShowSavedPlaylistCallback, HostFavoritePlaylistsAdapter.FavoritePlaylistCallback {
+public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, ClientSearchBarFragment.ClientSearchBarCallback, HostSongFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, HostPartyPeopleFragment.PartyPeopleList, HostSettingsFragment.GetServerSettings, HostPlaylistAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, HostFavoritePlaylistsFragment.ShowSavedPlaylistCallback, HostFavoritePlaylistsAdapter.FavoritePlaylistCallback {
 
     private static final String TAG = HostActivity.class.getName();
     private String password;

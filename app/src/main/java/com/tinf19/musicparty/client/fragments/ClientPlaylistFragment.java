@@ -14,6 +14,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.databinding.FragmentClientPlaylistBinding;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.client.adapter.ClientPlaylistAdapter;
 import com.tinf19.musicparty.util.DownloadImageTask;
@@ -29,16 +30,12 @@ public class ClientPlaylistFragment extends Fragment {
     private ImageView currentSongCoverImageView;
     private TextView currentSongTitleTextView;
     private TextView currentSongArtistTextView;
-    private Track currentTrack;
 
-    public ClientPlaylistFragment() {
-        // Required empty public constructor
-    }
+    public ClientPlaylistFragment() { }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+
+
+    //Android lifecycle methods
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -61,9 +58,11 @@ public class ClientPlaylistFragment extends Fragment {
         return view;
     }
 
+
+
     public void setCurrentPlaying(Track track) {
         if(track != null) {
-            Log.d(TAG, track.getName());
+            Log.d(TAG, "current track has been changed to: " + track.getName());
             if (currentSongTitleTextView != null) {
                 currentSongTitleTextView.setText(track.getName());
             }
@@ -79,6 +78,7 @@ public class ClientPlaylistFragment extends Fragment {
 
     public void showResult(List<Track> tracks) {
         if(clientPlaylistAdapter != null) {
+            Log.d(TAG, "playlist has been updated with new size: " + tracks.size());
             clientPlaylistAdapter.setDataset(tracks);
             clientPlaylistAdapter.notifyDataSetChanged();
         }

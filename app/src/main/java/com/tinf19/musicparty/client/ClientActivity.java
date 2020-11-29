@@ -292,7 +292,7 @@ public class ClientActivity extends AppCompatActivity {
                             }
                         }).start();
                     });
-                    clientSongFragment = new ClientSongFragment(new ClientSongFragment.PartyButtonClicked() {
+                    clientSongFragment = new ClientSongFragment(new ClientSongFragment.ClientSongCallback() {
                         @Override
                         public void exitConnection() {
                             animateFragmentChange(true, clientExitConnectionFragment, "ExitConnectionFragment");
@@ -311,7 +311,7 @@ public class ClientActivity extends AppCompatActivity {
                         }
                     });
                     clientPlaylistFragment = new ClientPlaylistFragment();
-                    clientSearchBarFragment = new ClientSearchBarFragment(new ClientSearchBarFragment.SearchForSongs() {
+                    clientSearchBarFragment = new ClientSearchBarFragment(new ClientSearchBarFragment.ClientSearchBarCallback() {
                         @Override
                         public void searchForSongs(List<Track> tracks) {
                             animateFragmentChange(true, searchSongsOutputFragment, "SearchSongOutputFragment");
@@ -323,7 +323,7 @@ public class ClientActivity extends AppCompatActivity {
                             return mBoundService != null ? mBoundService.getToken() : null;
                         }
                     });
-                    clientExitConnectionFragment = new ClientExitConnectionFragment(new ClientExitConnectionFragment.ConfirmExit() {
+                    clientExitConnectionFragment = new ClientExitConnectionFragment(new ClientExitConnectionFragment.ClientExitConnectionCallback() {
                         @Override
                         public void denyExit() {
                             showShowSongFragment();

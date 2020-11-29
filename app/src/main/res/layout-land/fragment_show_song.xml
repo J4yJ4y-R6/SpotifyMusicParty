@@ -92,7 +92,7 @@
             android:layout_height="48dp"
             android:layout_marginTop="2dp"
             android:paddingTop="7dip"
-            android:text="@string/text_verbunden_mit"
+            android:text="@string/text_connectedTo"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             android:textSize="24sp"

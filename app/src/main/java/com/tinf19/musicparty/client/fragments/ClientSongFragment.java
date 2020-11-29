@@ -26,45 +26,36 @@ import com.tinf19.musicparty.music.Track;
 public class ClientSongFragment extends Fragment {
 
     private static final String TAG = ClientSongFragment.class.getName();
-    public PartyButtonClicked partyButtonClicked;
+    public ClientSongCallback clientSongCallback;
     private ImageView songCover;
     private TextView songTitle;
     private TextView songArtist;
     private TextView songAlbum;
     private TextView connectedToParty;
-    private View rootView;
     private boolean started;
 
-    public interface PartyButtonClicked {
+    public interface ClientSongCallback {
         void exitConnection();
         void showPlaylist();
     }
 
-    public ClientSongFragment(PartyButtonClicked partyButtonClicked) {
-        this.partyButtonClicked = partyButtonClicked;
-    }
+    public ClientSongFragment(ClientSongCallback clientSongCallback) { this.clientSongCallback = clientSongCallback; }
 
-    public ClientSongFragment() {
-    }
+    public ClientSongFragment() { }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+
+
+    //Android lifecycle methods
 
     @Override
     public void onStart() {
         super.onStart();
         started = true;
-        if(songTitle != null) {
-            songTitle.setSelected(true);
-        }
-        if(songArtist != null) {
-            songArtist.setSelected(true);
-        }
-        if(songAlbum != null) {
-            songAlbum.setSelected(true);
-        }
+        //TODO: Bug nach fragment wechsel
+        Log.d(TAG, "textview starts rotating");
+        if(songTitle != null) songTitle.setSelected(true);
+        if(songArtist != null) songArtist.setSelected(true);
+        if(songAlbum != null) songAlbum.setSelected(true);
     }
 
     @Override
@@ -76,15 +67,15 @@ public class ClientSongFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof PartyButtonClicked)
-            partyButtonClicked = (PartyButtonClicked) context;
+        if(context instanceof ClientSongCallback)
+            clientSongCallback = (ClientSongCallback) context;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        rootView = inflater.inflate(R.layout.fragment_show_song, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_show_song, container, false);
 
         songCover = rootView.findViewById(R.id.songCoverImageView);
         songTitle = rootView.findViewById(R.id.songtitleTextView);
@@ -93,43 +84,24 @@ public class ClientSongFragment extends Fragment {
         connectedToParty = rootView.findViewById(R.id.connectedTo);
 
         ImageButton exitButton = rootView.findViewById(R.id.exitButton);
-        if(exitButton != null) {
-            exitButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    partyButtonClicked.exitConnection();
-                }
-            });
-        }
+        if(exitButton != null) exitButton.setOnClickListener(v -> clientSongCallback.exitConnection());
 
         ImageButton playlistButton = rootView.findViewById(R.id.playlistButtonImageButton);
-        if(playlistButton != null) {
-            playlistButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            partyButtonClicked.showPlaylist();
-                        }
-                    }).start();
-                }
-            });
-        }
+        if(playlistButton != null) playlistButton.setOnClickListener(v -> new Thread(() -> clientSongCallback.showPlaylist()).start());
         return rootView;
     }
 
-    public boolean getStarted() {
-        return started;
-    }
+
+    public boolean getStarted() { return started; }
+
+
 
     public void showSongs(Track track) {
-
         if(track != null && songTitle.getHeight() > 150) {
+            Log.d(TAG, "welcome message gets changed to first song");
             songTitle.setSingleLine(true);
             songTitle.setHeight(150);
         }
-        Log.d(TAG, "showSongs: " + track);
         if(songCover != null) {
             String coverURL = "https://i.scdn.co/image/"+track.getCoverFull();
             new DownloadImageTask(songCover).execute(coverURL);
@@ -139,8 +111,9 @@ public class ClientSongFragment extends Fragment {
         if(songAlbum != null) songAlbum.setText(track.getAlbum());
     }
 
+
     public void setPartyName(String name) {
-        String conTo = "Verbunden mit ";
+        String conTo = getString(R.string.text_connectedTo);
         String partyName = conTo + name;
         if(connectedToParty != null && !name.equals("")) {
             connectedToParty.setText(partyName, TextView.BufferType.SPANNABLE);

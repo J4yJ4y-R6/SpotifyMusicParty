@@ -23,6 +23,7 @@ import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.ForAllCallback;
+import com.tinf19.musicparty.util.SpotifyHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,41 +44,27 @@ import okhttp3.Response;
 public class ClientSearchBarFragment extends Fragment {
 
     private static final String TAG = ClientSearchBarFragment.class.getName();
-    private String token;
-    private SearchForSongs searchForSongs;
-    private List<Track> tracks = new ArrayList<>();
+    private final List<Track> tracks = new ArrayList<>();
+    private ClientSearchBarCallback clientSearchBarCallback;
     private AutoCompleteTextView searchText;
     private ImageButton searchButton;
     private ArrayAdapter<String> adapter;
 
-    public interface SearchForSongs extends ForAllCallback {
-        void searchForSongs(List<Track> tracks);
-    }
+    public interface ClientSearchBarCallback extends ForAllCallback { void searchForSongs(List<Track> tracks);}
 
-    public ClientSearchBarFragment() {
-    }
+    public ClientSearchBarFragment() { }
 
-    public ClientSearchBarFragment(SearchForSongs searchForSongs) {
-        this.searchForSongs = searchForSongs;
-    }
+    public ClientSearchBarFragment(ClientSearchBarCallback clientSearchBarCallback) { this.clientSearchBarCallback = clientSearchBarCallback; }
 
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putString(Constants.TOKEN, token);
-    }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
 
-    }
+    //Android lifecycle methods
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof SearchForSongs)
-            searchForSongs = (SearchForSongs) context;
+        if(context instanceof ClientSearchBarCallback)
+            clientSearchBarCallback = (ClientSearchBarCallback) context;
     }
 
     @Override
@@ -85,10 +72,7 @@ public class ClientSearchBarFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_client_search_bar, container, false);
-
-        if(savedInstanceState != null)
-            token = savedInstanceState.getString(Constants.TOKEN, "");
-
+        SpotifyHelper spotifyHelper = new SpotifyHelper();
 
         searchText = view.findViewById(R.id.searchEditText);
         Point displaySize = new Point();
@@ -104,7 +88,25 @@ public class ClientSearchBarFragment extends Fragment {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     if(!searchText.getText().toString().equals(""))
-                        search(s.toString(), false, "artist,track", "5");
+                        spotifyHelper.search(s.toString(), "artist,track", "5", clientSearchBarCallback.getToken(), new SpotifyHelper.SpotifyHelperCallback() {
+                            @Override
+                            public void onFailure() { }
+
+                            @Override
+                            public void onResponse(Response response) {
+                                try {
+                                    if(!response.isSuccessful()) Log.d(TAG, "Request was not successful" + response.body().string());
+                                    else {
+                                        Log.d(TAG, "Request Successful.");
+                                        showAutofills(response.body().string());
+                                    }
+                                } catch (IOException e) {
+                                    Log.e(TAG, e.getMessage(), e);
+                                } finally {
+                                    response.close();
+                                }
+                            }
+                        });
                 }
 
                 @Override
@@ -113,18 +115,40 @@ public class ClientSearchBarFragment extends Fragment {
         }
         searchButton = view.findViewById(R.id.searchButton);
         if(searchButton != null) {
-            searchButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    searchButton.setEnabled(false);
-                    if  (searchText != null && !searchText.getText().toString().trim().equals("")) {
-                        searchText.clearFocus();
-                        InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                        search(searchText.getText().toString().trim(), true, "track", "15");
-                    } else {
-                        searchButton.setEnabled(true);
-                    }
+            searchButton.setOnClickListener(v -> {
+                searchButton.setEnabled(false);
+                if  (searchText != null && !searchText.getText().toString().trim().equals("")) {
+                    searchText.clearFocus();
+                    InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                    spotifyHelper.search(searchText.getText().toString().trim(), "track", "15", clientSearchBarCallback.getToken(), new SpotifyHelper.SpotifyHelperCallback() {
+                        @Override
+                        public void onFailure() {
+                            if(searchButton != null)
+                                getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
+                        }
+
+                        @Override
+                        public void onResponse(Response response) {
+                            if(!response.isSuccessful()){
+                                if(searchButton != null)
+                                    getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
+                                Log.e(TAG, "Request was not successful");
+                            }else {
+                                Log.d(TAG,"Request Successful.");
+                            }
+                            final String data;
+                            try {
+                                data = response.body().string();
+                                extractSongs(data);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            response.close();
+                        }
+                    });
+                } else {
+                    searchButton.setEnabled(true);
                 }
             });
         }
@@ -132,53 +156,7 @@ public class ClientSearchBarFragment extends Fragment {
         return view;
     }
 
-    public void search(String query, boolean usage, String type, String limit) {
-        String token = searchForSongs.getToken();
-        if(token == null) return;
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("search")
-                .addQueryParameter("q", query)
-                .addQueryParameter("type", type)
-                .addQueryParameter("limit", limit )
-                .build();
-        Log.d(TAG, "Making request to " + completeURL.toString());
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .addHeader("Authorization", "Bearer " + token)
-                .build();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                if(searchButton != null && usage)
-                    getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
-                e.printStackTrace();
-                Log.d(TAG, "Request Failed.");
-            }
 
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if(!response.isSuccessful()){
-                    if(searchButton != null)
-                        getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
-                    throw new IOException("Error : " + response);
-                }else {
-                    Log.d(TAG,"Request Successful.");
-                }
-                final String data = response.body().string();
-                response.close();
-
-                // Read data in the worker thread
-                if(usage)
-                    extractSongs(data);
-                else
-                    showAutofills(data);
-            }
-        });
-    }
 
     public void showAutofills(String data) {
         try {
@@ -203,7 +181,7 @@ public class ClientSearchBarFragment extends Fragment {
                 Log.d(TAG, "showAutofills: not able to show hints under searchText");
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage(), e);
         }
     }
 
@@ -245,13 +223,13 @@ public class ClientSearchBarFragment extends Fragment {
                                 imageFull[imageFull.length-1],
                                 track.getInt("duration_ms"),
                                 track.getJSONObject("album").getString("name")));
-                Log.d(TAG, tracks.get(i).toString());
             }
-            searchForSongs.searchForSongs(tracks);
+            Log.d(TAG, "client searched for " + tracks.size() + "songs");
+            clientSearchBarCallback.searchForSongs(tracks);
             if(searchButton != null)
                 getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage(), e);
         }
     }
 }

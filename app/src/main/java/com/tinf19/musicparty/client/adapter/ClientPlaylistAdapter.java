@@ -15,8 +15,7 @@ import com.tinf19.musicparty.music.Track;
 import java.util.List;
 
 public class ClientPlaylistAdapter extends RecyclerView.Adapter<ClientPlaylistAdapter.ViewHolder> {
-
-    private static final String TAG = ClientPlaylistAdapter.class.getName();
+    
     private List<Track> mDataset;
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -40,7 +39,6 @@ public class ClientPlaylistAdapter extends RecyclerView.Adapter<ClientPlaylistAd
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
-
         View textView = inflater.inflate(R.layout.client_playlist_recyc_view_row, parent, false);
         return new ViewHolder(textView);
     }

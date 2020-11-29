@@ -20,38 +20,36 @@ import com.tinf19.musicparty.R;
 
 public class ClientExitConnectionFragment extends Fragment {
 
-    private static final String TAG = ClientExitConnectionFragment.class.getName();
-    public ConfirmExit confirmExit;
+    public ClientExitConnectionCallback clientExitConnectionCallback;
     private TextView leaveTextView;
 
-    public interface ConfirmExit {
+    public interface ClientExitConnectionCallback {
         void denyExit();
         void acceptExit();
         String getPartyName();
     }
 
-    public ClientExitConnectionFragment(ConfirmExit confirmExit) {
-        this.confirmExit = confirmExit;
+    public ClientExitConnectionFragment(ClientExitConnectionCallback clientExitConnectionCallback) {
+        this.clientExitConnectionCallback = clientExitConnectionCallback;
     }
 
     public ClientExitConnectionFragment() { }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+
+
+    //Android lifecycle methods
 
     @Override
     public void onStart() {
         super.onStart();
-        setPartyName(confirmExit.getPartyName());
+        setPartyName(clientExitConnectionCallback.getPartyName());
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof ConfirmExit)
-            confirmExit = (ConfirmExit) context;
+        if(context instanceof ClientExitConnectionCallback)
+            clientExitConnectionCallback = (ClientExitConnectionCallback) context;
     }
 
     @Override
@@ -62,11 +60,13 @@ public class ClientExitConnectionFragment extends Fragment {
         leaveTextView = view.findViewById(R.id.leavePartyOfTextView);
         Button denyButton = view.findViewById(R.id.denyLeavePartyButton);
         Button acceptButton = view.findViewById(R.id.acceptLeavePartyButton);
-        denyButton.setOnClickListener(v -> confirmExit.denyExit());
-        acceptButton.setOnClickListener(v -> confirmExit.acceptExit());
+        denyButton.setOnClickListener(v -> clientExitConnectionCallback.denyExit());
+        acceptButton.setOnClickListener(v -> clientExitConnectionCallback.acceptExit());
 
         return view;
     }
+
+
 
     public void setPartyName(String name) {
         if(leaveTextView != null) {
