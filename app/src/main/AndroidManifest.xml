@@ -27,7 +27,7 @@
             android:enabled="true"
             android:exported="true" />
         <service
-            android:name="com.tinf19.musicparty.server.ServerService"
+            android:name="com.tinf19.musicparty.server.HostService"
             android:enabled="true"
             android:exported="true" />
 

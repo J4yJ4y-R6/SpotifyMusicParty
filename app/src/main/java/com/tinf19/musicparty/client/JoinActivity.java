@@ -13,6 +13,7 @@ import android.widget.Toast;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.databinding.ActivityJoinBinding;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.databinding.ActivityClientBinding;
 
@@ -25,7 +26,7 @@ public class JoinActivity extends AppCompatActivity {
 
     private static final String TAG = JoinActivity.class.getName();
     private final Random rand = new Random();
-    private ActivityClientBinding binding;
+    private ActivityJoinBinding binding;
     private IntentIntegrator qrScan;
     private EditText ipAddressEditText;
     private EditText passwordEditText;
@@ -37,7 +38,7 @@ public class JoinActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        binding = ActivityClientBinding.inflate(getLayoutInflater());
+        binding = ActivityJoinBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
         ipAddressEditText = binding.etAddress;

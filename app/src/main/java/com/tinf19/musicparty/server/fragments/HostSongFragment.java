@@ -25,7 +25,7 @@ import com.tinf19.musicparty.util.DownloadImageTask;
 public class HostSongFragment extends Fragment {
 
     private static final String TAG = HostSongFragment.class.getName();
-    private OpenHostFragments openHostFragments;
+    private HostSongCallback hostSongCallback;
     private String partyName;
     private ImageButton playTrackImageButton;
     private TextView currentPlayingTitleTextView;
@@ -36,7 +36,7 @@ public class HostSongFragment extends Fragment {
     private LinearLayout playBarLinearLayout;
 
 
-    public interface OpenHostFragments {
+    public interface HostSongCallback {
         void openSettingsFragment();
         void openPeopleFragment();
         void openPlaylistFragment();
@@ -51,22 +51,23 @@ public class HostSongFragment extends Fragment {
     }
 
 
-    public HostSongFragment(OpenHostFragments openHostFragments) {
-        this.openHostFragments = openHostFragments;
-    }
+    public HostSongFragment(HostSongCallback hostSongCallback) { this.hostSongCallback = hostSongCallback; }
 
-    public HostSongFragment() {
-        // Required empty public constructor
-    }
+    public HostSongFragment() { }
+
+
+
+    //Android lifecycle methods
 
     @Override
     public void onStart() {
         super.onStart();
-        this.partyName = openHostFragments.getPartyPeoplePartyName();
-        setPartyNameCount(openHostFragments.getPartyPeopleSize());
-        if(openHostFragments != null) {
-            setPlayTrackButtonImage(openHostFragments.getPauseState());
-            Track track = openHostFragments.setShowNowPlaying();
+        Log.d(TAG, "set party name and the current track in TextView");
+        this.partyName = hostSongCallback.getPartyPeoplePartyName();
+        setPartyNameCount(hostSongCallback.getPartyPeopleSize());
+        if(hostSongCallback != null) {
+            setPlayTrackButtonImage(hostSongCallback.getPauseState());
+            Track track = hostSongCallback.setShowNowPlaying();
             if(track != null) setNowPlaying(track);
         }
         if(currentPlayingTitleTextView != null) currentPlayingTitleTextView.setSelected(true);
@@ -74,31 +75,18 @@ public class HostSongFragment extends Fragment {
         if(currentPlayingArtistTextView != null) currentPlayingArtistTextView.setSelected(true);
     }
 
-
-    public void setPartyNameCount(int count) {
-        if(partyNameTextView != null) {
-            String text = partyName + " mit " + count + " Menschen";
-            partyNameTextView.setText(text);
-        }
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof OpenHostFragments)
-            openHostFragments = (OpenHostFragments) context;
+        if(context instanceof HostSongCallback)
+            hostSongCallback = (HostSongCallback) context;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_show_song_host, container, false);
+        View view = inflater.inflate(R.layout.fragment_host_song, container, false);
 
         partyNameTextView = view.findViewById(R.id.partyOverviewTextView);
 
@@ -107,90 +95,76 @@ public class HostSongFragment extends Fragment {
         currentPlayingAlbumTextView = view.findViewById(R.id.albumHostTextView);
         currentPlayingCoverTextView = view.findViewById(R.id.songCoverHostImageView);
         playBarLinearLayout = view.findViewById(R.id.hostPlayBarLinearLayout);
-        Log.d(TAG, "onCreateView: CREATE VIEW " + currentPlayingTitleTextView);
 
         ImageButton openPlaylistButton = view.findViewById(R.id.playlistButtonHostImageButton);
         if(openPlaylistButton != null) {
-            openPlaylistButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) { openHostFragments.openPlaylistFragment(); }
-            });
+            openPlaylistButton.setOnClickListener(v -> hostSongCallback.openPlaylistFragment());
         }
 
         ImageButton openSettingsButton = view.findViewById(R.id.optionsButton);
         if(openSettingsButton != null) {
-            openSettingsButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) { openHostFragments.openSettingsFragment(); }
-            });
+            openSettingsButton.setOnClickListener(v -> hostSongCallback.openSettingsFragment());
         }
 
         ImageButton openPeopleButton = view.findViewById(R.id.partyPeopleButton);
         if(openPeopleButton != null) {
-            openPeopleButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) { openHostFragments.openPeopleFragment(); }
-            });
+            openPeopleButton.setOnClickListener(v -> hostSongCallback.openPeopleFragment());
         }
 
         ImageButton openExitButton = view.findViewById(R.id.endPartyButton);
         if(openExitButton != null) {
-            openExitButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) { openHostFragments.openExitFragment(); }
-            });
+            openExitButton.setOnClickListener(v -> hostSongCallback.openExitFragment());
         }
 
         ImageButton lastTrackImageButton = view.findViewById(R.id.lastTrackImageButton);
         if(lastTrackImageButton != null) {
-            lastTrackImageButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    buttonEffect(lastTrackImageButton);
-                    openHostFragments.lastTrack();
-                    setPlayTrackButtonImage(false);
-                }
+            lastTrackImageButton.setOnClickListener(v -> {
+                buttonEffect(lastTrackImageButton);
+                hostSongCallback.lastTrack();
+                setPlayTrackButtonImage(false);
             });
         }
 
         playTrackImageButton = view.findViewById(R.id.playTrackImageButton);
         if(playTrackImageButton != null) {
-            playTrackImageButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    buttonEffect(playTrackImageButton);
-                    boolean pause = !openHostFragments.getPauseState();
-                    openHostFragments.playTrack();
-                    setPlayTrackButtonImage(pause);
-                }
+            playTrackImageButton.setOnClickListener(v -> {
+                buttonEffect(playTrackImageButton);
+                boolean pause = !hostSongCallback.getPauseState();
+                hostSongCallback.playTrack();
+                setPlayTrackButtonImage(pause);
             });
         }
 
         ImageButton nextTrackImageButton = view.findViewById(R.id.nextTrackImageButton);
         if(nextTrackImageButton != null) {
-            nextTrackImageButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    buttonEffect(nextTrackImageButton);
-                    openHostFragments.nextTrack();
-                    setPlayTrackButtonImage(false);
-                }
+            nextTrackImageButton.setOnClickListener(v -> {
+                buttonEffect(nextTrackImageButton);
+                hostSongCallback.nextTrack();
+                setPlayTrackButtonImage(false);
             });
         }
 
         return view;
     }
 
+
+
+    public void setPartyNameCount(int count) {
+        if(partyNameTextView != null)
+            partyNameTextView.setText(getString(R.string.text_hostsongfragment_header, partyName, count));
+    }
+
     public void setPlayTrackButtonImage(boolean pause) {
         if(playTrackImageButton != null) {
-            if(pause) playTrackImageButton.setImageResource(R.drawable.ic_play_track_button);
-            else playTrackImageButton.setImageResource(R.drawable.ic_pause_button);
+            if(pause) playTrackImageButton.setImageResource(R.drawable.icon_play_cycle);
+            else playTrackImageButton.setImageResource(R.drawable.icon_pause_cycle);
         }
     }
 
     public void setNowPlaying(Track nowPlaying) {
-        Log.d(TAG, "setNowPlaying: " + nowPlaying.getCover());
+        Log.d(TAG, "set current track to: " + nowPlaying.getName());
         if(playBarLinearLayout != null && playBarLinearLayout.getVisibility() == View.INVISIBLE) {
+            Log.d(TAG, "welcome message gets changed to first song");
             playBarLinearLayout.setVisibility(View.VISIBLE);
             currentPlayingTitleTextView.setSingleLine(true);
             currentPlayingTitleTextView.setHeight(150);
@@ -202,29 +176,26 @@ public class HostSongFragment extends Fragment {
         if(currentPlayingAlbumTextView != null) currentPlayingAlbumTextView.setText(nowPlaying.getAlbum());
         if(currentPlayingCoverTextView != null) {
             String coverURL = "https://i.scdn.co/image/"+nowPlaying.getCoverFull();
-            //String coverURL = nowPlaying.getCover();
             new DownloadImageTask(currentPlayingCoverTextView).execute(coverURL);
         }
     }
 
     public static void buttonEffect(View button){
-        button.setOnTouchListener(new View.OnTouchListener() {
-
-            public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()) {
-                    case MotionEvent.ACTION_DOWN: {
-                        v.getBackground().setColorFilter(Color.green(255), PorterDuff.Mode.SRC_ATOP);
-                        v.invalidate();
-                        break;
-                    }
-                    case MotionEvent.ACTION_UP: {
-                        v.getBackground().clearColorFilter();
-                        v.invalidate();
-                        break;
-                    }
+        button.setOnTouchListener((v, event) -> {
+            v.performClick();
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN: {
+                    v.getBackground().setColorFilter(Color.green(255), PorterDuff.Mode.SRC_ATOP);
+                    v.invalidate();
+                    break;
                 }
-                return false;
+                case MotionEvent.ACTION_UP: {
+                    v.getBackground().clearColorFilter();
+                    v.invalidate();
+                    break;
+                }
             }
+            return false;
         });
     }
 }

@@ -54,20 +54,20 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
     private String token;
     private SharedPreferences savePlaylistMemory;
     private Playlist[] playlists;
-    private HostFavoritePlaylistsFragment.ShowSavedPlaylistCallback favoritePlaylistsCallback;
-    private HostFavoritePlaylistsAdapter.FavoritePlaylistCallback favoritePlaylistCallback;
+    private HostFavoritePlaylistCallback favoritePlaylistsCallback;
+    private HostFavoritePlaylistsAdapter.HostFavoritePlaylistAdapterCallback hostFavoritePlaylistCallback;
     private String playlistID;
     private String playlistCoverUrl;
     public HostFavoritePlaylistsAdapter hostFavoritePlaylistsAdapter;
     private int counter;
 
-    public interface ShowSavedPlaylistCallback extends ForAllCallback {
+    public interface HostFavoritePlaylistCallback extends ForAllCallback {
         void changePlaylistCover(String id, Bitmap image);
     }
 
-    public HostFavoritePlaylistsFragment(ShowSavedPlaylistCallback favoritePlaylistsCallback, HostFavoritePlaylistsAdapter.FavoritePlaylistCallback favoritePlaylistCallback) {
+    public HostFavoritePlaylistsFragment(HostFavoritePlaylistCallback favoritePlaylistsCallback, HostFavoritePlaylistsAdapter.HostFavoritePlaylistAdapterCallback hostFavoritePlaylistAdapterCallback) {
         this.favoritePlaylistsCallback = favoritePlaylistsCallback;
-        this.favoritePlaylistCallback = favoritePlaylistCallback;
+        this.hostFavoritePlaylistCallback = hostFavoritePlaylistAdapterCallback;
     }
 
     public HostFavoritePlaylistsFragment() {
@@ -119,21 +119,21 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof  ShowSavedPlaylistCallback)
-            favoritePlaylistsCallback = (ShowSavedPlaylistCallback) context;
+        if(context instanceof HostFavoritePlaylistCallback)
+            favoritePlaylistsCallback = (HostFavoritePlaylistCallback) context;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_show_saved_playlists, container, false);
+        View view = inflater.inflate(R.layout.fragment_host_favorite_playlists, container, false);
 
         if(savedInstanceState != null)
             token = savedInstanceState.getString(Constants.TOKEN, "");
 
         RecyclerView recyclerView = view.findViewById(R.id.gridRecyclerview);
-        hostFavoritePlaylistsAdapter = new HostFavoritePlaylistsAdapter(new ArrayList<>(), this, favoritePlaylistCallback);
+        hostFavoritePlaylistsAdapter = new HostFavoritePlaylistsAdapter(new ArrayList<>(), this, hostFavoritePlaylistCallback);
         if(recyclerView != null) {
             recyclerView.setAdapter(hostFavoritePlaylistsAdapter);
             if(getScreenOrientation() == Configuration.ORIENTATION_PORTRAIT)

@@ -23,8 +23,8 @@ import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.tinf19.musicparty.BuildConfig;
-import com.tinf19.musicparty.databinding.ActivityClientPartyBinding;
 import com.tinf19.musicparty.client.fragments.ClientPlaylistFragment;
+import com.tinf19.musicparty.databinding.ActivityClientBinding;
 import com.tinf19.musicparty.fragments.LoadingFragment;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
@@ -55,6 +55,7 @@ public class ClientActivity extends AppCompatActivity {
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
+            Log.d(TAG, "service has been connected");
             mBoundService = ((ClientService.LocalBinder)service).getService();
             loginToSpotify();
             if(mBoundService.isStopped()) {
@@ -63,6 +64,7 @@ public class ClientActivity extends AppCompatActivity {
         }
 
         public void onServiceDisconnected(ComponentName className) {
+            Log.d(TAG, "service has been disconnected");
             mBoundService = null;
         }
     };
@@ -71,6 +73,7 @@ public class ClientActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             new Thread(() -> {
+                Log.d(TAG, "user disconnected from server by service-notification");
                 try {
                     if(mBoundService != null)
                         mBoundService.getClientThread().sendMessage(Commands.QUIT, "User left the channel");
@@ -110,7 +113,7 @@ public class ClientActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        com.tinf19.musicparty.databinding.ActivityClientPartyBinding binding = ActivityClientPartyBinding.inflate(getLayoutInflater());
+        com.tinf19.musicparty.databinding.ActivityClientBinding binding = ActivityClientBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
 
@@ -124,7 +127,7 @@ public class ClientActivity extends AppCompatActivity {
         } else {
             Log.d(TAG, "Fragment has been changed to LoadingFragment");
             getSupportFragmentManager().beginTransaction().
-                    replace(R.id.showSongFragmentFrame, new LoadingFragment(), "LoadingFragment").commitAllowingStateLoss();
+                    replace(R.id.showSongFragmentFrame, new LoadingFragment(getString(R.string.text_loadingClient)), "LoadingFragment").commitAllowingStateLoss();
             doBindService();
         }
     }

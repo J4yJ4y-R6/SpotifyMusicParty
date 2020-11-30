@@ -23,6 +23,7 @@ import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.ForAllCallback;
+import com.tinf19.musicparty.util.SpotifyHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,36 +44,31 @@ import okhttp3.Response;
 public class HostSearchBarFragment extends Fragment {
 
     private static final String TAG = HostSearchBarFragment.class.getName();
-    private HostSearchForSongs searchForSongs;
-    private List<Track> tracks = new ArrayList<>();
+    private final List<Track> tracks = new ArrayList<>();
+    private HostSearchBarCallback hostSearchBarCallback;
     private AutoCompleteTextView searchText;
     private ImageButton searchButton;
     private ArrayAdapter<String> adapter;
+    private SpotifyHelper spotifyHelper = new SpotifyHelper();
 
-    public interface HostSearchForSongs extends ForAllCallback {
+    public interface HostSearchBarCallback extends ForAllCallback {
         void searchForSongs(List<Track> tracks);
         void openSavedPlaylistsFragment();
     }
 
-    public HostSearchBarFragment() {
-        // Required empty public constructor
-    }
+    public HostSearchBarFragment(HostSearchBarCallback hostSearchBarCallback) { this.hostSearchBarCallback = hostSearchBarCallback; }
 
-    public HostSearchBarFragment(HostSearchForSongs searchForSongs) {
-        this.searchForSongs = searchForSongs;
-    }
+    public HostSearchBarFragment() { }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
 
+
+    //Android lifecycle methods
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof HostSearchForSongs)
-            searchForSongs = (HostSearchForSongs) context;
+        if(context instanceof HostSearchBarCallback)
+            hostSearchBarCallback = (HostSearchBarCallback) context;
     }
 
 
@@ -95,7 +91,27 @@ public class HostSearchBarFragment extends Fragment {
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if(!searchText.getText().toString().equals("")) search(s.toString(), false, "artist,track", "5");
+                    if(!searchText.getText().toString().equals("")) {
+                        spotifyHelper.search(s.toString(), "artist,track", "5", hostSearchBarCallback.getToken(), new SpotifyHelper.SpotifyHelperCallback() {
+                            @Override
+                            public void onFailure() { }
+
+                            @Override
+                            public void onResponse(Response response) {
+                                try {
+                                    if(!response.isSuccessful()) Log.d(TAG, "Request was not successful" + response.body().string());
+                                    else {
+                                        Log.d(TAG, "Request Successful.");
+                                        showAutofills(response.body().string());
+                                    }
+                                } catch (IOException e) {
+                                    Log.e(TAG, e.getMessage(), e);
+                                } finally {
+                                    response.close();
+                                }
+                            }
+                        });
+                    }
                 }
 
                 @Override
@@ -105,104 +121,63 @@ public class HostSearchBarFragment extends Fragment {
 
         searchButton = view.findViewById(R.id.hostSearchImageButton);
         if(searchButton != null) {
-            searchButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    searchButton.setEnabled(false);
-                    if  (searchText != null && !searchText.getText().toString().trim().equals("")) {
-                        searchText.clearFocus();
-                        InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-                        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                        search(searchText.getText().toString().trim(), true, "track", "15");
-                    } else {
-                        searchButton.setEnabled(true);
-                    }
+            searchButton.setOnClickListener(v -> {
+                searchButton.setEnabled(false);
+                if  (searchText != null && !searchText.getText().toString().trim().equals("")) {
+                    String searchQuery = searchText.getText().toString().trim();
+                    Log.d(TAG, "search for songs with query: " + searchQuery);
+                    searchText.clearFocus();
+                    InputMethodManager imm = (InputMethodManager)getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                    spotifyHelper.search(searchQuery, "track", "15", hostSearchBarCallback.getToken(), new SpotifyHelper.SpotifyHelperCallback() {
+                        @Override
+                        public void onFailure() {
+                            if(searchButton != null)
+                                getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
+                        }
+
+                        @Override
+                        public void onResponse(Response response) {
+                            if(!response.isSuccessful()){
+                                if(searchButton != null)
+                                    getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
+                                Log.e(TAG, "Request was not successful");
+                            }else {
+                                Log.d(TAG,"Request Successful.");
+                            }
+                            final String data;
+                            try {
+                                data = response.body().string();
+                                extractSongs(data);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            response.close();
+                        }
+                    });
+                } else {
+                    searchButton.setEnabled(true);
                 }
             });
         }
         ImageButton favoriteSavedPlaylistsImageButton = view.findViewById(R.id.hostSavedPlaylistsImageButton);
         if (favoriteSavedPlaylistsImageButton != null) {
-            favoriteSavedPlaylistsImageButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) { searchForSongs.openSavedPlaylistsFragment(); }
-            });
+            favoriteSavedPlaylistsImageButton.setOnClickListener(v -> hostSearchBarCallback.openSavedPlaylistsFragment());
         }
 
         return view;
     }
 
-    public void search(String query, boolean usage, String type, String limit) {
-        String token = searchForSongs.getToken();
-        if(token == null) return;
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("search")
-                .addQueryParameter("q", query)
-                .addQueryParameter("type", type)
-                .addQueryParameter("limit", limit )
-                .build();
-        Log.d(TAG, "Making request to " + completeURL.toString());
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .addHeader("Authorization", "Bearer " + token)
-                .build();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-                if(searchButton != null && usage)
-                    getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
-                e.printStackTrace();
-                Log.d(TAG, "Request Failed.");
-            }
-
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if(!response.isSuccessful()){
-                    if(searchButton != null)
-                        getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
-                    throw new IOException("Error : " + response);
-                }else {
-                    Log.d(TAG,"Request Successful.");
-                }
-                final String data = response.body().string();
-                response.close();
-
-                // Read data in the worker thread
-                if(usage)
-                    extractSongs(data);
-                else
-                    showAutofills(data);
-            }
-        });
-    }
-
     public void showAutofills(String data) {
         try {
-            ArrayList<String> titles = new ArrayList<>();
-            JSONObject jsonObject = new JSONObject(data);
-            Iterator<String> keys = jsonObject.keys();
-            while(keys.hasNext()) {
-                String key = keys.next();
-                if(jsonObject.get(key) instanceof JSONObject) {
-                    JSONObject keysObject = jsonObject.getJSONObject(key);
-                    JSONArray jsonArray = keysObject.getJSONArray("items");
-                    for(int i = 0; i < jsonArray.length(); i++) {
-                        JSONObject track = jsonArray.getJSONObject(i);
-                        titles.add(track.getString("name"));
-                    }
-                }
-            }
             if(searchText != null) {
-                adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, titles);
+                adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, spotifyHelper.showAutofills(data));
                 getActivity().runOnUiThread( () -> searchText.setAdapter(adapter));
             } else {
                 Log.d(TAG, "showAutofills: not able to show the hints under searchText");
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage(), e);
         }
     }
 
@@ -214,44 +189,13 @@ public class HostSearchBarFragment extends Fragment {
     public void extractSongs(String data) {
         try {
             tracks.clear();
-            JSONObject jsonObject = new JSONObject(data);
-            jsonObject = jsonObject.getJSONObject("tracks");
-            JSONArray jsonArray = jsonObject.getJSONArray("items");
-            for(int i = 0; i < jsonArray.length(); i++) {
-                JSONObject track = jsonArray.getJSONObject(i);
-                JSONArray artists = track.getJSONArray("artists");
-                Artist[] array = new Artist[artists.length()];
-                for(int j = 0; j < array.length; j++) {
-                    JSONObject artist = artists.getJSONObject(j);
-                    array[j] = new Artist(artist.getString("id"), artist.getString("name"));
-                }
-                String [] image = track
-                        .getJSONObject("album")
-                        .getJSONArray("images")
-                        .getJSONObject(2)
-                        .getString("url").split("/");
-                String [] imageFull = track
-                        .getJSONObject("album")
-                        .getJSONArray("images")
-                        .getJSONObject(1)
-                        .getString("url").split("/");
-                tracks.add(
-                        new Track(
-                                track.getString("id"),
-                                track.getString("name"),
-                                array,
-                                image[image.length-1],
-                                imageFull[imageFull.length-1],
-                                track.getInt("duration_ms"),
-                                track.getJSONObject("album").getString("name")));
-                Log.d(TAG, tracks.get(i).toString());
-            }
-            searchForSongs.searchForSongs(tracks);
+            tracks.addAll(spotifyHelper.extractSong(data));
+            Log.d(TAG, "host searched for " + tracks.size() + "songs");
+            hostSearchBarCallback.searchForSongs(tracks);
             if(searchButton != null)
                 getActivity().runOnUiThread(() ->  searchButton.setEnabled(true));
         } catch (JSONException e) {
-            e.printStackTrace();
+            Log.e(TAG, e.getMessage(), e);
         }
     }
-
 }

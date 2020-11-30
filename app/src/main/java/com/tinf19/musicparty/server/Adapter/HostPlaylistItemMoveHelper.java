@@ -5,20 +5,21 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
-public class HostPlaylistItemMoveCallback extends ItemTouchHelper.Callback {
+public class HostPlaylistItemMoveHelper extends ItemTouchHelper.Callback {
 
-    private final ItemTouchHelperContract mAdapter;
+    private final HostPlaylistItemMoveHelperCallback mAdapter;
 
-    public interface ItemTouchHelperContract {
+    public interface HostPlaylistItemMoveHelperCallback {
         void onRowMoved(int fromPosition, int toPosition);
         void onRowSelected(HostPlaylistAdapter.MyViewHolder myViewHolder);
         void onRowClear(HostPlaylistAdapter.MyViewHolder myViewHolder);
         void onRowDeleted(int position);
     }
 
-    public HostPlaylistItemMoveCallback(ItemTouchHelperContract adapter) {
-        this.mAdapter = adapter;
-    }
+    public HostPlaylistItemMoveHelper(HostPlaylistItemMoveHelperCallback adapter) { this.mAdapter = adapter; }
+
+
+    //Android move methods
 
     @Override
     public boolean isLongPressDragEnabled() {

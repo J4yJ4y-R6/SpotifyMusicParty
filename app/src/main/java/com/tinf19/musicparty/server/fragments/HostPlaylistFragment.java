@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +20,7 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.server.Adapter.HostPlaylistAdapter;
-import com.tinf19.musicparty.server.Adapter.HostPlaylistItemMoveCallback;
+import com.tinf19.musicparty.server.Adapter.HostPlaylistItemMoveHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,28 +33,31 @@ public class HostPlaylistFragment extends Fragment {
     private TextView currentSongArtistTextView;
     private ImageView currentSongCoverImageView;
     private HostPlaylistAdapter hostPlaylistAdapter;
-    private PlaylistCallback playlistCallback;
+    private HostPlaylistCallback hostPlaylistCallback;
     private HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
 
-    public interface PlaylistCallback {
+    public interface HostPlaylistCallback {
         void showPlaylist();
         Track getCurrentPlaying();
     }
 
-    public HostPlaylistFragment(PlaylistCallback playlistCallback, HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
-        this.playlistCallback = playlistCallback;
+    public HostPlaylistFragment(HostPlaylistCallback hostPlaylistCallback, HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
+        this.hostPlaylistCallback = hostPlaylistCallback;
         this.hostPlaylistAdapterCallback = hostPlaylistAdapterCallback;
     }
 
-    public HostPlaylistFragment() {
-        // Required empty public constructor
-    }
+    public HostPlaylistFragment() { }
+
+
+
+    //Android lifecycle methods
 
     @Override
     public void onStart() {
         super.onStart();
-        playlistCallback.showPlaylist();
-        Track currentPlaying = playlistCallback.getCurrentPlaying();
+        hostPlaylistCallback.showPlaylist();
+        Track currentPlaying = hostPlaylistCallback.getCurrentPlaying();
+        Log.d(TAG, "set current track to " + currentPlaying.getName());
         if(currentPlaying != null) {
             if (currentSongTitleTextView != null)
                 currentSongTitleTextView.setText(currentPlaying.getName());
@@ -67,18 +71,13 @@ public class HostPlaylistFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         if(context instanceof HostPlaylistAdapter.HostPlaylistAdapterCallback) {
             hostPlaylistAdapterCallback = (HostPlaylistAdapter.HostPlaylistAdapterCallback) context;
         }
-        if(context instanceof PlaylistCallback)
-            playlistCallback = (PlaylistCallback) context;
+        if(context instanceof HostPlaylistCallback)
+            hostPlaylistCallback = (HostPlaylistCallback) context;
     }
 
     @Override
@@ -86,13 +85,10 @@ public class HostPlaylistFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.fragment_host_playlist, container, false);
-
         recyclerView = view.findViewById(R.id.hostPlaylistRecyclerView);
         if(recyclerView != null) {
             hostPlaylistAdapter = new HostPlaylistAdapter(new ArrayList<Track>(), hostPlaylistAdapterCallback);
-            ItemTouchHelper.Callback callback =
-                    new HostPlaylistItemMoveCallback(hostPlaylistAdapter);
-            ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
+            ItemTouchHelper touchHelper = new ItemTouchHelper(new HostPlaylistItemMoveHelper(hostPlaylistAdapter));
             touchHelper.attachToRecyclerView(recyclerView);
             recyclerView.setAdapter(hostPlaylistAdapter);
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(view.getContext());
@@ -108,12 +104,14 @@ public class HostPlaylistFragment extends Fragment {
 
     public void showResult(List<Track> tracks) {
         if(hostPlaylistAdapter != null) {
+            Log.d(TAG, "playlist has been updated with new size: " + tracks.size());
             hostPlaylistAdapter.setDataset(tracks);
             hostPlaylistAdapter.notifyDataSetChanged();
         }
     }
 
     public void updateRecyclerView() {
+        Log.d(TAG, "playlist has been updated - notify RecyclerView");
         hostPlaylistAdapter.notifyDataSetChanged();
     }
 }

@@ -55,7 +55,7 @@ public class ClientExitConnectionFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_exit_connection, container, false);
+        View view = inflater.inflate(R.layout.fragment_client_exit_connection, container, false);
 
         leaveTextView = view.findViewById(R.id.leavePartyOfTextView);
         Button denyButton = view.findViewById(R.id.denyLeavePartyButton);

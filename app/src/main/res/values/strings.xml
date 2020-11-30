@@ -6,7 +6,7 @@
     <string name="app_username">Benutzername</string>
     <string name="text_playbutton">Lied stoppen/spielen</string>
     <string name="text_partyName">Music Party</string>
-    <string name="text_next">Next</string>
+    <string name="text_next">Nächstes Lied spielen</string>
     <string name="text_stopServer">Server stoppen</string>
     <string name="text_server">Server</string>
     <string name="text_client">Client</string>
@@ -31,12 +31,13 @@
     <string name="text_loadingServer">Verbindung zu Spotify wird hergestellt</string>
     <string name="text_qrCodeNoResult">Kein Ergebnis gefunden</string>
     <string name="text_qrCodeNotMusicParty">Scanne einen validen QR-Code</string>
+    <string name="text_minutes"> Minuten</string>
+    <string name="text_hostsongfragment_header">%1$s mit %2$d  Menschen"</string>
 
     <string name="heading_settings">Einstellungen</string>
     <string name="service_channelName">Music Party Service Channel</string>
     <string name="service_name">MusicParty</string>
     <string name="service_clientMsg">Du bist Teil einer %1$s</string>
-    <string name="service_clientContent"></string>
     <string name="service_clientConnectionError">Die Verbindung zum Host ist fehlgeschlagen</string>
     <string name="service_serverMsg">Du hostest die Party: %1$s</string>
     <string name="service_serverPeople">Aktuell sind %1$d Menschen Teil deiner Party.</string>
@@ -65,6 +66,13 @@
     <string name="text_shareQR_Description">QR-Code teilen</string>
     <string name="text_shareLink_Description">Link zum beitreten teilen</string>
     <string name="text_songsOutputSwipeForQue">Wischen um das Lied der Warteschlange hinzuzufügen</string>
+    <string name="text_animatedLogo_ContentD">animiertes App-Logo</string>
+    <string name="text_showInfoCard_ContentD">Info Karte öffnen</string>
+    <string name="text_closeInfoCard_ContentD">Info Karte schließen</string>
+    <string name="text_openPlaylistFragment_ContentD">Playlist öffnen</string>
+    <string name="text_openExitFragment_ContentD">Party verlassen</string>
+    <string name="text_openSettingsFragment_ContentD">Einstellungen öffnen</string>
+    <string name="text_openPeopleFragment_ContentD">Anwesende Personen anzeigen</string>
 
     <string name="text_toastPlaylistNotSaved">Playlist konnte nicht gespeichert werden. Prüfe ob du schon 30 Playlisten gespeichert hast.</string>
     <string name="text_toastPlaylistNameNeeded">Playlist konnte nicht gespeichert werden. Du musst einen Namen Hinzufügen</string>
@@ -104,6 +112,9 @@
     <string name="text_joinParty">Party beitreten</string>
 
     <string name="notification_clientServiceTitle">Verbindung wird hergestellt</string>
+    <string name="text_enterNewPartyName">Gibt hier den Playlistnamen ein</string>
+    <string name="text_lastSong">letzten Song abspielen</string>
+    <string name="text_zeroMinutes">0 Minuten</string>
 
 
 </resources>

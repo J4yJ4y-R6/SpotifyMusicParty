@@ -8,25 +8,27 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.tinf19.musicparty.util.Constants;
 
-public class SearchSongsOutputItemTouchHelperCallback extends ItemTouchHelper.Callback {
+public class SearchSongsOutputItemTouchHelper extends ItemTouchHelper.Callback {
 
-    private static final String TAG = SearchSongsOutputItemTouchHelperCallback.class.getName();
-    private final ItemTouchHelperAdapter mAdapter;
+    private final SearchSongOutputItemTouchHelperCallback mAdapter;
     private SearchSongsOutputAdapter adapter;
 
-    public interface ItemTouchHelperAdapter {
+    public interface SearchSongOutputItemTouchHelperCallback {
         void sendToPlaylist(int position);
     }
 
-    public interface ItemTouchHelperViewHolder {
+    public interface SearchSongOutputItemTouchHelperViewHolderCallback {
         void onItemSelected();
         void onItemClear();
     }
 
-    public SearchSongsOutputItemTouchHelperCallback(ItemTouchHelperAdapter adapter) {
+    public SearchSongsOutputItemTouchHelper(SearchSongOutputItemTouchHelperCallback adapter) {
         mAdapter = adapter;
         this.adapter = (SearchSongsOutputAdapter) adapter;
     }
+
+
+    //Android movement methods
 
     @Override
     public boolean isLongPressDragEnabled() {
@@ -45,9 +47,7 @@ public class SearchSongsOutputItemTouchHelperCallback extends ItemTouchHelper.Ca
     }
 
     @Override
-    public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-        return false;
-    }
+    public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) { return false; }
 
     @Override
     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
@@ -70,8 +70,8 @@ public class SearchSongsOutputItemTouchHelperCallback extends ItemTouchHelper.Ca
     @Override
     public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
         if (actionState != ItemTouchHelper.ACTION_STATE_IDLE) {
-            if (viewHolder instanceof ItemTouchHelperViewHolder) {
-                ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
+            if (viewHolder instanceof SearchSongOutputItemTouchHelperViewHolderCallback) {
+                SearchSongOutputItemTouchHelperViewHolderCallback itemViewHolder = (SearchSongOutputItemTouchHelperViewHolderCallback) viewHolder;
                 itemViewHolder.onItemSelected();
             }
         }
@@ -84,8 +84,8 @@ public class SearchSongsOutputItemTouchHelperCallback extends ItemTouchHelper.Ca
 
         viewHolder.itemView.setAlpha(Constants.ALPHA_FULL);
 
-        if (viewHolder instanceof ItemTouchHelperViewHolder) {
-            ItemTouchHelperViewHolder itemViewHolder = (ItemTouchHelperViewHolder) viewHolder;
+        if (viewHolder instanceof SearchSongOutputItemTouchHelperViewHolderCallback) {
+            SearchSongOutputItemTouchHelperViewHolderCallback itemViewHolder = (SearchSongOutputItemTouchHelperViewHolderCallback) viewHolder;
             itemViewHolder.onItemClear();
         }
     }

@@ -17,8 +17,9 @@
             android:layout_height="50dp"
             android:layout_marginEnd="30dp"
             android:layout_marginBottom="16dp"
-            android:background="@drawable/custom_button"
-            android:src="@drawable/ic_queue_button"
+            android:background="@drawable/background_transparent"
+            android:src="@drawable/icon_queue"
+            android:contentDescription="@string/text_openPlaylistFragment_ContentD"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/optionsButton" />
 
@@ -28,8 +29,9 @@
             android:layout_height="50dp"
             android:layout_marginEnd="30dp"
             android:layout_marginBottom="16dp"
-            android:background="@drawable/custom_button"
-            android:src="@drawable/ic_options_button"
+            android:background="@drawable/background_transparent"
+            android:src="@drawable/icon_settings"
+            android:contentDescription="@string/text_openSettingsFragment_ContentD"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/partyPeopleButton" />
 
@@ -39,8 +41,9 @@
             android:layout_height="50dp"
             android:layout_marginEnd="30dp"
             android:layout_marginBottom="16dp"
-            android:background="@drawable/custom_button"
-            android:src="@drawable/ic_partypeople_button"
+            android:background="@drawable/background_transparent"
+            android:src="@drawable/icon_people_group"
+            android:contentDescription="@string/text_openPeopleFragment_ContentD"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/endPartyButton" />
 
@@ -50,8 +53,9 @@
             android:layout_height="50dp"
             android:layout_marginEnd="30dp"
             android:layout_marginBottom="16dp"
-            android:background="@drawable/custom_button"
-            android:src="@drawable/ic_exit_button"
+            android:background="@drawable/background_transparent"
+            android:contentDescription="@string/text_openExitFragment_ContentD"
+            android:src="@drawable/icon_exit_room"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
@@ -150,6 +154,7 @@
             android:layout_height="280dip"
             android:layout_marginStart="10dp"
             android:src="@android:color/darker_gray"
+            android:contentDescription="@string/text_songcover"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -158,7 +163,7 @@
             android:id="@+id/hostPlayBarLinearLayout"
             android:layout_width="70dip"
             android:layout_height="280dip"
-            android:background="@drawable/host_show_song_playbar_land"
+            android:background="@drawable/host_song_remote_bar_land"
             android:baselineAligned="false"
             android:orientation="vertical"
             android:paddingTop="30dp"
@@ -178,8 +183,9 @@
                     android:id="@+id/lastTrackImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/custom_button"
-                    android:src="@drawable/ic_last_track_button" />
+                    android:background="@drawable/background_transparent"
+                    android:contentDescription="@string/text_lastSong"
+                    android:src="@drawable/icon_last_cycle" />
 
             </LinearLayout>
 
@@ -195,8 +201,9 @@
                     android:id="@+id/playTrackImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/custom_button"
-                    android:src="@drawable/ic_play_track_button" />
+                    android:background="@drawable/background_transparent"
+                    android:contentDescription="@string/text_playbutton"
+                    android:src="@drawable/icon_play_cycle" />
             </LinearLayout>
 
             <LinearLayout
@@ -211,9 +218,10 @@
                     android:id="@+id/nextTrackImageButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@drawable/custom_button"
+                    android:background="@drawable/background_transparent"
+                    android:contentDescription="@string/text_next"
                     android:paddingTop="10dp"
-                    android:src="@drawable/ic_next_track_button" />
+                    android:src="@drawable/icon_next_cycle" />
             </LinearLayout>
 
         </LinearLayout>

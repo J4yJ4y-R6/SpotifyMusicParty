@@ -49,6 +49,7 @@ public class ClientSearchBarFragment extends Fragment {
     private AutoCompleteTextView searchText;
     private ImageButton searchButton;
     private ArrayAdapter<String> adapter;
+    private SpotifyHelper spotifyHelper = new SpotifyHelper();
 
     public interface ClientSearchBarCallback extends ForAllCallback { void searchForSongs(List<Track> tracks);}
 
@@ -72,7 +73,6 @@ public class ClientSearchBarFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_client_search_bar, container, false);
-        SpotifyHelper spotifyHelper = new SpotifyHelper();
 
         searchText = view.findViewById(R.id.searchEditText);
         Point displaySize = new Point();
@@ -160,22 +160,8 @@ public class ClientSearchBarFragment extends Fragment {
 
     public void showAutofills(String data) {
         try {
-            ArrayList<String> titles = new ArrayList<>();
-            JSONObject jsonObject = new JSONObject(data);
-            Iterator<String> keys = jsonObject.keys();
-            while(keys.hasNext()) {
-                String key = keys.next();
-                if(jsonObject.get(key) instanceof JSONObject) {
-                    JSONObject keysObject = jsonObject.getJSONObject(key);
-                    JSONArray jsonArray = keysObject.getJSONArray("items");
-                    for(int i = 0; i < jsonArray.length(); i++) {
-                        JSONObject track = jsonArray.getJSONObject(i);
-                        titles.add(track.getString("name"));
-                    }
-                }
-            }
             if(searchText != null) {
-                adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, titles);
+                adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, spotifyHelper.showAutofills(data));
                 getActivity().runOnUiThread( () -> searchText.setAdapter(adapter));
             } else {
                 Log.d(TAG, "showAutofills: not able to show hints under searchText");
@@ -193,37 +179,7 @@ public class ClientSearchBarFragment extends Fragment {
     public void extractSongs(String data) {
         try {
             tracks.clear();
-            JSONObject jsonObject = new JSONObject(data);
-            jsonObject = jsonObject.getJSONObject("tracks");
-            JSONArray jsonArray = jsonObject.getJSONArray("items");
-            for(int i = 0; i < jsonArray.length(); i++) {
-                JSONObject track = jsonArray.getJSONObject(i);
-                JSONArray artists = track.getJSONArray("artists");
-                Artist[] array = new Artist[artists.length()];
-                for(int j = 0; j < array.length; j++) {
-                    JSONObject artist = artists.getJSONObject(j);
-                    array[j] = new Artist(artist.getString("id"), artist.getString("name"));
-                }
-                String [] image = track
-                        .getJSONObject("album")
-                        .getJSONArray("images")
-                        .getJSONObject(2)
-                        .getString("url").split("/");
-                String [] imageFull = track
-                        .getJSONObject("album")
-                        .getJSONArray("images")
-                        .getJSONObject(1)
-                        .getString("url").split("/");
-                tracks.add(
-                        new Track(
-                                track.getString("id"),
-                                track.getString("name"),
-                                array,
-                                image[image.length-1],
-                                imageFull[imageFull.length-1],
-                                track.getInt("duration_ms"),
-                                track.getJSONObject("album").getString("name")));
-            }
+            tracks.addAll(spotifyHelper.extractSong(data));
             Log.d(TAG, "client searched for " + tracks.size() + "songs");
             clientSearchBarCallback.searchForSongs(tracks);
             if(searchButton != null)

@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
-import com.tinf19.musicparty.server.ServerService;
+import com.tinf19.musicparty.server.HostService;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -20,23 +20,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class HostPlaylistAdapter extends RecyclerView.Adapter<HostPlaylistAdapter.MyViewHolder> implements HostPlaylistItemMoveCallback.ItemTouchHelperContract {
+public class HostPlaylistAdapter extends RecyclerView.Adapter<HostPlaylistAdapter.MyViewHolder> implements HostPlaylistItemMoveHelper.HostPlaylistItemMoveHelperCallback {
 
-    private static final String TAG = HostPlaylistAdapter.class.getName();
+    private final HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
     private List<Track> mdataset;
     private View view;
-    private HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
 
     public interface HostPlaylistAdapterCallback {
         void swapPlaylistItems(int from, int to);
-        void removeItem(Track toRemove, int position, ServerService.AfterCallback callback);
+        void removeItem(Track toRemove, int position, HostService.AfterCallback callback);
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
 
-        private TextView songTitleTextView;
-        private TextView songArtistTextView;
-        private View rowView;
+        private final TextView songTitleTextView;
+        private final TextView songArtistTextView;
+        private final View rowView;
 
         public MyViewHolder(View itemView) {
             super(itemView);
@@ -51,10 +50,14 @@ public class HostPlaylistAdapter extends RecyclerView.Adapter<HostPlaylistAdapte
         this.hostPlaylistAdapterCallback = hostPlaylistAdapterCallback;
     }
 
+
+
+    //Android lifecycle methods
+
     @NotNull
     @Override
     public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        view = LayoutInflater.from(parent.getContext()).inflate(R.layout.client_playlist_recyc_view_row, parent, false);
+        view = LayoutInflater.from(parent.getContext()).inflate(R.layout.row_client_playlist, parent, false);
         return new MyViewHolder(view);
     }
 
@@ -103,11 +106,12 @@ public class HostPlaylistAdapter extends RecyclerView.Adapter<HostPlaylistAdapte
         hostPlaylistAdapterCallback.removeItem(mdataset.get(position), position, this::notifyDataSetChanged);
     }
 
-
     @Override
     public int getItemCount() {
         return mdataset.size();
     }
+
+
 
     public void setDataset(List<Track> mDataset) {
         this.mdataset = mDataset;

@@ -75,9 +75,9 @@ public class ClientService extends Service {
 
         Notification notification = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
                 .setContentTitle(getString(R.string.notification_clientServiceTitle))
-                .setSmallIcon(R.drawable.ic_service_notification_icon)
+                .setSmallIcon(R.drawable.logo_service_notification)
                 .setContentIntent(pendingIntent)
-                .addAction(R.drawable.ic_exit_button, getString(R.string.text_leave),pendingIntentButton)
+                .addAction(R.drawable.icon_exit_room, getString(R.string.text_leave),pendingIntentButton)
                 .build();
         Log.d(TAG, "starting ClientService-Notification");
         startForeground(1, notification);
@@ -87,7 +87,7 @@ public class ClientService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
 
         if(first) {
-            Thread tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenCallback() {
+            Thread tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenRefreshCallback() {
                 @Override
                 public void afterConnection(String token) {
                     Log.d(TAG, "afterConnection: Token has been gained");
@@ -140,9 +140,9 @@ public class ClientService extends Service {
         NotificationManagerCompat mNotificationManager = NotificationManagerCompat.from(this);
         Notification notificationUpdate = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
                 .setContentTitle(text)
-                .setSmallIcon(R.drawable.ic_service_notification_icon)
+                .setSmallIcon(R.drawable.logo_service_notification)
                 .setContentIntent(pendingIntent)
-                .addAction(R.drawable.ic_exit_button, getString(R.string.text_end), pendingIntentButton)
+                .addAction(R.drawable.icon_exit_room, getString(R.string.text_end), pendingIntentButton)
                 .build();
         mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
     }

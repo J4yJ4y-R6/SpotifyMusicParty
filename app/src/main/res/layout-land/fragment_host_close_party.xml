@@ -92,7 +92,7 @@
             android:autofillHints="playlistName"
             android:ems="10"
             android:enabled="false"
-            android:hint="Gibt hier den Playlistnamen ein"
+            android:hint="@string/text_enterNewPartyName"
             android:inputType="textPersonName"
             android:textColor="#FFFFFF"
             android:textColorHighlight="#FFFFFF"

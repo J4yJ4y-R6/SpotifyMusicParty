@@ -35,6 +35,8 @@ public class Constants {
     public static final int NOTIFY_ID = 1;
     public static final int CROSSFADE = 5;
 
+
+
     public static final int RESULT_LOAD_IMAGE = 1;
     public static final float ALPHA_FULL = 1.0f;
     public static final String LEXICON = "ABCDEFGHIJKLMNOPQRSTUVWXYZ12345674890";

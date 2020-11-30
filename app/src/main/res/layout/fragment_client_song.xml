@@ -13,33 +13,29 @@
 
         <TextView
             android:id="@+id/songtitleTextView"
-            android:layout_width="0dp"
-            android:layout_height="42dp"
-            android:layout_marginStart="60dp"
-            android:layout_marginTop="100dp"
-            android:layout_marginEnd="20dp"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="50dp"
             android:ellipsize="marquee"
             android:focusable="true"
             android:marqueeRepeatLimit="marquee_forever"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
             android:scrollHorizontally="true"
-            android:singleLine="true"
-            android:text="@string/text_songtitel"
+            android:singleLine="false"
+            android:text="@string/text_songtitle_placeholder"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
             android:textSize="30sp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/songCoverImageView"
-            app:layout_constraintTop_toBottomOf="@+id/connectedTo" />
+            app:layout_constraintHorizontal_bias="0.495"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/songCoverImageView" />
 
 
         <TextView
             android:id="@+id/albumTextView"
             android:layout_width="0dp"
             android:layout_height="25dip"
-            android:layout_marginStart="60dp"
-            android:layout_marginEnd="20dp"
             android:ellipsize="marquee"
             android:focusable="true"
             android:marqueeRepeatLimit="marquee_forever"
@@ -47,19 +43,18 @@
             android:paddingRight="5dp"
             android:scrollHorizontally="true"
             android:singleLine="true"
-            android:text="@string/text_albumname"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/songCoverImageView"
-            app:layout_constraintTop_toBottomOf="@+id/songtitleTextView" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/songtitleTextView"
+            app:layout_constraintVertical_bias="0.0" />
 
         <TextView
             android:id="@+id/artistTextView"
             android:layout_width="0dp"
             android:layout_height="25dip"
-            android:layout_marginStart="60dp"
-            android:layout_marginEnd="20dp"
             android:ellipsize="marquee"
             android:focusable="true"
             android:marqueeRepeatLimit="marquee_forever"
@@ -67,12 +62,13 @@
             android:paddingRight="5dp"
             android:scrollHorizontally="true"
             android:singleLine="true"
-            android:text="@string/text_kuenstler"
             android:textAlignment="center"
             android:textColor="#FFFFFF"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/songCoverImageView"
-            app:layout_constraintTop_toBottomOf="@+id/albumTextView" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/albumTextView"
+            app:layout_constraintVertical_bias="0.0" />
 
         <View
             android:id="@+id/divider3"
@@ -104,32 +100,36 @@
             android:id="@+id/songCoverImageView"
             android:layout_width="300dip"
             android:layout_height="300dip"
-            android:layout_marginStart="30dp"
-            android:layout_marginTop="20dp"
+            android:contentDescription="@string/text_songcover"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.495"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/connectedTo" />
+            app:layout_constraintTop_toBottomOf="@+id/connectedTo"
+            app:srcCompat="@drawable/icon_cover_placeholder" />
 
         <ImageButton
             android:id="@+id/playlistButtonImageButton"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:layout_marginEnd="30dp"
+            android:layout_marginStart="34dp"
             android:layout_marginBottom="16dp"
-            android:background="@drawable/custom_button"
+            android:background="@drawable/background_transparent"
+            android:contentDescription="@string/text_openPlaylistFragment_ContentD"
+            app:srcCompat="@drawable/icon_queue"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/exitButton"
-            app:srcCompat="@drawable/ic_queue_button" />
+            app:layout_constraintStart_toStartOf="parent" />
 
         <ImageButton
             android:id="@+id/exitButton"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:layout_marginEnd="30dp"
+            android:layout_marginEnd="34dp"
             android:layout_marginBottom="16dp"
-            android:background="@drawable/custom_button"
+            android:background="@drawable/background_transparent"
+            android:contentDescription="@string/text_openExitFragment_ContentD"
+            app:srcCompat="@drawable/icon_exit_room"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@drawable/ic_exit_button" />
+            app:layout_constraintEnd_toEndOf="parent" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

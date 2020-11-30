@@ -39,7 +39,7 @@ public class ClientPlaylistAdapter extends RecyclerView.Adapter<ClientPlaylistAd
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
-        View textView = inflater.inflate(R.layout.client_playlist_recyc_view_row, parent, false);
+        View textView = inflater.inflate(R.layout.row_client_playlist, parent, false);
         return new ViewHolder(textView);
     }
 

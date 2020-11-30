@@ -57,7 +57,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <Switch
+        <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/savePlaylistSwitch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -69,8 +69,7 @@
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/closePartyTextView"
-            tools:ignore="UseSwitchCompatOrMaterialXml" />
+            app:layout_constraintTop_toBottomOf="@+id/closePartyTextView" />
 
         <EditText
             android:id="@+id/savePlaylistNameEditText"
@@ -82,7 +81,7 @@
             android:autofillHints="playlistName"
             android:ems="10"
             android:enabled="false"
-            android:hint="Gibt hier den Playlistnamen ein"
+            android:hint="@string/text_enterNewPartyName"
             android:inputType="textPersonName"
             android:textColor="#FFFFFF"
             android:textColorHighlight="#FFFFFF"

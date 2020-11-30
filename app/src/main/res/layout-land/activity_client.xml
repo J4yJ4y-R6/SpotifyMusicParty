@@ -1,149 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/main_background_gradient"
-    android:padding="5dp"
-    android:visibility="visible"
-    tools:context=".client.JoinActivity">
+    android:background="@drawable/background_green_gradient"
+    tools:context=".client.ClientActivity">
 
-    <EditText
-        android:id="@+id/et_address"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:layout_marginStart="10dp"
-        android:autofillHints="ipaddress"
-        android:backgroundTint="@color/button_green"
-        android:ems="10"
-        android:hint="@string/text_ip_address"
-        android:inputType="textPersonName"
-        android:textColor="#FFFFFF"
-        android:textColorHint="#FFFFFF"
-        app:layout_constraintStart_toEndOf="@+id/infoIpSymbolImageButton"
-        app:layout_constraintTop_toTopOf="@+id/infoIpSymbolImageButton" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
-    <EditText
-        android:id="@+id/et_password"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="10dp"
-        android:autofillHints="fourCharNumberPassword"
-        android:backgroundTint="@color/button_green"
-        android:ems="10"
-        android:hint="@string/app_password"
-        android:inputType="numberPassword"
-        android:textColor="#FFFFFF"
-        android:textColorHint="#FFFFFF"
-        app:layout_constraintStart_toEndOf="@+id/infoIpSymbolImageButton"
-        app:layout_constraintTop_toBottomOf="@+id/et_address" />
+        <FrameLayout
+            android:id="@+id/searchBarFragmentFrame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="6">
 
-    <Button
-        android:id="@+id/bt_connect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="50dp"
-        android:onClick="nextPage"
-        android:text="@string/text_connect"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/loginViaQRCodeImageButton" />
+        </FrameLayout>
 
-    <EditText
-        android:id="@+id/usernameEditText"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="40dp"
-        android:autofillHints="username"
-        android:backgroundTint="@color/button_green"
-        android:ems="10"
-        android:hint="@string/app_username"
-        android:inputType="textPersonName"
-        android:textColor="#FFFFFF"
-        android:textColorHint="#F8F8F8"
-        app:layout_constraintStart_toEndOf="@+id/infoUsernameSymbolImageButton"
-        app:layout_constraintTop_toBottomOf="@+id/headerClientActivityTextView" />
+        <FrameLayout
+            android:layout_weight="1"
+            android:id="@+id/showSongFragmentFrame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-    <TextView
-        android:id="@+id/usernameDescriptionTextView"
-        android:layout_width="250dp"
-        android:layout_height="80dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginTop="40dp"
-        android:background="@color/button_green"
-        android:text="@string/text_infobox_username"
-        android:textAlignment="center"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:visibility="invisible"
-        app:layout_constraintStart_toEndOf="@+id/infoUsernameSymbolImageButton"
-        app:layout_constraintTop_toBottomOf="@+id/headerClientActivityTextView" />
+        </FrameLayout>
 
-    <TextView
-        android:id="@+id/headerClientActivityTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:text="@string/header_activity_client"
-        android:textColor="#FFFFFF"
-        android:textSize="30sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/loginDescriptionTextView"
-        android:layout_width="250dp"
-        android:layout_height="70dp"
-        android:layout_marginStart="10dp"
-        android:background="@color/button_green"
-        android:text="@string/text_infobox_connecttion"
-        android:textAlignment="center"
-        android:textColor="#FDFDFD"
-        android:textSize="16sp"
-        android:visibility="invisible"
-        app:layout_constraintStart_toEndOf="@+id/infoIpSymbolImageButton"
-        app:layout_constraintTop_toTopOf="@+id/infoIpSymbolImageButton" />
-
-    <ImageButton
-        android:id="@+id/loginViaQRCodeImageButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:background="@drawable/rounded_button"
-        android:contentDescription="@string/text_qrButtonHint"
-        android:padding="15dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/et_password"
-        app:srcCompat="@drawable/ic_qr_code_image" />
-
-    <ImageButton
-        android:id="@+id/infoIpSymbolImageButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="30dp"
-        android:background="@drawable/rounded_button"
-        android:contentDescription="@string/text_infobox"
-        android:src="@drawable/ic_iconmonstr_info_2"
-        app:layout_constraintStart_toEndOf="@+id/usernameDescriptionTextView"
-        app:layout_constraintTop_toTopOf="@+id/infoUsernameSymbolImageButton" />
-
-    <ImageButton
-        android:id="@+id/infoUsernameSymbolImageButton"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:layout_marginStart="30dp"
-        android:layout_marginTop="40dp"
-        android:background="@drawable/rounded_button"
-        android:contentDescription="@string/text_infobox"
-        android:src="@drawable/ic_iconmonstr_info_2"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/headerClientActivityTextView" />
-
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -26,7 +26,7 @@
         android:layout_alignParentEnd="true"
         android:layout_toEndOf="@+id/partyPeopleNameTextView"
         android:gravity="center_vertical"
-        android:text="0 Minuten"
+        android:text="@string/text_zeroMinutes"
         android:textColor="#FFFFFF"
         android:textSize="12sp" />
 

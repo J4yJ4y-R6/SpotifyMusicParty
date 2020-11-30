@@ -23,44 +23,38 @@ public class HostPartyPeopleFragment extends Fragment {
     private static final String TAG = HostPartyPeopleFragment.class.getName();
     private RecyclerView recyclerView;
     private HostPartyPeopleAdapter hostPartyPeopleAdapter;
-    private PartyPeopleList partyPeopleList;
+    private HostPartyPeopleCallback hostPartyPeopleCallback;
 
-    public interface PartyPeopleList {
+    public interface HostPartyPeopleCallback {
         ArrayList<PartyPeople> getPartyPeopleList();
     }
 
-    public HostPartyPeopleFragment(PartyPeopleList partyPeopleList) {
-        this.partyPeopleList = partyPeopleList;
-    }
+    public HostPartyPeopleFragment(HostPartyPeopleCallback hostPartyPeopleCallback) { this.hostPartyPeopleCallback = hostPartyPeopleCallback; }
 
-    public HostPartyPeopleFragment() {
-        // Required empty public constructor
-    }
+    public HostPartyPeopleFragment() { }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+
+
+    //Android lifecycle methods
 
     @Override
     public void onStart() {
         super.onStart();
-        hostPartyPeopleAdapter.setDataset(partyPeopleList.getPartyPeopleList());
+        hostPartyPeopleAdapter.setDataset(hostPartyPeopleCallback.getPartyPeopleList());
     }
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof PartyPeopleList)
-            partyPeopleList = (PartyPeopleList) context;
+        if(context instanceof HostPartyPeopleCallback)
+            hostPartyPeopleCallback = (HostPartyPeopleCallback) context;
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_party_people, container, false);
-
+        View view = inflater.inflate(R.layout.fragment_host_party_people, container, false);
         recyclerView = view.findViewById(R.id.partyPeopleRecyclerView);
         if(recyclerView != null) {
             hostPartyPeopleAdapter = new HostPartyPeopleAdapter(new ArrayList<>());

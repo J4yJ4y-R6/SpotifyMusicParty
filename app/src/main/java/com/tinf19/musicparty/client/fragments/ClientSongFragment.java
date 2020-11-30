@@ -75,7 +75,7 @@ public class ClientSongFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View rootView = inflater.inflate(R.layout.fragment_show_song, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_client_song, container, false);
 
         songCover = rootView.findViewById(R.id.songCoverImageView);
         songTitle = rootView.findViewById(R.id.songtitleTextView);

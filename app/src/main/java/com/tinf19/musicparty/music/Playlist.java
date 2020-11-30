@@ -1,5 +1,7 @@
 package com.tinf19.musicparty.music;
 
+import org.jetbrains.annotations.NotNull;
+
 public class Playlist {
 
     public final String id;
@@ -24,6 +26,7 @@ public class Playlist {
         return coverURL;
     }
 
+    @NotNull
     @Override
     public String toString() {
         return "Playlist{" +

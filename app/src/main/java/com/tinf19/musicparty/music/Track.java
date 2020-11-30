@@ -1,7 +1,10 @@
 package com.tinf19.musicparty.music;
 
+import android.util.Log;
+
 import com.tinf19.musicparty.util.Constants;
 
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -10,6 +13,7 @@ import java.util.List;
 
 public class Track {
 
+    private static final String TAG = Track.class.getName();
     private final String id;
     private final String name;
     private final Artist [] artist;
@@ -62,6 +66,10 @@ public class Track {
 
     }
 
+
+
+    //Getter
+
     public String getId() {
         return id;
     }
@@ -90,21 +98,12 @@ public class Track {
         return album;
     }
 
-    @Override
-    public String toString() {
-        return "Track{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", duration=" + duration +
-                ", cover='" + cover + '\'' +
-                '}';
-    }
-
     public String getURI() {
         return "spotify:track:" + id;
     }
 
     public String serialize() throws JSONException {
+        Log.d(TAG, "serialize artist (" + name + ") from json");
         JSONObject tempObject = new JSONObject();
         JSONArray artistTemp = new JSONArray();
         for (Artist x : artist) {
@@ -119,5 +118,16 @@ public class Track {
                 .put(Constants.ALBUM, album)
                 .put(Constants.COVER_FULL, coverFull);
         return tempObject.toString();
+    }
+
+    @NotNull
+    @Override
+    public String toString() {
+        return "Track{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", duration=" + duration +
+                ", cover='" + cover + '\'' +
+                '}';
     }
 }

@@ -16,7 +16,6 @@ import java.util.List;
 
 public class HostPartyPeopleAdapter extends RecyclerView.Adapter<HostPartyPeopleAdapter.ViewHolder> {
 
-    private static final String TAG = HostPartyPeopleAdapter.class.getName();
     private List<PartyPeople> mDataset;
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -31,17 +30,14 @@ public class HostPartyPeopleAdapter extends RecyclerView.Adapter<HostPartyPeople
         }
     }
 
-    public HostPartyPeopleAdapter(List<PartyPeople> partyPeopleList) {
-        this.mDataset = partyPeopleList;
-    }
+    public HostPartyPeopleAdapter(List<PartyPeople> partyPeopleList) { this.mDataset = partyPeopleList; }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
-
-        View textView = inflater.inflate(R.layout.party_people_recyc_view_row, parent, false);
+        View textView = inflater.inflate(R.layout.row_host_party_people, parent, false);
         return new ViewHolder(textView);
     }
 
@@ -54,7 +50,7 @@ public class HostPartyPeopleAdapter extends RecyclerView.Adapter<HostPartyPeople
             nameTV.setText(name);
         TextView durationTV = holder.partyPeopleDurationTextView;
         if(durationTV != null) {
-            String durationTime = (int)((duration / 1000)/60) + " Minuten";
+            String durationTime = (int)((duration / 1000) / 60) + holder.itemView.getContext().getString(R.string.text_minutes);
             durationTV.setText(durationTime);
         }
     }

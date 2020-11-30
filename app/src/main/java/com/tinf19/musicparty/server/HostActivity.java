@@ -27,13 +27,12 @@ import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.tinf19.musicparty.BuildConfig;
+import com.tinf19.musicparty.fragments.LoadingFragment;
 import com.tinf19.musicparty.server.fragments.HostClosePartyFragment;
 import com.tinf19.musicparty.server.fragments.HostPlaylistFragment;
 import com.tinf19.musicparty.server.fragments.HostSearchBarFragment;
 import com.tinf19.musicparty.server.fragments.HostPartyPeopleFragment;
-import com.tinf19.musicparty.client.fragments.ClientSearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
-import com.tinf19.musicparty.fragments.ServerLoadingFragment;
 import com.tinf19.musicparty.server.fragments.HostSettingsFragment;
 import com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment;
 import com.tinf19.musicparty.server.fragments.HostSongFragment;
@@ -61,7 +60,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-public class HostActivity extends AppCompatActivity implements ServerService.SpotifyPlayerCallback, ClientSearchBarFragment.ClientSearchBarCallback, HostSongFragment.OpenHostFragments, SearchSongsOutputFragment.AddSongCallback, HostPlaylistFragment.PlaylistCallback, HostClosePartyFragment.ClosePartyCallback, HostPartyPeopleFragment.PartyPeopleList, HostSettingsFragment.GetServerSettings, HostPlaylistAdapter.HostPlaylistAdapterCallback, HostSearchBarFragment.HostSearchForSongs, HostFavoritePlaylistsFragment.ShowSavedPlaylistCallback, HostFavoritePlaylistsAdapter.FavoritePlaylistCallback {
+public class HostActivity extends AppCompatActivity {
 
     private static final String TAG = HostActivity.class.getName();
     private String password;
@@ -70,11 +69,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private WifiP2pManager manager;
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
-    private ServerService mBoundService;
+    private HostService mBoundService;
     private boolean mShouldUnbind;
     private boolean stopped;
 
-    private FragmentTransaction fragmentTransaction;
     private HostSongFragment showSongFragment;
     private HostSearchBarFragment hostSearchBarFragment;
     private SearchSongsOutputFragment searchSongsOutputFragment;
@@ -83,10 +81,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     private HostPlaylistFragment hostPlaylistFragment;
     private HostPartyPeopleFragment hostPartyPeopleFragment;
     private HostFavoritePlaylistsFragment hostFavoritePlaylistsFragment;
-    private ServerLoadingFragment serverLoadingFragment;
+    private LoadingFragment loadingFragment;
 
 
-    public interface ConnectionCallback {
+    public interface HostActivityCallback {
         void afterConnection(SpotifyAppRemote appRemote);
         void afterFailure();
     }
@@ -94,144 +92,248 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "user stopped server by service-notification");
             stopService();
         }
     };
 
-    //    methods and objects for ServerService-Connection
-    private ServiceConnection mConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            mBoundService = ((ServerService.LocalBinder) service).getService();
-            mBoundService.setSpotifyPlayerCallback(HostActivity.this);
-            if(mBoundService.isFirst())
-                loginToSpotify();
-            /*connect(appRemote -> {
-                Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
-                serviceIntent.putExtra(Constants.TOKEN, token);
-                serviceIntent.putExtra(Constants.PASSWORD, generatePassword());
-                serviceIntent.putExtra(Constants.PARTYNAME, getString(R.string.text_partyName));
-                startService(serviceIntent);
-            });*/
-            // Tell the user about this for our demo.
-        }
 
-        public void onServiceDisconnected(ComponentName className) {
-            mBoundService = null;
-            Toast.makeText(HostActivity.this, getString(R.string.service_serverDisconnected),
-                    Toast.LENGTH_SHORT).show();
-        }
-    };
-
-    void doBindService() {
-        if (bindService(new Intent(this, ServerService.class),
-                mConnection, Context.BIND_AUTO_CREATE)) {
-            mShouldUnbind = true;
-        } else {
-            Log.e(TAG, "Error: The requested service doesn't " +
-                    "exist, or this client isn't allowed access to it.");
-        }
-    }
-
-    void doUnbindService() {
-        if (mShouldUnbind) {
-            // Release information about the service's state.
-            mBoundService.setSpotifyPlayerCallback(null);
-            unbindService(mConnection);
-            mShouldUnbind = false;
-        }
-    }
-
-    public void stopService() {
-        if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null) {
-            mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
-            SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
-        }
-        doUnbindService();
-        stopService(new Intent(this, ServerService.class));
-        startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
-    }
-
-    private String generatePassword() {
-        if(password == null) password = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
-        return password;
-    }
-
-    public void loginToSpotify() {
-        Log.d(TAG, "Trying to get auth token");
-        AuthorizationRequest.Builder builder =
-                new AuthorizationRequest.Builder(BuildConfig.CLIENT_ID, AuthorizationResponse.Type.CODE, Constants.REDIRECT_URI);
-        builder.setScopes(new String[]{"streaming", "app-remote-control", "playlist-modify-private", "playlist-modify-public", "user-read-private", "ugc-image-upload"});
-        AuthorizationRequest request = builder.build();
-        AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
-
-        // Check if result comes from the correct activity
-        if (requestCode == Constants.REQUEST_CODE) {
-            AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
-
-            switch (response.getType()) {
-                // Response was successful and contains auth token
-                case TOKEN:
-                    // Handle successful response
-                    //token = response.getAccessToken();
-                    Log.d(TAG, "Token gained successful");
-                    break;
-                // Auth flow returned an error
-                case ERROR:
-                    // Handle error response
-                    Log.e(TAG, "Spotify login error");
-                    stopService();
-                    break;
-                // Most likely auth flow was cancelled
-                case CODE:
-                    Log.d(TAG, "Code: " + response.getCode());
-                    Log.d(TAG, "State: " + response.getState()); Intent serviceIntent = new Intent(HostActivity.this, ServerService.class);
-                    serviceIntent.putExtra(Constants.CODE, response.getCode());
-                    serviceIntent.putExtra(Constants.PASSWORD, generatePassword());
-                    serviceIntent.putExtra(Constants.PARTYNAME, getString(R.string.text_partyName));
-                    startService(serviceIntent);
-                    break;
-                default:
-                    // Handle other cases
-                    Log.e(TAG, "Something went wrong");
-            }
-        }
-    }
-
-    @Override
-    public String getToken() {
-        return mBoundService != null ? mBoundService.getToken() : null;
-    }
-
-
-//    Interaction with Activity
+    //Android lifecycle methods
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-/*        SharedPreferences savePlaylistMemory = this.getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = savePlaylistMemory.edit();
-        editor.clear();
-        editor.apply();*/
-
-        setContentView(R.layout.activity_host_party);
+        setContentView(R.layout.activity_host);
 
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
 
-        hostSearchBarFragment = new HostSearchBarFragment(this);
-        showSongFragment = new HostSongFragment(this);
-        searchSongsOutputFragment = new SearchSongsOutputFragment(this);
-        hostClosePartyFragment = new HostClosePartyFragment(this);
-        hostSettingsFragment = new HostSettingsFragment(this);
-        hostPlaylistFragment = new HostPlaylistFragment(this, this);
-        hostPartyPeopleFragment = new HostPartyPeopleFragment(this);
-        hostFavoritePlaylistsFragment = new HostFavoritePlaylistsFragment(this, this);
-        serverLoadingFragment = new ServerLoadingFragment();
+        hostSearchBarFragment = new HostSearchBarFragment(new HostSearchBarFragment.HostSearchBarCallback() {
+            @Override
+            public void searchForSongs(List<Track> tracks) {
+                animateFragmentChange(true, searchSongsOutputFragment, "SearchSongOutputFragment");
+                HostActivity.this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));
+            }
+
+            @Override
+            public void openSavedPlaylistsFragment() {
+                animateFragmentChange(true, hostFavoritePlaylistsFragment, "ShowSavedPlaylistFragment");
+            }
+
+            @Override
+            public String getToken() {
+                return getHostToken();
+            }
+        });
+        showSongFragment = new HostSongFragment(new HostSongFragment.HostSongCallback() {
+            @Override
+            public void openSettingsFragment() {
+                animateFragmentChange(true, hostSettingsFragment, "SettingsHostFragment");
+            }
+
+            @Override
+            public void openPeopleFragment() {
+                animateFragmentChange(true, hostPartyPeopleFragment, "PartyPeopleFragment");
+            }
+
+            @Override
+            public void openPlaylistFragment() {
+                animateFragmentChange(true, hostPlaylistFragment, "HostPlaylistFragment");
+            }
+
+            @Override
+            public void openExitFragment() {
+                animateFragmentChange(true, hostClosePartyFragment, "HostClosePartyFragment");
+            }
+
+            @Override
+            public void nextTrack() {
+                if (mBoundService != null)
+                    if(!mBoundService.isPlaylistEnded())
+                        mBoundService.next();
+                    else
+                        mBoundService.restartQue();
+            }
+
+            @Override
+            public void lastTrack() {
+                if(mBoundService != null) {
+                    mBoundService.back();
+                }
+            }
+
+            @Override
+            public void playTrack() {
+                if(mBoundService != null)
+                    mBoundService.togglePlayback();
+            }
+
+            @Override
+            public int getPartyPeopleSize() {
+                if (mBoundService != null) {
+                    int partySize = mBoundService.getClientListSize();
+                    Log.d(TAG, "current party size: " + partySize);
+                    return partySize;
+                }
+                else return 0;
+            }
+
+            @Override
+            public String getPartyPeoplePartyName() {
+                String partyName = mBoundService != null ? mBoundService.getPartyName() : getString(R.string.text_partyName);
+                Log.d(TAG, "current party name: " + partyName);
+                return partyName;
+            }
+
+            @Override
+            public boolean getPauseState() {
+                return mBoundService != null && mBoundService.getPause();
+            }
+
+            @Override
+            public Track setShowNowPlaying() {
+                if (mBoundService != null) return mBoundService.getNowPlaying();
+                else return null;
+            }
+        });
+        searchSongsOutputFragment = new SearchSongsOutputFragment(track -> {
+            HostActivity.this.runOnUiThread(() -> Toast.makeText(HostActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
+            new Thread(() -> {
+                if (mBoundService != null) {
+                    mBoundService.addItemToPlaylist(track);
+                }
+            }).start();
+        });
+        hostClosePartyFragment = new HostClosePartyFragment(new HostClosePartyFragment.HostClosePartyCallback() {
+            @Override
+            public void denyEndParty() {
+                Log.d(TAG, "host has denied closing the party");
+                onBackPressed();
+            }
+
+            @Override
+            public void acceptEndParty() { stopService(); }
+
+            @Override
+            public void createPlaylistFromArrayList(String name) throws JSONException {
+                if(mBoundService != null)
+                    mBoundService.createPlaylist(name, true);
+            }
+        });
+        hostSettingsFragment = new HostSettingsFragment(new HostSettingsFragment.HostSettingsCallback() {
+            @Override
+            public String getIpAddress() {
+                return getIPAddress(true);
+            }
+
+            @Override
+            public String getPassword() {
+                return generatePassword();
+            }
+
+            @Override
+            public void setNewPartyName(String newPartyName) {
+                if (mBoundService != null) {
+                    Log.d(TAG, "party name has changed to: " + newPartyName);
+                    mBoundService.setPartyName(newPartyName);
+                    new Thread(() -> {
+                        try {
+                            mBoundService.sendToAll(Commands.LOGIN, mBoundService.getPartyName());
+                            mBoundService.updateServiceNotifaction();
+                        } catch (IOException e) {
+                            Log.e(TAG, e.getMessage(), e);
+                        }
+                    }).start();
+                }
+            }
+        });
+        hostPlaylistFragment = new HostPlaylistFragment(new HostPlaylistFragment.HostPlaylistCallback() {
+            @Override
+            public void showPlaylist() {
+                if (mBoundService != null) {
+                    List<Track> trackList = mBoundService.getPlaylist();
+                    runOnUiThread(() -> hostPlaylistFragment.showResult(trackList));
+                }
+            }
+
+            @Override
+            public Track getCurrentPlaying() {
+                if (mBoundService != null) return mBoundService.getNowPlaying();
+                else return null;
+            }
+        }, new HostPlaylistAdapter.HostPlaylistAdapterCallback() {
+
+            @Override
+            public void swapPlaylistItems(int from, int to) {
+                /*if (mBoundService != null) {
+                    try {
+                        mBoundService.moveItem(from, to);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }*/
+            }
+
+            @Override
+            public void removeItem(Track toRemove, int position, HostService.AfterCallback callback) {
+                if(mBoundService != null) {
+                    mBoundService.deleteFromQue( position, () -> runOnUiThread(callback::deleteFromDataset));
+                }
+            }
+        });
+        hostPartyPeopleFragment = new HostPartyPeopleFragment(() -> {
+            if (mBoundService != null) return (ArrayList<PartyPeople>) mBoundService.getPeopleList();
+            else return new ArrayList<>();
+        });
+        hostFavoritePlaylistsFragment = new HostFavoritePlaylistsFragment(new HostFavoritePlaylistsFragment.HostFavoritePlaylistCallback() {
+            @Override
+            public void changePlaylistCover(String id, Bitmap image) {
+                if (mBoundService != null) {
+                    new Thread(() -> {
+                        mBoundService.updatePlaylistCover(id, image);
+                    }).start();
+                }
+            }
+
+            @Override
+            public String getToken() {
+                return getHostToken();
+            }
+        }, new HostFavoritePlaylistsAdapter.HostFavoritePlaylistAdapterCallback() {
+            @Override
+            public void playFavoritePlaylist(String id, ArrayList<String> idList) {
+                if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)  {
+                    mBoundService.setPlaylistID(id);
+                    mBoundService.getQueFromPlaylist(id);
+                    try {
+                        mBoundService.checkPlaylistFollowStatus(id);
+                    } catch (JSONException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
+                }
+            }
+
+            @Override
+            public void changePlaylistName(String name, String id) {
+                if(mBoundService != null) {
+                    new Thread(() -> {
+                        try {
+                            mBoundService.updatePlaylistName(name, id);
+                        } catch (JSONException e) {
+                            Log.e(TAG, e.getMessage(), e);
+                        }
+                    }).start();
+                }
+            }
+
+            @Override
+            public void deletePlaylist(String id) {
+                notifyFavPlaylistAdapter();
+                if(mBoundService != null)
+                    mBoundService.deletePlaylist(id);
+            }
+        });
+        loadingFragment = new LoadingFragment(getString(R.string.text_loadingServer));
 
         if(savedInstanceState != null) {
             password = savedInstanceState.getString(Constants.PASSWORD, "0000");
@@ -244,7 +346,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             }
         } else {
             getSupportFragmentManager().beginTransaction().
-                    replace(R.id.showSongHostFragmentFrame, serverLoadingFragment, "ServerLoadingFragment").commitAllowingStateLoss();
+                    replace(R.id.showSongHostFragmentFrame, loadingFragment, "LoadingFragment").commitAllowingStateLoss();
         }
 
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
@@ -258,14 +360,6 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         intentFilter.addAction(WifiP2pManager.WIFI_P2P_THIS_DEVICE_CHANGED_ACTION);
 
         doBindService();
-    }
-
-    @Override
-    public void showDefault() {
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.searchBarHostFragmentFrame, hostSearchBarFragment, "HostSearchBarFragment").commitAllowingStateLoss();
     }
 
     @Override
@@ -306,10 +400,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)
-//            SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
         doUnbindService();
-        Log.d(TAG, "I got destroyed");
     }
 
     @Override
@@ -321,15 +412,10 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
     }
 
     @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
     public void onBackPressed() {
         if(showSongFragment.isVisible()) {
             animateFragmentChange(true, hostClosePartyFragment, "ExitConnectionFragment");
-        } else if(serverLoadingFragment.isVisible()){
+        } else if(loadingFragment.isVisible()){
           stopService();
         } else {
             hostSearchBarFragment.clearSearch();
@@ -337,10 +423,208 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         }
     }
 
-    //  changing fragment source
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+        super.onActivityResult(requestCode, resultCode, intent);
+
+        // Check if result comes from the correct activity
+        if (requestCode == Constants.REQUEST_CODE) {
+            AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
+
+            switch (response.getType()) {
+                case CODE:
+                    Log.d(TAG, "got code from Spotify successfully");
+                    Intent serviceIntent = new Intent(HostActivity.this, HostService.class);
+                    serviceIntent.putExtra(Constants.CODE, response.getCode());
+                    serviceIntent.putExtra(Constants.PASSWORD, generatePassword());
+                    serviceIntent.putExtra(Constants.PARTYNAME, getString(R.string.text_partyName));
+                    startService(serviceIntent);
+                    break;
+                case ERROR:
+                    // Handle error response
+                    Log.e(TAG, "Spotify login error: " + response.getError());
+                    stopService();
+                    break;
+                default:
+                    // Handle other cases
+                    Log.e(TAG, "Something went wrong");
+            }
+        }
+    }
+
+
+
+    //Service methods
+    private ServiceConnection mConnection = new ServiceConnection() {
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            Log.d(TAG, "Service has been connected");
+            mBoundService = ((HostService.LocalBinder) service).getService();
+            mBoundService.setHostServiceCallback(new HostService.HostServiceCallback() {
+
+                @Override
+                public void setNowPlaying(Track nowPlaying) { runOnUiThread(() ->showSongFragment.setNowPlaying(nowPlaying)); }
+
+                @Override
+                public void setPeopleCount(int count) { runOnUiThread(() -> showSongFragment.setPartyNameCount(count)); }
+
+                @Override
+                public void setPlayImage(boolean pause) { showSongFragment.setPlayTrackButtonImage(pause); }
+
+                @Override
+                public void connect(HostActivityCallback hostActivityCallback) {
+                    runOnUiThread(() -> {
+                        ConnectionParams connectionParams =
+                                new ConnectionParams.Builder(BuildConfig.CLIENT_ID)
+                                        .setRedirectUri(Constants.REDIRECT_URI)
+                                        .showAuthView(false)
+                                        .build();
+                        SpotifyAppRemote.connect(HostActivity.this, connectionParams,
+                                new Connector.ConnectionListener() {
+                                    @Override
+                                    public void onConnected(SpotifyAppRemote spotifyAppRemote) {
+                                        Log.d(TAG, "connected to spotify remote control");
+                                        hostActivityCallback.afterConnection(spotifyAppRemote);
+                                        if(mBoundService != null && mBoundService.isFirst()) {
+                                            HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.service_serverMsg, getString(R.string.text_partyName)), Toast.LENGTH_SHORT).show());
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(Throwable throwable) {
+                                        if(throwable instanceof SpotifyConnectionTerminatedException) {
+                                            Log.d(TAG, "connection to spotify remote control failed");
+                                            hostActivityCallback.afterFailure();
+                                        } else if(throwable instanceof CouldNotFindSpotifyApp) {
+                                            final String appPackageName = "com.spotify.music";
+                                            stopped = true;
+                                            HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.text_noSpotifyFound), Toast.LENGTH_SHORT).show());
+                                            try {
+                                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                                            } catch (android.content.ActivityNotFoundException anfe) {
+                                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                                            }
+                                        }
+                                        else
+                                            Log.e(TAG, throwable.getMessage(), throwable);
+                                    }
+                                });
+                    });
+                }
+
+                @Override
+                public void notifyFavPlaylistAdapter() {
+                    Log.d(TAG, "favorite playlists has been changed");
+                    HostActivity.this.notifyFavPlaylistAdapter();
+                }
+
+                @Override
+                public void addToSharedPreferances(String name, String id) {
+                    Log.d(TAG, "playlist " + name + " has been added to favorites");
+                    SharedPreferences savePlaylistMemory = getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
+                    if(!savePlaylistMemory.getString("29", "").equals(""))
+                        Toast.makeText(HostActivity.this, getString(R.string.text_toastPlaylistNotSaved), Toast.LENGTH_LONG).show();
+                    SharedPreferences.Editor editor = savePlaylistMemory.edit();
+                    JSONObject playlist = new JSONObject();
+                    try {
+                        playlist.put("name", name);
+                        playlist.put("id", id);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+
+                    for(int i = 0; i < 30; i++) {
+                        try {
+                            if(savePlaylistMemory.getString("" + i, null) == null || id.equals(new JSONObject(savePlaylistMemory.getString("" + i, "")).getString("id"))) {
+                                editor.putString("" + i, playlist.toString());
+                                break;
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    editor.apply();
+                }
+
+                @Override
+                public void reloadPlaylistFragment() {
+                    if(hostPlaylistFragment.isVisible()) hostPlaylistFragment.updateRecyclerView();
+                }
+
+                @Override
+                public void showDefault() {
+                    Log.d(TAG, "Fragment has been changed to: HostSongFragment");
+                    getSupportFragmentManager().beginTransaction().
+                            replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
+                    Log.d(TAG, "TopFragment has been changed to: HostSearchBarFragment");
+                    getSupportFragmentManager().beginTransaction().
+                            replace(R.id.searchBarHostFragmentFrame, hostSearchBarFragment, "HostSearchBarFragment").commitAllowingStateLoss();
+                }
+
+                @Override
+                public void acceptEndParty() {
+                    stopService();
+                }
+            });
+            if(mBoundService.isFirst())
+                loginToSpotify();
+        }
+
+        public void onServiceDisconnected(ComponentName className) {
+            Log.d(TAG, "Service has been disconnected");
+            mBoundService = null;
+            Toast.makeText(HostActivity.this, getString(R.string.service_serverDisconnected),
+                    Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    void doBindService() {
+        if (bindService(new Intent(this, HostService.class),
+                mConnection, Context.BIND_AUTO_CREATE)) {
+            Log.d(TAG, "Service has been bound");
+            mShouldUnbind = true;
+        } else {
+            Log.e(TAG, "Error: The requested service doesn't " +
+                    "exist, or this client isn't allowed access to it.");
+        }
+    }
+
+    void doUnbindService() {
+        if (mShouldUnbind) {
+            Log.d(TAG, "Service has been unbound");
+            // Release information about the service's state.
+            mBoundService.setHostServiceCallback(null);
+            unbindService(mConnection);
+            mShouldUnbind = false;
+        }
+    }
+
+    public void stopService() {
+        Log.d(TAG, "spotify remote control disconnected");
+        if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null) {
+            mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
+            SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
+        }
+        doUnbindService();
+        stopService(new Intent(this, HostService.class));
+        startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
+    }
+
+    public void loginToSpotify() {
+        Log.d(TAG, "Trying to get auth token");
+        AuthorizationRequest.Builder builder =
+                new AuthorizationRequest.Builder(BuildConfig.CLIENT_ID, AuthorizationResponse.Type.CODE, Constants.REDIRECT_URI);
+        builder.setScopes(new String[]{"streaming", "app-remote-control", "playlist-modify-private", "playlist-modify-public", "user-read-private", "ugc-image-upload"});
+        AuthorizationRequest request = builder.build();
+        AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);
+    }
+
+
+
+    //Fragment methods
 
     public void animateFragmentChange(boolean direction, Fragment fragment, String tag) {
-        fragmentTransaction = getSupportFragmentManager().beginTransaction();
+        Log.d(TAG, "Fragment has been changed to " + tag);
+        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         if(direction)
             fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_up, R.anim.fragment_slide_out_up);
         else
@@ -349,254 +633,7 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         fragmentTransaction.commitAllowingStateLoss();
     }
 
-    @Override
-    public void searchForSongs(List<Track> tracks) {
-        animateFragmentChange(true, searchSongsOutputFragment, "SearchSongOutputFragment");
-        this.runOnUiThread(() -> searchSongsOutputFragment.showResult(tracks));
-    }
-
-    @Override
-    public void openSavedPlaylistsFragment() {
-        animateFragmentChange(true, hostFavoritePlaylistsFragment, "ShowSavedPlaylistFragment");
-    }
-
-    @Override
-    public void openSettingsFragment() {
-        animateFragmentChange(true, hostSettingsFragment, "SettingsHostFragment");
-    }
-
-    @Override
-    public void openPeopleFragment() {
-        animateFragmentChange(true, hostPartyPeopleFragment, "PartyPeopleFragment");
-    }
-
-    @Override
-    public void openPlaylistFragment() {
-        animateFragmentChange(true, hostPlaylistFragment, "HostPlaylistFragment");
-    }
-
-    @Override
-    public void openExitFragment() {
-        animateFragmentChange(true, hostClosePartyFragment, "HostClosePartyFragment");
-    }
-
-    @Override
-    public void reloadPlaylistFragment() {
-        if(hostPlaylistFragment.isVisible())
-            hostPlaylistFragment.updateRecyclerView();
-    }
-
-    @Override
-    public void addToSharedPreferances(String name, String id) {
-        SharedPreferences savePlaylistMemory = this.getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
-        if(!savePlaylistMemory.getString("29", "").equals(""))
-            Toast.makeText(this, getString(R.string.text_toastPlaylistNotSaved), Toast.LENGTH_LONG).show();
-        SharedPreferences.Editor editor = savePlaylistMemory.edit();
-        JSONObject playlist = new JSONObject();
-        try {
-            playlist.put("name", name);
-            playlist.put("id", id);
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        for(int i = 0; i < 30; i++) {
-            try {
-                if(savePlaylistMemory.getString("" + i, null) == null || id.equals(new JSONObject(savePlaylistMemory.getString("" + i, "")).getString("id"))) {
-                    editor.putString("" + i, playlist.toString());
-                    break;
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-        editor.apply();
-    }
-
-    @Override
-    public void deletePlaylist(String id) {
-        notifyFavPlaylistAdapter();
-        if(mBoundService != null)
-            mBoundService.deletePlaylist(id);
-    }
-
-    @Override
-    public void copyPlaylistToSpotify(String name) {
-        if(mBoundService != null) {
-            try {
-                mBoundService.createPlaylist(name, false);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    //    Methods for ShowSongFragment
-
-    @Override
-    public void setNowPlaying(Track nowPlaying) {
-        this.runOnUiThread(() ->showSongFragment.setNowPlaying(nowPlaying));
-    }
-
-    @Override
-    public void setPeopleCount(int count) { this.runOnUiThread(() -> showSongFragment.setPartyNameCount(count)); }
-
-    @Override
-    public void setPlayImage(boolean pause) {
-        showSongFragment.setPlayTrackButtonImage(pause);
-    }
-
-    @Override
-    public int getPartyPeopleSize() {
-        if (mBoundService != null) return mBoundService.getClientListSize();
-        else return 0;
-    }
-
-    @Override
-    public String getPartyPeoplePartyName() { return mBoundService != null ? mBoundService.getPartyName() : getString(R.string.text_partyName); }
-
-    @Override
-    public void nextTrack() {
-        if (mBoundService != null)
-            if(!mBoundService.isPlaylistEnded())
-                mBoundService.next();
-            else
-                mBoundService.restartQue();
-    }
-
-    @Override
-    public void lastTrack() {
-        if(mBoundService != null) {
-            mBoundService.back();
-        }
-    }
-
-    @Override
-    public void playTrack() {
-        if(mBoundService != null)
-            mBoundService.togglePlayback();
-    }
-
-    @Override
-    public boolean getPauseState() {
-        return mBoundService != null && mBoundService.getPause();
-    }
-
-    @Override
-    public Track setShowNowPlaying() {
-        if (mBoundService != null) return mBoundService.getNowPlaying();
-        else return null;
-    }
-
-    @Override
-    public void connect(HostActivity.ConnectionCallback connectionCallback) {
-        runOnUiThread(() -> {
-            Log.d(TAG, "connect: Trying to connect");
-            ConnectionParams connectionParams =
-                    new ConnectionParams.Builder(BuildConfig.CLIENT_ID)
-                            .setRedirectUri(Constants.REDIRECT_URI)
-                            .showAuthView(false)
-                            .build();
-            SpotifyAppRemote.connect(HostActivity.this, connectionParams,
-                    new Connector.ConnectionListener() {
-
-                        @Override
-                        public void onConnected(SpotifyAppRemote spotifyAppRemote) {
-                            Log.d(TAG, "Connected! Yay!");
-                            // Now you can start interacting with App Remote
-                            connectionCallback.afterConnection(spotifyAppRemote);
-                            if(mBoundService != null && mBoundService.isFirst()) {
-                                HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.service_serverMsg, getString(R.string.text_partyName)), Toast.LENGTH_SHORT).show());
-                            }
-                            //if(mBoundService!= null) mBoundService.setmSpotifyAppRemote(spotifyAppRemote);
-                        }
-
-                        @Override
-                        public void onFailure(Throwable throwable) {
-                            if(throwable instanceof SpotifyConnectionTerminatedException) {
-                                Log.d(TAG, "onFailure: Connection lost");
-                                connectionCallback.afterFailure();
-                            } else if(throwable instanceof CouldNotFindSpotifyApp) {
-                                final String appPackageName = "com.spotify.music";
-                                stopped = true;
-                                HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.text_noSpotifyFound), Toast.LENGTH_SHORT).show());
-                                try {
-                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
-                                } catch (android.content.ActivityNotFoundException anfe) {
-                                    startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
-                                }
-                            }
-                            else
-                                Log.e(TAG, throwable.getMessage(), throwable);
-                        }
-                    });
-        });
-    }
-
-//    Methods for SearchSongsOutput
-
-    @Override
-    public void addSong(Track track) {
-        this.runOnUiThread(() -> Toast.makeText(HostActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
-        new Thread(() -> {
-            if (mBoundService != null) {
-                //mBoundService.addItem(track.getURI(), track.getName());
-                mBoundService.addItemToPlaylist(track);
-            }
-        }).start();
-    }
-
-
-//    Methods for HostPlaylist
-
-    @Override
-    public void showPlaylist() {
-        if (mBoundService != null) {
-            List<Track> trackList = mBoundService.getPlaylist();
-            this.runOnUiThread(() -> hostPlaylistFragment.showResult(trackList));
-        }
-    }
-
-    @Override
-    public Track getCurrentPlaying() {
-        if (mBoundService != null) return mBoundService.getNowPlaying();
-        else return null;
-    }
-
-    @Override
-    public void swapPlaylistItems(int from, int to) {
-        /*if (mBoundService != null) {
-            try {
-                mBoundService.moveItem(from, to);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }*/
-    }
-
-    @Override
-    public void removeItem(Track toRemove, int position, ServerService.AfterCallback callback) {
-        if(mBoundService != null) {
-            mBoundService.deleteFromQue( position, () -> runOnUiThread(callback::deleteFromDataset));
-        }
-    }
-
-
-//    Methods for HostCloseParty
-
-    @Override
-    public void denyEndParty() {
-        onBackPressed();
-    }
-
-    @Override
-    public void acceptEndParty() {
-//        if(!save && mBoundService != null) mBoundService.deletePlaylist(mBoundService.getPlaylistID());
-        stopService();
-    }
-
-    @Override
-    public void notifyFavPlaylistAdapter() {
+    private void notifyFavPlaylistAdapter() {
         Fragment frg = null;
         frg = getSupportFragmentManager().findFragmentByTag("ShowSavedPlaylistFragment");
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
@@ -605,71 +642,15 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
         ft.commit();
     }
 
-    @Override
-    public void createPlaylistFromArrayList(String name) throws JSONException {
-        if(mBoundService != null)
-            mBoundService.createPlaylist(name, true);
+
+
+
+    private String getHostToken() { return mBoundService != null ? mBoundService.getToken() : null; }
+
+    private String generatePassword() {
+        if(password == null) password = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
+        return password;
     }
-
-
-
-//    Methods for PartyPeople
-
-    @Override
-    public ArrayList<PartyPeople> getPartyPeopleList() {
-        if (mBoundService != null) return (ArrayList<PartyPeople>) mBoundService.getPeopleList();
-        else return new ArrayList<>();
-    }
-
-
-
-//    Methods for ShowSavedPlaylistFragment
-
-    @Override
-    public void playFavoritePlaylist(String id, ArrayList<String> idList) {
-        if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)  {
-            //mBoundService.getmSpotifyAppRemote().getPlayerApi().play("spotify:playlist:"+id);
-            mBoundService.setPlaylistID(id);
-            mBoundService.getQueFromPlaylist(id);
-            try {
-                mBoundService.checkPlaylistFollowStatus(id);
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    @Override
-    public void changePlaylistName(String name, String id) {
-        if(mBoundService != null) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        mBoundService.updatePlaylistName(name, id);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
-        }
-    }
-
-    @Override
-    public void changePlaylistCover(String id, Bitmap image) {
-        if(mBoundService != null) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "run: " + id);
-                    mBoundService.updatePlaylistCover(id, image);
-                }
-            }).start();
-        }
-    }
-
-
-//    Methods for SettingsHost
 
     private String getIPAddress(boolean useIPv4) {
         try {
@@ -695,33 +676,5 @@ public class HostActivity extends AppCompatActivity implements ServerService.Spo
             }
         } catch (Exception ignored) { }
         return "";
-    }
-
-    @Override
-    public String getIpAddress() {
-        return getIPAddress(true);
-    }
-
-    @Override
-    public String getPassword() {
-        return generatePassword();
-    }
-
-    @Override
-    public void setNewPartyName(String newPartyName) {
-        if (mBoundService != null) {
-            mBoundService.setPartyName(newPartyName);
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        mBoundService.sendToAll(Commands.LOGIN, mBoundService.getPartyName());
-                        mBoundService.updateServiceNotifaction();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
-        }
     }
 }

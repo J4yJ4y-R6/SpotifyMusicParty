@@ -41,24 +41,23 @@ public class HostSettingsFragment extends Fragment {
     private EditText changePartyName;
     private TextView ipAddressTextView;
     private TextView passwordTextView;
-    private GetServerSettings getServerSettings;
+    private HostSettingsCallback hostSettingsCallback;
     private String partyName = "Music Party";
     private Bitmap bitmap;
 
-    public interface GetServerSettings {
+    public interface HostSettingsCallback {
         String getIpAddress();
         String getPassword();
         void setNewPartyName(String newPartyName);
     }
 
-    public HostSettingsFragment(GetServerSettings getServerSettings) {
-        this.getServerSettings = getServerSettings;
-    }
+    public HostSettingsFragment(HostSettingsCallback hostSettingsCallback) { this.hostSettingsCallback = hostSettingsCallback; }
 
-    public HostSettingsFragment() {
-        // Required empty public constructor
-    }
+    public HostSettingsFragment() { }
 
+
+
+    //Android lifecycle methods
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
@@ -67,19 +66,15 @@ public class HostSettingsFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
     public void onStart() {
         super.onStart();
+        Log.d(TAG, "set connection information");
         if(ipAddressTextView != null) {
-            String text = getString(R.string.text_ip_address) + ": " + getServerSettings.getIpAddress();
+            String text = getString(R.string.text_ip_address) + ": " + hostSettingsCallback.getIpAddress();
             ipAddressTextView.setText(text);
         }
         if(passwordTextView != null) {
-            String text = getString(R.string.app_password) + ": " + getServerSettings.getPassword();
+            String text = getString(R.string.app_password) + ": " + hostSettingsCallback.getPassword();
             passwordTextView.setText(text);
         }
     }
@@ -87,8 +82,8 @@ public class HostSettingsFragment extends Fragment {
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof GetServerSettings) {
-            getServerSettings = (GetServerSettings) context;
+        if(context instanceof HostSettingsCallback) {
+            hostSettingsCallback = (HostSettingsCallback) context;
         }
     }
 
@@ -101,14 +96,15 @@ public class HostSettingsFragment extends Fragment {
             partyName = savedInstanceState.getString(Constants.PARTYNAME, "MusicParty");
         }
 
-        View view = inflater.inflate(R.layout.fragment_settings_host, container, false);
+        View view = inflater.inflate(R.layout.fragment_host_settings, container, false);
 
         ImageView qrCodeImageView = view.findViewById(R.id.qrConnectionSettingsImageView);
 
         JSONObject json = new JSONObject();
         try {
-            json.put("ipaddress", getServerSettings.getIpAddress());
-            json.put("password", getServerSettings.getPassword());
+            Log.d(TAG, "generating qr code with connection information");
+            json.put("ipaddress", hostSettingsCallback.getIpAddress());
+            json.put("password", hostSettingsCallback.getPassword());
             MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
             BitMatrix bitMatrix = multiFormatWriter.encode(json.toString(), BarcodeFormat.QR_CODE, 200, 200);
 
@@ -136,65 +132,56 @@ public class HostSettingsFragment extends Fragment {
 
         ImageButton shareAddressButton = view.findViewById(R.id.shareButtonSettingsImageButton);
         if(shareAddressButton != null) {
-            shareAddressButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent sendIntent = new Intent();
-                    sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, "*Verbindung zu " + partyName + ":* \n" + ipAddressTextView.getText() + "\n" + passwordTextView.getText());
-                    sendIntent.setType("text/plain");
-                    Intent shareIntent = Intent.createChooser(sendIntent, null);
-                    startActivity(shareIntent);
-                }
+            shareAddressButton.setOnClickListener(v -> {
+                Log.d(TAG, "share connection information as text");
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_TEXT, "*Verbindung zu " + partyName + ":* \n" + ipAddressTextView.getText() + "\n" + passwordTextView.getText());
+                sendIntent.setType("text/plain");
+                Intent shareIntent = Intent.createChooser(sendIntent, null);
+                startActivity(shareIntent);
             });
         }
 
         ImageButton shareQRButton = view.findViewById(R.id.shareQRButtonSettingsImageButton);
         if(shareQRButton != null) {
-            shareQRButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    String bitmapPath = MediaStore.Images.Media.insertImage(getContext().getContentResolver(), bitmap,"title", null);
-                    Uri bitmapUri = Uri.parse(bitmapPath);
-                    Intent sendIntent = new Intent();
-                    sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_STREAM, bitmapUri);
-                    sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    sendIntent.setType("image/png");
-                    Intent shareIntent = Intent.createChooser(sendIntent, "Share");
-                    startActivity(shareIntent);
-                }
+            shareQRButton.setOnClickListener(v -> {
+                Log.d(TAG, "share connection information as QR-Code");
+                String bitmapPath = MediaStore.Images.Media.insertImage(getContext().getContentResolver(), bitmap,"title", null);
+                Uri bitmapUri = Uri.parse(bitmapPath);
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_STREAM, bitmapUri);
+                sendIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                sendIntent.setType("image/png");
+                Intent shareIntent = Intent.createChooser(sendIntent, "Share");
+                startActivity(shareIntent);
             });
         }
 
         ImageButton shareLinkButton = view.findViewById(R.id.shareLinkButtonSettingsImageButton);
         if(shareLinkButton != null) {
-            shareLinkButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Intent sendIntent = new Intent();
-                    sendIntent.setAction(Intent.ACTION_SEND);
-                    sendIntent.putExtra(Intent.EXTRA_TEXT, "*Verbindung zu " + partyName + ":* \n"  + getURI());
-                    sendIntent.setType("text/plain");
-                    Intent shareIntent = Intent.createChooser(sendIntent, null);
-                    startActivity(shareIntent);
-                }
+            shareLinkButton.setOnClickListener(v -> {
+                Log.d(TAG, "share connection information as a link");
+                Intent sendIntent = new Intent();
+                sendIntent.setAction(Intent.ACTION_SEND);
+                sendIntent.putExtra(Intent.EXTRA_TEXT, "*Verbindung zu " + partyName + ":* \n"  + getURI());
+                sendIntent.setType("text/plain");
+                Intent shareIntent = Intent.createChooser(sendIntent, null);
+                startActivity(shareIntent);
             });
         }
 
         Button savePartyNameButton = view.findViewById(R.id.savePartyNameButton);
         if (savePartyNameButton != null) {
-            savePartyNameButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    changePartyName = view.findViewById(R.id.changePartyNameEditText);
-                    if(changePartyName != null && !changePartyName.getText().toString().equals("")) {
-                        String newPartyName = changePartyName.getText().toString();
-                        Log.d(TAG, "onClick: new Party Name set to: " + newPartyName);
-                        partyName = newPartyName;
-                        getServerSettings.setNewPartyName(newPartyName);
-                        Toast.makeText(getContext(), "Der Partyname wurde auf " + newPartyName + " geändert.", Toast.LENGTH_SHORT).show();
-                    }
+            savePartyNameButton.setOnClickListener(v -> {
+                changePartyName = view.findViewById(R.id.changePartyNameEditText);
+                if(changePartyName != null && !changePartyName.getText().toString().equals("")) {
+                    String newPartyName = changePartyName.getText().toString();
+                    Log.d(TAG, "new Party Name set to: " + newPartyName);
+                    partyName = newPartyName;
+                    hostSettingsCallback.setNewPartyName(newPartyName);
+                    Toast.makeText(getContext(), "Der Partyname wurde auf " + newPartyName + " geändert.", Toast.LENGTH_SHORT).show();
                 }
             });
         }
@@ -202,9 +189,11 @@ public class HostSettingsFragment extends Fragment {
     }
 
 
+
     public String getURI() {
+        Log.d(TAG, "generating join-link with connection information");
         return "http://musicparty.join?" +
-                Constants.ADDRESS + "=" + getServerSettings.getIpAddress() + "&" +
-                Constants.PASSWORD + "=" + getServerSettings.getPassword();
+                Constants.ADDRESS + "=" + hostSettingsCallback.getIpAddress() + "&" +
+                Constants.PASSWORD + "=" + hostSettingsCallback.getPassword();
     }
 }

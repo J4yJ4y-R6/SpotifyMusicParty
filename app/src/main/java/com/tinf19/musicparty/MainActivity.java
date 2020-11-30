@@ -6,8 +6,6 @@ import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 import com.tinf19.musicparty.client.JoinActivity;
 import com.tinf19.musicparty.databinding.ActivityMainBinding;
 import com.tinf19.musicparty.server.HostActivity;
-import com.spotify.sdk.android.auth.AuthorizationClient;
-import com.spotify.sdk.android.auth.AuthorizationResponse;
 
 
 import android.content.Context;
@@ -20,21 +18,41 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.tinf19.musicparty.util.Constants;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ActivityMainBinding binding;
     private static final String TAG = MainActivity.class.getName();
-    private static String token;
+    private ActivityMainBinding binding;
 
+
+
+    //Android lifecycle methods
 
     @Override
     protected void onStart() {
         super.onStart();
         ImageView imageView = findViewById(R.id.animatedLogo);
+        Log.d(TAG, "animate App logo at the header");
         animate(imageView);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        binding = ActivityMainBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        binding.createPartyCardView.setEnabled(true);
+        binding.joinPartyCardView.setEnabled(true);
+
+        SharedPreferences firstConnection = this.getSharedPreferences("firstConnection", Context.MODE_PRIVATE);
+        if(firstConnection.getBoolean(Constants.FIRST_CONNECTION, true)) {
+            Log.d(TAG, "user connected for the first time ");
+            showInfoText(null);
+            SharedPreferences.Editor editor = firstConnection.edit();
+            editor.putBoolean(Constants.FIRST_CONNECTION, false);
+            editor.apply();
+        }
     }
 
     public void animate(ImageView v) {
@@ -48,85 +66,23 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-        //loginToSpotify();
-        binding.createPartyCardView.setEnabled(true);
-        binding.joinPartyCardView.setEnabled(true);
-
-        SharedPreferences firstConnection = this.getSharedPreferences("firstConnection", Context.MODE_PRIVATE);
-        if(firstConnection.getBoolean(Constants.FIRST_CONNECTION, true)) {
-            showInfoText(null);
-            SharedPreferences.Editor editor = firstConnection.edit();
-            editor.putBoolean(Constants.FIRST_CONNECTION, false);
-            editor.apply();
-        }
-    }
-
     public void changeHost(View view){
-        Intent intent = new Intent(this, HostActivity.class);
-        //intent.putExtra(Constants.TOKEN, token);
-        startActivity(intent);
+        Log.d(TAG, "starting HostActivity");
+        startActivity(new Intent(this, HostActivity.class));
     }
 
     public void changeClient(View view){
-        Intent intent = new Intent(this, JoinActivity.class);
-        //intent.putExtra(Constants.TOKEN, token);
-        startActivity(intent);
-    }
-
-    public void loginToSpotify() {
-        Log.d(TAG, "Trying to get auth token");
-        AuthorizationRequest.Builder builder =
-                new AuthorizationRequest.Builder(BuildConfig.CLIENT_ID, AuthorizationResponse.Type.TOKEN, Constants.REDIRECT_URI);
-        builder.setScopes(new String[]{"streaming", "app-remote-control", "playlist-modify-private", "playlist-modify-public", "user-read-private", "ugc-image-upload"});
-        AuthorizationRequest request = builder.build();
-        AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-        super.onActivityResult(requestCode, resultCode, intent);
-
-        // Check if result comes from the correct activity
-        if (requestCode == Constants.REQUEST_CODE) {
-            AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
-
-            switch (response.getType()) {
-                // Response was successful and contains auth token
-                case TOKEN:
-                    // Handle successful response
-                    token = response.getAccessToken();
-                    Log.d(TAG, "Expires in: " + response.getExpiresIn());
-                    Log.d(TAG, "Token gained successful: " + token);
-                    binding.createPartyCardView.setEnabled(true);
-                    binding.joinPartyCardView.setEnabled(true);
-                    break;
-                // Auth flow returned an error
-                case ERROR:
-                    // Handle error response
-                    Log.e(TAG, "Spotify login error");
-                    break;
-                // Most likely auth flow was cancelled
-                case CODE:
-                    Log.d(TAG, "Code: " + response.getCode());
-                    Log.d(TAG, "State: " + response.getState());
-                    break;
-                default:
-                    // Handle other cases
-                    Log.e(TAG, "Something went wrong");
-            }
-        }
+        Log.d(TAG, "starting ClientLoginActivity");
+        startActivity(new Intent(this, JoinActivity.class));
     }
 
     public void showInfoText(View view) {
+        Log.d(TAG, "info text is visible");
         binding.infoCardView.setVisibility(View.VISIBLE);
     }
 
     public void hideInfoText(View view) {
+        Log.d(TAG, "info field is invisible");
         binding.infoCardView.setVisibility(View.INVISIBLE);
     }
 

@@ -1,5 +1,7 @@
 package com.tinf19.musicparty.util;
 
+import android.util.Log;
+
 import com.tinf19.musicparty.BuildConfig;
 
 import org.json.JSONException;
@@ -20,18 +22,17 @@ public class TokenRefresh implements Runnable {
     private final String CODE;
     private String token;
     private String refreshToken;
-    private boolean stopped;
     private int duration;
-    private TokenCallback tokenCallback;
+    private TokenRefreshCallback tokenRefreshCallback;
 
-    public interface TokenCallback{
+    public interface TokenRefreshCallback {
         void afterConnection(String token);
         void afterRefresh(String token);
     }
 
-    public TokenRefresh( String code, TokenCallback tokenCallback) {
+    public TokenRefresh( String code, TokenRefreshCallback tokenRefreshCallback) {
         this.CODE = code;
-        this.tokenCallback = tokenCallback;
+        this.tokenRefreshCallback = tokenRefreshCallback;
     }
 
     @Override
@@ -41,7 +42,7 @@ public class TokenRefresh implements Runnable {
         } catch (JSONException | IOException e) {
             e.printStackTrace();
         }
-        while(!stopped){
+        while(true){
             try {
                 if(duration > 60) Thread.sleep((duration - 60) * 1000);
                 else return;
@@ -76,7 +77,7 @@ public class TokenRefresh implements Runnable {
             duration = responseBody.getInt("expires_in");
             token = responseBody.getString("access_token");
             refreshToken = responseBody.getString("refresh_token");
-            tokenCallback.afterConnection(token);
+            tokenRefreshCallback.afterConnection(token);
         }
         response.close();
     }
@@ -100,10 +101,11 @@ public class TokenRefresh implements Runnable {
                 .build();
         Response response = client.newCall(request).execute();
         if(response.isSuccessful()) {
+            Log.d(TokenRefresh.class.getName(), "token has been refreshed");
             JSONObject responseBody = new JSONObject(response.body().string());
             duration = responseBody.getInt("expires_in");
             token = responseBody.getString("access_token");
-            tokenCallback.afterRefresh(token);
+            tokenRefreshCallback.afterRefresh(token);
         }
         response.close();
     }

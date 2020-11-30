@@ -18,12 +18,12 @@
             android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
             android:layout_marginEnd="20dp"
-            android:background="@drawable/rounded_button"
+            android:background="@drawable/background_green_round"
             android:contentDescription="@string/text_searchButton_ContentD"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/searchEditText"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_search_button" />
+            app:srcCompat="@drawable/icon_search" />
 
         <AutoCompleteTextView
             android:id="@+id/searchEditText"

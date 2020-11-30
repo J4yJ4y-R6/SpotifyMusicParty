@@ -8,18 +8,10 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-
-    <ImageView
-        android:id="@+id/imageView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:onClick="hideInfoText"
-        app:srcCompat="@color/transparent" />
-
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/main_background_gradient"
+        android:background="@drawable/background_green_gradient"
         android:animateLayoutChanges="true">
 
         <ImageView
@@ -27,7 +19,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="10dp"
-            android:src="@drawable/musicparty_logo_withtext_animated"
+            android:src="@drawable/logo_withtext_transparent_animated"
+            android:contentDescription="@string/text_animatedLogo_ContentD"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -61,9 +54,10 @@
                     android:layout_marginTop="20dp"
                     android:layout_marginRight="30dp"
                     android:layout_marginBottom="20dp"
-                    android:background="@drawable/rounded_button"
+                    android:background="@drawable/background_green_round"
                     android:padding="10dp"
-                    android:src="@drawable/ic_enter_button" />
+                    android:contentDescription="@string/text_joinParty"
+                    android:src="@drawable/icon_enter_room" />
 
                 <TextView
                     android:id="@+id/textView5"
@@ -98,7 +92,8 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical">
+                android:orientation="vertical"
+                tools:ignore="UseCompoundDrawables">
 
                 <ImageView
                     android:id="@+id/button"
@@ -108,9 +103,10 @@
                     android:layout_marginTop="20dp"
                     android:layout_marginRight="30dp"
                     android:layout_marginBottom="20dp"
-                    android:background="@drawable/rounded_button"
+                    android:background="@drawable/background_green_round"
                     android:padding="10dp"
-                    android:src="@drawable/ic_openparty_button" />
+                    android:src="@drawable/icon_open_party"
+                    android:contentDescription="@string/text_createParty"/>
 
                 <TextView
                     android:id="@+id/textView2"
@@ -147,11 +143,12 @@
             android:layout_height="60dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="16dp"
-            android:background="@drawable/rounded_button"
+            android:background="@drawable/background_green_round"
             android:onClick="showInfoText"
+            android:contentDescription="@string/text_showInfoCard_ContentD"
             app:layout_constraintBottom_toTopOf="@+id/textView7"
             app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@drawable/ic_iconmonstr_info_2" />
+            app:srcCompat="@drawable/icon_i_cycle" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/infoCardView"
@@ -175,7 +172,7 @@
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:weightSum="6">
 
@@ -191,11 +188,12 @@
                         android:id="@+id/imageButton2"
                         android:layout_width="50dp"
                         android:layout_height="50dp"
-                        android:layout_gravity="right"
+                        android:layout_gravity="end"
                         android:layout_weight="1"
-                        android:background="@drawable/rounded_button"
+                        android:background="@drawable/background_green_round"
                         android:onClick="hideInfoText"
-                        app:srcCompat="@drawable/ic_deny_button" />
+                        android:contentDescription="@string/text_closeInfoCard_ContentD"
+                        app:srcCompat="@drawable/icon_x" />
 
                 </LinearLayout>
 

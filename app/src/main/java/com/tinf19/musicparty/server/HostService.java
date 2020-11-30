@@ -24,6 +24,7 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.SpotifyHelper;
 import com.tinf19.musicparty.util.TokenRefresh;
 
 import org.jetbrains.annotations.NotNull;
@@ -50,10 +51,11 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class ServerService extends Service implements Parcelable, Que.CountDownCallback {
+public class HostService extends Service implements Parcelable {
 
-    private static final String TAG = ServerService.class.getName();
+    private static final String TAG = HostService.class.getName();
     private final IBinder mBinder = new LocalBinder();
+    private final SpotifyHelper spotifyHelper = new SpotifyHelper();
     private String password;
     private Thread serverThread = null;
     private Thread tokenRefresh = null;
@@ -65,13 +67,12 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
     private int size = 0;
     private boolean first = true;
     private String partyName;
-    //private List<Track> tracks = new ArrayList<>();
     private Que que;
     private List<Track> playlist = new ArrayList<>();
     private SpotifyAppRemote mSpotifyAppRemote;
     private boolean pause = true;
     private boolean newSong;
-    private SpotifyPlayerCallback spotifyPlayerCallback;
+    private HostServiceCallback hostServiceCallback;
     private  com.spotify.protocol.types.Track nowPlaying;
     private com.spotify.protocol.types.Track lastSongTitle;
     private boolean stopped;
@@ -79,38 +80,13 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
 
-    @Override
-    public void playSong(Track track) {
-        if(getmSpotifyAppRemote() != null) {
-            mSpotifyAppRemote.getPlayerApi().play(track.getURI());
-            Log.d(TAG, "New song has been started: " + track.getName());
-            new Thread(()->{
-                try {
-                    sendToAll(Commands.PLAYING, que.getNowPlaying().serialize());
-                } catch (IOException | JSONException e) {
-                    Log.e(TAG, e.getMessage(), e);
-                }
-            }).start();
-        }
-    }
 
-    @Override
-    public void setProgressBar(long timeRemaining) {
-
-    }
-
-    @Override
-    public void stopPlayback() {
-        mSpotifyAppRemote.getPlayerApi().seekTo(0);
-        mSpotifyAppRemote.getPlayerApi().pause();
-    }
-
-    public interface SpotifyPlayerCallback {
+    public interface HostServiceCallback {
         void setNowPlaying(Track nowPlaying);
         void setPeopleCount(int count);
         void setPlayImage(boolean pause);
         void showDefault();
-        void connect(HostActivity.ConnectionCallback connectionCallback);
+        void connect(HostActivity.HostActivityCallback hostActivityCallback);
         void reloadPlaylistFragment();
         void addToSharedPreferances(String name, String id);
         void acceptEndParty();
@@ -122,16 +98,42 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
     }
 
     public class LocalBinder extends Binder {
-        ServerService getService() { return ServerService.this; }
+        HostService getService() { return HostService.this; }
     }
 
-    // Service - Interaction
+
+
+    //Android lifecycle methods
 
     @Override
     public void onCreate() {
         super.onCreate();
-        que = new Que(this);
-        Log.d(TAG, "Stopped: " + stopped + " Lastsong: " + (lastSongTitle != null ? lastSongTitle.name : "Nichts"));
+        que = new Que(new Que.QueCallback() {
+            @Override
+            public void playSong(Track track) {
+                if(getmSpotifyAppRemote() != null) {
+                    Log.d(TAG, "new song has been started: " + track.getName());
+                    mSpotifyAppRemote.getPlayerApi().play(track.getURI());
+                    new Thread(()->{
+                        try {
+                            sendToAll(Commands.PLAYING, que.getNowPlaying().serialize());
+                        } catch (IOException | JSONException e) {
+                            Log.e(TAG, e.getMessage(), e);
+                        }
+                    }).start();
+                }
+            }
+
+            @Override
+            public void setProgressBar(long timeRemaining) { }
+
+            @Override
+            public void stopPlayback() {
+                Log.d(TAG, "stopping playback at the end of the playlist");
+                mSpotifyAppRemote.getPlayerApi().seekTo(0);
+                mSpotifyAppRemote.getPlayerApi().pause();
+            }
+        });
         startServer();
     }
 
@@ -141,39 +143,38 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         password = intent.getStringExtra(Constants.PASSWORD);
         partyName = intent.getStringExtra(Constants.PARTYNAME);
         if (first) {
-            tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenCallback() {
+            tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenRefreshCallback() {
                 @Override
                 public void afterConnection(String token) {
-                    Log.d(TAG, "afterConnection: Token has been " + token);
-                    ServerService.this.token = token;
-                    if(spotifyPlayerCallback != null) {
-                        HostActivity.ConnectionCallback callback = new HostActivity.ConnectionCallback() {
+                    HostService.this.token = token;
+                    if(hostServiceCallback != null) {
+                        HostActivity.HostActivityCallback callback = new HostActivity.HostActivityCallback() {
                             @Override
                             public void afterConnection(SpotifyAppRemote appRemote) {
+                                Log.d(TAG, "connected to spotify-app remote control");
                                 mSpotifyAppRemote = appRemote;
                                 addEventListener();
-                                Log.d(TAG, "afterConnection: App remote" + (appRemote != null));
                             }
 
                             @Override
                             public void afterFailure() {
-                                if(spotifyPlayerCallback != null) spotifyPlayerCallback.connect(this);
+                                if(hostServiceCallback != null) hostServiceCallback.connect(this);
                             }
                         };
-                        spotifyPlayerCallback.connect( new HostActivity.ConnectionCallback() {
+                        hostServiceCallback.connect(new HostActivity.HostActivityCallback() {
                             @Override
                             public void afterConnection(SpotifyAppRemote appRemote) {
+                                Log.d(TAG, "connected to spotify-app remote control");
                                 mSpotifyAppRemote = appRemote;
-                                Log.d(TAG, "afterConnection: App remote" + (appRemote != null));
                                 getUserID();
                                 addEventListener();
-                                if (spotifyPlayerCallback != null)
-                                    spotifyPlayerCallback.showDefault();
+                                if (hostServiceCallback != null)
+                                    hostServiceCallback.showDefault();
                             }
 
                             @Override
                             public void afterFailure() {
-                                if(spotifyPlayerCallback != null) spotifyPlayerCallback.connect(callback);
+                                if(hostServiceCallback != null) hostServiceCallback.connect(callback);
                             }
                         });
                     }
@@ -182,7 +183,7 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                 @Override
                 public void afterRefresh(String token) {
                     Log.d(TAG, "afterRefresh: Token hast been refreshed");
-                    ServerService.this.token = token;
+                    HostService.this.token = token;
                 }
             }));
             tokenRefresh.start();
@@ -198,25 +199,21 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         Notification notification = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_serverMsg, partyName))
                 .setContentText(getString(R.string.service_serverPeople, clientThreads.size()))
-                .setSmallIcon(R.drawable.ic_service_notification_icon)
+                .setSmallIcon(R.drawable.logo_service_notification)
                 .setContentIntent(pendingIntent)
-                .addAction(R.drawable.ic_exit_button, getString(R.string.text_end),pendingIntentButton)
+                .addAction(R.drawable.icon_exit_room, getString(R.string.text_end),pendingIntentButton)
                 .build();
+        Log.d(TAG, "service notification started");
         startForeground(Constants.NOTIFY_ID, notification);
-
-        Log.d(TAG, "onStartCommand: first notify");
-
         return START_NOT_STICKY;
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.d(ServerService.class.getName(), "I have been destroyed " + clientThreads.size());
+        Log.d(TAG, "service has been destroyed with " + clientThreads.size() + " clients");
         lastSongTitle = null;
-        //nowPlaying = null;
         stopped = false;
-//        deletePlaylist(playlistID);
         new Thread(() -> {
             try {
                 serverSocket.close();
@@ -233,11 +230,12 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         return mBinder;
     }
 
-    public boolean isPlaylistEnded() {
-        return que.isPlaylistEnded();
-    }
+
+
+    //Service - Methods
 
     public void restartQue() {
+        Log.d(TAG, "que has been restarted");
         if(que.size() == 0) {
             lastSongTitle = null;
             nowPlaying = null;
@@ -245,6 +243,12 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         }
         que.setPlaylistEnded(false);
         que.next();
+    }
+
+    public void deleteFromQue(int position, AfterCallback callback) {
+        callback.deleteFromDataset();
+        playlist.remove(position);
+        que.remove(position);
     }
 
     public void next() {
@@ -259,7 +263,11 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
             mSpotifyAppRemote.getPlayerApi().play(nowPlaying.uri);
     }
 
+
+
     // Getter
+
+    public boolean isPlaylistEnded() { return que.isPlaylistEnded(); }
 
     public SpotifyAppRemote getmSpotifyAppRemote() { return ( mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()) ? mSpotifyAppRemote : null; }
     
@@ -279,15 +287,9 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         return clientThreads.size();
     }
 
-    public String getPlaylistID() {
-        return playlistID;
-    }
-
     public String getPartyName() {
         return partyName;
     }
-
-    //public List<Track> getTracks() { return tracks;}
 
     public String getToken() {
         return token;
@@ -323,9 +325,8 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         this.partyName = partyName;
     }
 
-    public void setSpotifyPlayerCallback(SpotifyPlayerCallback spotifyPlayerCallback) {
-        Log.d(TAG, "setSpotifyPlayerCallback: " + spotifyPlayerCallback);
-        this.spotifyPlayerCallback = spotifyPlayerCallback;
+    public void setHostServiceCallback(HostServiceCallback hostServiceCallback) {
+        this.hostServiceCallback = hostServiceCallback;
     }
 
 
@@ -334,42 +335,27 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
     // HTTP Requests
 
     private void getUserID() {
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("me")
-                .build();
-        Log.d(TAG, "Making request to " + completeURL.toString());
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .addHeader("Authorization", "Bearer " + token)
-                .build();
-        client.newCall(request).enqueue(new Callback() {
+        spotifyHelper.getUserID(token, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
-                Log.d(TAG, "Request Failed.");
+            public void onFailure() {
+                Log.d(TAG, "Request failed");
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Response response) {
                 if(!response.isSuccessful()){
-                    Log.d(TAG, response.body().string());
-                    throw new IOException("Error : " + response);
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }else {
                     Log.d(TAG,"Request Successful. Got the username of the user.");
                 }
-
-                // Read data in the worker thread
-                final String data = response.body().string();
                 try {
+                    final String data = response.body().string();
                     userID = new JSONObject(data).getString("id");
-                    Log.d(TAG, "UserID: " + userID);
-                    //createPlaylist("MusicParty");
-                } catch (JSONException e) {
+                } catch (JSONException | IOException e) {
                     Log.e(TAG, e.getMessage(), e);
                 }
                 response.close();
@@ -379,49 +365,28 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
 
     public void createPlaylist(String name, boolean exit) throws JSONException {
         if (userID == null ) return;
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("users")
-                .addPathSegment(userID)
-                .addPathSegment("playlists")
-                .build();
-        JSONObject sampleObject = new JSONObject()
-                .put("name", name)
-                .put("public", false)
-                .put("description", getString(R.string.service_playlistDescription, partyName));
-        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
-        Log.d(TAG, "Making request to " + completeURL.toString());
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .post(body)
-                .addHeader("Authorization", "Bearer " + token)
-                .addHeader("Content-Type", "application/json")
-                .build();
-        Log.d(TAG, request.headers().toString());
-        client.newCall(request).enqueue(new Callback() {
+        spotifyHelper.createPlaylist(token, name, userID, getString(R.string.service_playlistDescription, partyName), new SpotifyHelper.SpotifyHelperCallback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
+            public void onFailure() {
                 Log.d(TAG, "Request Failed.");
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Response response) {
                 if(!response.isSuccessful()){
-                    Log.d(TAG, response.body().string());
-                    throw new IOException("Error : " + response);
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }else {
                     Log.d(TAG,"Request Successful. New playlist has been created.");
                 }
                 String [] uri = response.header("Location").split("/");
                 String id = uri[uri.length-1];
                 Log.d(TAG, id);
-                if(spotifyPlayerCallback != null) {
-                    spotifyPlayerCallback.addToSharedPreferances(name, id);
+                if(hostServiceCallback != null) {
+                    hostServiceCallback.addToSharedPreferances(name, id);
                 }
                 try {
                     addItemsToPlaylist(id, 0, exit);
@@ -440,39 +405,23 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
     }
 
     private void getQueFromPlaylist(String id, int page) {
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("playlists")
-                .addPathSegment(id)
-                .addPathSegment("tracks")
-                .addQueryParameter("offset", String.valueOf(100 * page))
-                .build();
-        Log.d(TAG, "Making request to " + completeURL.toString());
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .get()
-                .addHeader("Authorization", "Bearer " + token)
-                .addHeader("Content-Type", "application/json")
-                .build();
-        Log.d(TAG, request.headers().toString());
-        client.newCall(request).enqueue(new Callback() {
+        spotifyHelper.getQueFromPlaylist(token, id, page, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
+            public void onFailure() {
                 Log.d(TAG, "Request Failed.");
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Response response) {
                 if(!response.isSuccessful()){
-                    Log.d(TAG, response.body().string());
-                    throw new IOException("Error : " + response);
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }else {
                     try {
+                        Log.d(TAG, "Request successfully");
                         JSONObject body = new JSONObject(response.body().string());
                         JSONArray items = body.getJSONArray("items");
                         int count = body.getInt("total");
@@ -507,12 +456,12 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                             que.addItem(tmpTrack);
                             playlist.add(tmpTrack);
                         }
-                        Log.d(TAG, "onResponse: added " + que.size() + " elements" );
+                        Log.d(TAG, "added " + que.size() + " elements" );
                         if(page == 0 && que.size() > 0)
                             que.next();
                         if(count > 100 * page)
                             getQueFromPlaylist(id, page + 1);
-                    } catch (JSONException e) {
+                    } catch (JSONException | IOException e) {
                         Log.e(TAG, e.getMessage(), e);
                     }
                 }
@@ -522,75 +471,42 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
     }
 
     public void checkPlaylistFollowStatus(String id) throws JSONException {
-        String token = getToken();
-        if(token == null) return;
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("playlists")
-                .addPathSegment(id)
-                .addPathSegment("followers")
-                .build();
-        Log.d(TAG, "Follow playlist with id:  " + id + ": " + completeURL.toString());
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("public", false);
-        RequestBody body = RequestBody.create(jsonObject.toString(), Constants.JSON);
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .put(body)
-                .addHeader("Authorization", "Bearer " + token)
-                .addHeader("Content-Type", "application/json")
-                .build();
-        client.newCall(request).enqueue(new Callback() {
+        spotifyHelper.checkPlaylistFollowStatus(token, id, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                e.printStackTrace();
-                Log.d(TAG, "onFailure: failed to follow playlist with id: " + id);
+            public void onFailure() {
+                Log.d(TAG, "failed to follow playlist with id: " + id);
             }
 
             @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+            public void onResponse(Response response) {
                 if (!response.isSuccessful()) {
-                    throw new IOException("Error : " + response);
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 } else {
-                    Log.d(TAG, "onResponse: followed successfully playlist: " + id);
+                    Log.d(TAG, "followed successfully playlist: " + id);
                 }
             }
         });
     }
 
     public void deletePlaylist(String id) {
-        if(id == null) return;
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("playlists")
-                .addPathSegment(id)
-                .addPathSegment("followers")
-                .build();
-        Log.d(TAG, "Making request to " + completeURL.toString());
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .delete()
-                .addHeader("Authorization", "Bearer " + token)
-                .build();
-        client.newCall(request).enqueue(new Callback() {
+        spotifyHelper.deletePlaylist(token, id, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
+            public void onFailure() {
                 Log.d(TAG, "Request Failed.");
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Response response) {
                 if(!response.isSuccessful()){
-                    Log.d(TAG, response.body().string());
-                    throw new IOException("Error : " + response);
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }else {
                     Log.d(TAG,"Request Successful. Playlist has been deleted.");
                 }
@@ -600,43 +516,20 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
     }
 
     public void addItemsToPlaylist(String id, int page, boolean exit) throws JSONException {
-        Log.d(TAG, "addItemsToPlaylist: " + page);
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("playlists")
-                .addPathSegment(id)
-                .addPathSegment("tracks")
-                .build();
-        JSONArray jsonArray = new JSONArray();
-        for(int i = page * 100; i < (Math.min(playlist.size(), (page + 1) * 100)); i++) {
-            jsonArray.put(playlist.get(i).getURI());
-        }
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("uris", jsonArray);
-        RequestBody body = RequestBody.create(jsonObject.toString(), Constants.JSON);
-        Log.d(TAG, "Making request to " + completeURL.toString());
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .post(body)
-                .addHeader("Authorization", "Bearer " + token)
-                .addHeader("Content-Type", "application/json")
-                .build();
-        client.newCall(request).enqueue(new Callback() {
+        spotifyHelper.addItemsToPlaylist(token, playlist, id, page, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
+            public void onFailure() {
                 Log.d(TAG, "Request Failed.");
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Response response) {
                 if(!response.isSuccessful()){
-                    Log.d(TAG, response.body().string());
-                    throw new IOException("Error : " + response);
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }else {
                     if(playlist.size() >= ((page+1) * 100)) {
                         try {
@@ -645,8 +538,8 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                             e.printStackTrace();
                         }
                     } else {
-                        if(spotifyPlayerCallback != null && exit)
-                            spotifyPlayerCallback.acceptEndParty();
+                        if(hostServiceCallback != null && exit)
+                            hostServiceCallback.acceptEndParty();
                     }
                 }
                 response.close();
@@ -654,56 +547,25 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         });
     }
 
-    public void deleteFromQue(int position, AfterCallback callback) {
-        callback.deleteFromDataset();
-        playlist.remove(position);
-        que.remove(position);
-    }
-
     public void deleteItem(String uri, String name, int position, AfterCallback callback) throws JSONException {
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("playlists")
-                .addPathSegment(playlistID)
-                .addPathSegment("tracks")
-                .build();
-        int index = size - que.size() + position;
-        if(index < 0 || index >= size)
-            return;
-        JSONObject uris = new JSONObject()
-                .put("uri", uri)
-                .put("positions", new JSONArray().put(index));
-        ;
-        JSONObject sampleObject = new JSONObject()
-               .put("tracks", new JSONArray().put(uris));
-        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
-        Log.d(TAG, "Making request to " + completeURL.toString());
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .delete(body)
-                .addHeader("Authorization", "Bearer " + token)
-                .addHeader("Content-Type", "application/json")
-                .build();
-        client.newCall(request).enqueue(new Callback() {
+        spotifyHelper.deleteItem(token, playlistID, uri, size, que.size(), position, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
+            public void onFailure() {
                 Log.d(TAG, "Request Failed.");
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Response response) {
                 if(!response.isSuccessful()){
-                    Log.d(TAG, response.body().string());
-                    throw new IOException("Error : " + response);
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }else {
                     Log.d(TAG,"Request Successful. Track " + name + " has been deleted.");
                     callback.deleteFromDataset();
-                    playlist.remove(index);
+                    playlist.remove(size - que.size() + position);
                     que.remove(position);
                     size--;
                 }
@@ -718,39 +580,20 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         from = from + position;
         to = to + position;
         if (from < to) to++;
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("playlists")
-                .addPathSegment(playlistID)
-                .addPathSegment("tracks")
-                .build();
-        Log.d(TAG, "Making request to " + completeURL.toString());
-        JSONObject sampleObject = new JSONObject()
-                .put("range_start", from)
-                .put("insert_before", to);
-        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .put(body)
-                .addHeader("Authorization", "Bearer " + token)
-                .addHeader("Content-Type", "application/json")
-                .build();
-        client.newCall(request).enqueue(new Callback() {
+        spotifyHelper.moveItem(token, playlistID, from, to, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
-                Log.d(TAG, "Request Failed.");
+            public void onFailure() {
+                Log.d(TAG, "Request failed");
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Response response) {
                 if(!response.isSuccessful()){
-                    Log.d(TAG, response.body().string());
-                    throw new IOException("Error : " + response);
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }else {
                     Log.d(TAG,"Request Successful. Track moved.");
                 }
@@ -760,82 +603,48 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
     }
 
     public void updatePlaylistCover(String id, Bitmap image) {
-        OkHttpClient client = new OkHttpClient();
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
         byte[] byteArray = byteArrayOutputStream.toByteArray();
         byte[] encoded = Base64.encode(byteArray, Base64.NO_WRAP);
-        HttpUrl completeUrl = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("users")
-                .addPathSegment(userID)
-                .addPathSegment("playlists")
-                .addPathSegment(id)
-                .addPathSegment("images")
-                .build();
-        RequestBody body = RequestBody.create(encoded);
-        Request request = new Request.Builder()
-                .url(completeUrl)
-                .put(body)
-                .addHeader("Authorization", "Bearer " + token)
-                .addHeader("Content-Type", "image/jpeg")
-                .build();
-        client.newCall(request).enqueue(new Callback() {
+        spotifyHelper.updatePlaylistCover(token, userID, id, encoded, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
-                Log.d(TAG, "Request Failed.");
+            public void onFailure() {
+                Log.d(TAG, "Request failed");
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Response response) {
                 if(!response.isSuccessful()){
-                    Log.d(TAG, response.body().string());
-                    throw new IOException("Error : " + response);
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }else {
                     Log.d(TAG,"Request Successful. Playlist cover changed");
-                    spotifyPlayerCallback.notifyFavPlaylistAdapter();
+                    hostServiceCallback.notifyFavPlaylistAdapter();
                 }
                 response.close();
             }
         });
-
     }
 
     public void updatePlaylistName(String name, String id) throws JSONException {
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("playlists")
-                .addPathSegment(id)
-                .build();
-        Log.d(TAG, "Making request to " + completeURL.toString());
-        JSONObject sampleObject = new JSONObject()
-                .put("name", name);
-        RequestBody body = RequestBody.create(sampleObject.toString(), Constants.JSON);
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .put(body)
-                .addHeader("Authorization", "Bearer " + token)
-                .addHeader("Content-Type", "application/json")
-                .build();
-        client.newCall(request).enqueue(new Callback() {
+        spotifyHelper.updatePlaylistName(token, name, id, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
-            public void onFailure(Call call, IOException e) {
-                // Do something when request failed
-                e.printStackTrace();
-                Log.d(TAG, "Request Failed.");
+            public void onFailure() {
+                Log.d(TAG, "Request failed");
             }
 
             @Override
-            public void onResponse(Call call, Response response) throws IOException {
+            public void onResponse(Response response) {
                 if(!response.isSuccessful()){
-                    throw new IOException("Error : " + response);
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 }else {
                     Log.d(TAG,"Request Successful. Playlist name changed.");
                 }
@@ -843,6 +652,9 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
             }
         });
     }
+
+
+    //TODO: hier sind wir stehen geblieben
 
 
 
@@ -856,15 +668,15 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
     @Override
     public void writeToParcel(Parcel dest, int flags) { }
 
-    public static final Creator<ServerService> CREATOR = new Creator<ServerService>() {
+    public static final Creator<HostService> CREATOR = new Creator<HostService>() {
         @Override
-        public ServerService createFromParcel(Parcel in) {
-            return new ServerService();
+        public HostService createFromParcel(Parcel in) {
+            return new HostService();
         }
 
         @Override
-        public ServerService[] newArray(int size) {
-            return new ServerService[size];
+        public HostService[] newArray(int size) {
+            return new HostService[size];
         }
     };
 
@@ -916,14 +728,14 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                             //else if(previous)
                              //   previous = false;
 
-                            if(spotifyPlayerCallback != null) {
-                                spotifyPlayerCallback.setNowPlaying(getNowPlaying());
+                            if(hostServiceCallback != null) {
+                                hostServiceCallback.setNowPlaying(getNowPlaying());
                             }
                             lastSongTitle = track;
                         }
 
-                        if(spotifyPlayerCallback != null)
-                            spotifyPlayerCallback.setPlayImage(pause);
+                        if(hostServiceCallback != null)
+                            hostServiceCallback.setPlayImage(pause);
                     }
                     /*if(playlistID != null) {
                         nowPlaying = track;
@@ -996,9 +808,9 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
         Notification notificationUpdate = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
                 .setContentTitle(text)
                 .setContentText(peopleCount)
-                .setSmallIcon(R.drawable.ic_service_notification_icon)
+                .setSmallIcon(R.drawable.logo_service_notification)
                 .setContentIntent(pendingIntent)
-                .addAction(R.drawable.ic_exit_button, getString(R.string.text_end), pendingIntentButton)
+                .addAction(R.drawable.icon_exit_room, getString(R.string.text_end), pendingIntentButton)
                 .build();
         mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
     }
@@ -1087,7 +899,7 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                             switch (command) {
                                 case QUIT:
                                     clientThreads.remove(this);
-                                    if(spotifyPlayerCallback!= null) spotifyPlayerCallback.setPeopleCount(clientThreads.size());
+                                    if(hostServiceCallback != null) hostServiceCallback.setPeopleCount(clientThreads.size());
                                     Log.d(TAG, "User " + username + " has left the party");
                                     updateServiceNotifaction();
                                     close();
@@ -1102,7 +914,7 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                                                 sendMessage(Commands.LOGIN, partyName);
                                             else
                                                 sendMessage(Commands.LOGIN, partyName + "~" + getNowPlaying().serialize());
-                                            if(spotifyPlayerCallback!= null) spotifyPlayerCallback.setPeopleCount(clientThreads.size());
+                                            if(hostServiceCallback != null) hostServiceCallback.setPeopleCount(clientThreads.size());
                                         } else {
                                             sendMessage(Commands.QUIT, "Login Failed");
                                             close();
@@ -1116,7 +928,7 @@ public class ServerService extends Service implements Parcelable, Que.CountDownC
                                         Track track = new Track(attribute);
                                         addItemToPlaylist(track);
                                         //addItem(track.getURI(), track.getName());
-                                        spotifyPlayerCallback.reloadPlaylistFragment();
+                                        hostServiceCallback.reloadPlaylistFragment();
                                         //sendToAll(Commands.QUEUE, track.serialize());
                                     }
                                     break;

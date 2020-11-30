@@ -20,18 +20,17 @@ import com.tinf19.musicparty.util.DownloadImageTask;
 import java.util.List;
 
 
-public class SearchSongsOutputAdapter extends RecyclerView.Adapter<SearchSongsOutputAdapter.ViewHolder> implements SearchSongsOutputItemTouchHelperCallback.ItemTouchHelperAdapter{
+public class SearchSongsOutputAdapter extends RecyclerView.Adapter<SearchSongsOutputAdapter.ViewHolder> implements SearchSongsOutputItemTouchHelper.SearchSongOutputItemTouchHelperCallback {
 
-    public interface SongCallback{
+    public interface SearchSongOutputAdapterCallback {
         void returnSong(Track track);
     }
 
-    private static final String TAG = SearchSongsOutputAdapter.class.getName();
-    private SongCallback songCallback;
+    private SearchSongOutputAdapterCallback searchSongOutputAdapterCallback;
     private List<Track> mDataset;
     private View textView;
 
-    public class ViewHolder extends RecyclerView.ViewHolder implements SearchSongsOutputItemTouchHelperCallback.ItemTouchHelperViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder implements SearchSongsOutputItemTouchHelper.SearchSongOutputItemTouchHelperViewHolderCallback {
 
         public TextView songTitleTextView;
         public TextView artistNameTextView;
@@ -55,23 +54,20 @@ public class SearchSongsOutputAdapter extends RecyclerView.Adapter<SearchSongsOu
         }
     }
 
-    public SearchSongsOutputAdapter(List<Track> trackList, SongCallback songCallback) {
-        this.songCallback = songCallback;
+    public SearchSongsOutputAdapter(List<Track> trackList, SearchSongOutputAdapterCallback searchSongOutputAdapterCallback) {
+        this.searchSongOutputAdapterCallback = searchSongOutputAdapterCallback;
         mDataset = trackList;
     }
 
-    public void setDataset(List<Track> mDataset) {
-        this.mDataset = mDataset;
-    }
+
+    //Android lifecycle methods
 
     @NonNull
     @Override
     public SearchSongsOutputAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         Context context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
-
-        textView = inflater.inflate(R.layout.partyacrecyclerview_row, parent, false);
-
+        textView = inflater.inflate(R.layout.row_song_output, parent, false);
         return new ViewHolder(textView);
     }
 
@@ -95,13 +91,15 @@ public class SearchSongsOutputAdapter extends RecyclerView.Adapter<SearchSongsOu
 
     }
 
-    @Override
-    public int getItemCount() {
-        return mDataset.size();
-    }
+
+
+    //Getter and Setter
+
+    public void setDataset(List<Track> mDataset) { this.mDataset = mDataset; }
 
     @Override
-    public void sendToPlaylist(int position) {
-        songCallback.returnSong(mDataset.get(position));
-    }
+    public int getItemCount() { return mDataset.size(); }
+
+    @Override
+    public void sendToPlaylist(int position) { searchSongOutputAdapterCallback.returnSong(mDataset.get(position)); }
 }

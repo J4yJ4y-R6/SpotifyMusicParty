@@ -17,47 +17,37 @@ import android.view.ViewGroup;
 import com.tinf19.musicparty.adapter.SearchSongsOutputAdapter;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
-import com.tinf19.musicparty.adapter.SearchSongsOutputItemTouchHelperCallback;
+import com.tinf19.musicparty.adapter.SearchSongsOutputItemTouchHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class SearchSongsOutputFragment extends Fragment implements SearchSongsOutputAdapter.SongCallback {
+public class SearchSongsOutputFragment extends Fragment {
 
     private static final String TAG = SearchSongsOutputFragment.class.getName();
-    private RecyclerView recyclerView;
     private SearchSongsOutputAdapter mAdapter;
-    AddSongCallback addSongCallback;
+    private SearchSongsOutputCallback searchSongsOutputCallback;
 
-    public interface AddSongCallback {
+    public interface SearchSongsOutputCallback {
         void addSong(Track track);
     }
 
-    public SearchSongsOutputFragment(AddSongCallback addSongCallback) {
-        this.addSongCallback = addSongCallback;
+    public SearchSongsOutputFragment(SearchSongsOutputCallback searchSongsOutputCallback) {
+        this.searchSongsOutputCallback = searchSongsOutputCallback;
     }
 
-    public SearchSongsOutputFragment() {
-    }
+    public SearchSongsOutputFragment() { }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
 
-    public void showResult(List<Track> tracks) {
-        if(mAdapter != null) {
-            mAdapter.setDataset(tracks);
-            mAdapter.notifyDataSetChanged();
-        }
-    }
+
+    //Android lifecycle methods
 
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if(context instanceof AddSongCallback)
-            addSongCallback = (AddSongCallback) context;
+        if(context instanceof SearchSongsOutputCallback)
+            searchSongsOutputCallback = (SearchSongsOutputCallback) context;
     }
 
     @Override
@@ -66,13 +56,13 @@ public class SearchSongsOutputFragment extends Fragment implements SearchSongsOu
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_search_songs_output, container, false);
 
-        recyclerView = view.findViewById(R.id.songsOutputRecyclerView);
+        RecyclerView recyclerView = view.findViewById(R.id.songsOutputRecyclerView);
         if(recyclerView != null) {
-            mAdapter = new SearchSongsOutputAdapter(new ArrayList<Track>(), this);
+            mAdapter = new SearchSongsOutputAdapter(new ArrayList<>(), track -> searchSongsOutputCallback.addSong(track));
             recyclerView.setAdapter(mAdapter);
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(view.getContext());
             recyclerView.setLayoutManager(layoutManager);
-            ItemTouchHelper.Callback swipeController = new SearchSongsOutputItemTouchHelperCallback(mAdapter);
+            ItemTouchHelper.Callback swipeController = new SearchSongsOutputItemTouchHelper(mAdapter);
             ItemTouchHelper itemTouchHelper = new ItemTouchHelper(swipeController);
             itemTouchHelper.attachToRecyclerView(recyclerView);
         }
@@ -81,9 +71,12 @@ public class SearchSongsOutputFragment extends Fragment implements SearchSongsOu
     }
 
 
-    @Override
-    public void returnSong(Track track) {
-        Log.d(TAG, "Clicked item " + track.getName());
-        addSongCallback.addSong(track);
+
+    public void showResult(List<Track> tracks) {
+        if(mAdapter != null) {
+            Log.d(TAG, "show list of songs in the output-fragment");
+            mAdapter.setDataset(tracks);
+            mAdapter.notifyDataSetChanged();
+        }
     }
 }
