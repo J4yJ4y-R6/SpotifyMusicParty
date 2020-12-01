@@ -56,31 +56,33 @@ public class HostService extends Service implements Parcelable {
     private static final String TAG = HostService.class.getName();
     private final IBinder mBinder = new LocalBinder();
     private final SpotifyHelper spotifyHelper = new SpotifyHelper();
-    private String password;
+    private final List<Track> playlist = new ArrayList<>();
+    private final List<CommunicationThread> clientThreads = new ArrayList<>();
+
     private Thread serverThread = null;
-    private Thread tokenRefresh = null;
     private ServerSocket serverSocket;
-    private List<CommunicationThread> clientThreads = new ArrayList<>();
-    private String userID;
-    private String token;
-    private String playlistID;
-    private int size = 0;
-    private boolean first = true;
-    private String partyName;
     private Que que;
-    private List<Track> playlist = new ArrayList<>();
     private SpotifyAppRemote mSpotifyAppRemote;
-    private boolean pause = true;
-    private boolean newSong;
     private HostServiceCallback hostServiceCallback;
-    private  com.spotify.protocol.types.Track nowPlaying;
+    private com.spotify.protocol.types.Track nowPlaying;
     private com.spotify.protocol.types.Track lastSongTitle;
-    private boolean stopped;
-    private boolean previous;
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
 
+    private String password;
+    private String userID;
+    private String token;
+    private String playlistID;
+    private String partyName;
+    private int size = 0;
+    private boolean first = true;
+    private boolean pause = true;
+    private boolean newSong;
+    private boolean stopped;
+    private boolean previous;
 
+
+    
     public interface HostServiceCallback {
         void setNowPlaying(Track nowPlaying);
         void setPeopleCount(int count);
@@ -143,11 +145,11 @@ public class HostService extends Service implements Parcelable {
         password = intent.getStringExtra(Constants.PASSWORD);
         partyName = intent.getStringExtra(Constants.PARTYNAME);
         if (first) {
-            tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenRefreshCallback() {
+            Thread tokenRefresh = new Thread(new TokenRefresh(intent.getStringExtra(Constants.CODE), new TokenRefresh.TokenRefreshCallback() {
                 @Override
                 public void afterConnection(String token) {
                     HostService.this.token = token;
-                    if(hostServiceCallback != null) {
+                    if (hostServiceCallback != null) {
                         HostActivity.HostActivityCallback callback = new HostActivity.HostActivityCallback() {
                             @Override
                             public void afterConnection(SpotifyAppRemote appRemote) {
@@ -158,7 +160,7 @@ public class HostService extends Service implements Parcelable {
 
                             @Override
                             public void afterFailure() {
-                                if(hostServiceCallback != null) hostServiceCallback.connect(this);
+                                if (hostServiceCallback != null) hostServiceCallback.connect(this);
                             }
                         };
                         hostServiceCallback.connect(new HostActivity.HostActivityCallback() {
@@ -174,7 +176,8 @@ public class HostService extends Service implements Parcelable {
 
                             @Override
                             public void afterFailure() {
-                                if(hostServiceCallback != null) hostServiceCallback.connect(callback);
+                                if (hostServiceCallback != null)
+                                    hostServiceCallback.connect(callback);
                             }
                         });
                     }
@@ -261,6 +264,121 @@ public class HostService extends Service implements Parcelable {
             que.back(playlist.get(playlist.size() - que.size() - 2));
         else
             mSpotifyAppRemote.getPlayerApi().play(nowPlaying.uri);
+    }
+
+    public void addItemToPlaylist(Track track) {
+        Log.d(TAG, "added track (" + track.getName() + ") to playlist");
+        playlist.add(track);
+        que.addItem(track);
+        if(playlist.size() == 1)
+            que.next();
+    }
+
+    public void addItemToTrackList(Track track) { que.addItem(track); }
+
+    public void togglePlayback() {
+        if (pause && getmSpotifyAppRemote() != null) {
+            if(que.isPlaylistEnded()) {
+                Log.d(TAG, "Last song has been played. Queue has been restarted");
+                restartQue();
+            } else {
+                Log.d(TAG, "Current Song has been resumed. Queue-Size: " + que.size());
+                getmSpotifyAppRemote().getPlayerApi().resume();
+            }
+        }
+        else if (getmSpotifyAppRemote() != null){
+            Log.d(TAG, "Current Song has been paused. Queue-Size: " + que.size());
+            getmSpotifyAppRemote().getPlayerApi().pause();
+        }
+    }
+
+    public void addEventListener() {
+        Log.d(TAG, "Playbackchanged-EventListener added to remote control");
+        mSpotifyAppRemote.getPlayerApi()
+                .subscribeToPlayerState()
+                .setEventCallback(playerState -> {
+                    final com.spotify.protocol.types.Track track = playerState.track;
+                    if(playerState.isPaused != pause) {
+                        if(playerState.isPaused)
+                            que.pause();
+                        else
+                            que.resume();
+                    } else if(playlist.size() != 0 && !playerState.isPaused && (track.duration - playerState.playbackPosition) > Constants.CROSSFADE * 1000) {
+                        que.setTimer(track.duration - playerState.playbackPosition, true);
+                    }
+
+                    pause = playerState.isPaused;
+                    if(playlist.size() != 0) {
+                        nowPlaying = track;
+                        if(lastSongTitle == null || !nowPlaying.uri.equals(lastSongTitle.uri)) {
+                            if(hostServiceCallback != null)
+                                hostServiceCallback.setNowPlaying(getNowPlaying());
+                            lastSongTitle = track;
+                        }
+
+                        if(hostServiceCallback != null)
+                            hostServiceCallback.setPlayImage(pause);
+                    }
+                    /*if(playlistID != null) {
+                        nowPlaying = track;
+
+                        if((lastSongTitle == null && !playerState.isPaused) || (nowPlaying != null && !nowPlaying.uri.equals(lastSongTitle.uri))) {
+                            if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
+                                stopped = true;
+                                Log.d(TAG, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
+                                mSpotifyAppRemote.getPlayerApi().skipPrevious();
+                                mSpotifyAppRemote.getPlayerApi().pause();
+                                pause = true;
+                                if(spotifyPlayerCallback != null)
+                                    spotifyPlayerCallback.setPlayImage(true);
+                                return;
+                            } else if(tracks.size() == 0 && lastSongTitle != null) {
+                                return;
+                            }
+                            lastSongTitle = nowPlaying;
+                            Log.d(TAG, "New song has been started " + track.uri.split(":")[2]);
+                            stopped = false;
+                            new Thread(()->{
+                                try {
+                                    sendToAll(Commands.PLAYING, getNowPlaying().serialize());
+                                } catch (IOException | JSONException e) {
+                                    Log.e(TAG, e.getMessage(), e);
+                                }
+                            }).start();
+
+                            if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
+                                tracks.remove(0);
+                            }
+                        }
+                        pause = playerState.isPaused;
+                        if(tracks.size() > 0 && nowPlaying.uri.equals(tracks.get(0).getURI()))
+                            tracks.remove(0);
+                        Log.d(TAG, "addEventListener: " + track + " - " + spotifyPlayerCallback);
+                        if (track != null && spotifyPlayerCallback != null) {
+                            Log.d(TAG, track.name + " by " + track.artist.name);
+                            //if (playerState.playbackPosition == 0)
+                            //nextSong();
+                            spotifyPlayerCallback.setNowPlaying(getNowPlaying());
+                        }
+
+                        if(spotifyPlayerCallback != null) spotifyPlayerCallback.setPlayImage(pause);
+                    }*/
+                });
+    }
+
+    public void updateServiceNotifaction() {
+        String text = getString(R.string.service_serverMsg, partyName);
+        String peopleCount = getString(R.string.service_serverPeople, clientThreads.size());
+        NotificationManagerCompat mNotificationManager = NotificationManagerCompat.from(this);
+        Notification notificationUpdate = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
+                .setContentTitle(text)
+                .setContentText(peopleCount)
+                .setSmallIcon(R.drawable.logo_service_notification)
+                .setContentIntent(pendingIntent)
+                .addAction(R.drawable.icon_exit_room, getString(R.string.text_end), pendingIntentButton)
+                .build();
+        Log.d(TAG, "service notification updated");
+        mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
     }
 
 
@@ -654,9 +772,6 @@ public class HostService extends Service implements Parcelable {
     }
 
 
-    //TODO: hier sind wir stehen geblieben
-
-
 
     // Parcel
 
@@ -681,148 +796,20 @@ public class HostService extends Service implements Parcelable {
     };
 
 
-    // In-App Lists
-
-    public void addItemToPlaylist(Track track) {
-        playlist.add(track);
-        que.addItem(track);
-        if(playlist.size() == 1)
-            que.next();
-    }
-
-    public void addItemToTrackList(Track track) { que.addItem(track); }
-
-    public void togglePlayback() {
-        if (pause && getmSpotifyAppRemote() != null) {
-            Log.d(TAG, "Size: " + que.size() + " Playlist size: " + playlist.size());
-            if(que.isPlaylistEnded()) {
-                restartQue();
-            } else {
-                getmSpotifyAppRemote().getPlayerApi().resume();
-            }
-        }
-        else if (getmSpotifyAppRemote() != null)
-            getmSpotifyAppRemote().getPlayerApi().pause();
-    }
-
-    public void addEventListener() {
-        mSpotifyAppRemote.getPlayerApi()
-                .subscribeToPlayerState()
-                .setEventCallback(playerState -> {
-                    final com.spotify.protocol.types.Track track = playerState.track;
-                    if(playerState.isPaused != pause) {
-                        if(playerState.isPaused)
-                            que.pause();
-                        else
-                            que.resume();
-                    } else if(playlist.size() != 0 && !playerState.isPaused && (track.duration - playerState.playbackPosition) > Constants.CROSSFADE * 1000) {
-                        que.setTimer(track.duration - playerState.playbackPosition, true);
-                    }
-
-                    pause = playerState.isPaused;
-                    if(playlist.size() != 0) {
-                        nowPlaying = track;
-                        if(lastSongTitle == null || !nowPlaying.uri.equals(lastSongTitle.uri)) {
-                            //if(que.size() > 0 && !nowPlaying.uri.equals(que.getQueList().get(0).getURI()) && !previous);
-                                //que.next();
-                            //else if(previous)
-                             //   previous = false;
-
-                            if(hostServiceCallback != null) {
-                                hostServiceCallback.setNowPlaying(getNowPlaying());
-                            }
-                            lastSongTitle = track;
-                        }
-
-                        if(hostServiceCallback != null)
-                            hostServiceCallback.setPlayImage(pause);
-                    }
-                    /*if(playlistID != null) {
-                        nowPlaying = track;
-
-                        if((lastSongTitle == null && !playerState.isPaused) || (nowPlaying != null && !nowPlaying.uri.equals(lastSongTitle.uri))) {
-                            //printPlaylist(playlist);
-                            //printPlaylist(tracks);
-                            Log.d(TAG, "addEventListener: " + (playlist.size() - 2 - tracks.size()));
-                            //if(playlist.size() > 1 && playlist.get(playlist.size() - 2 - tracks.size()).getURI().equals(nowPlaying.uri));
-                                //tracks.add(0, playlist.get(playlist.size() - 2 - tracks.size()));
-
-                            if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
-                                stopped = true;
-                                Log.d(TAG, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
-                                mSpotifyAppRemote.getPlayerApi().skipPrevious();
-                                mSpotifyAppRemote.getPlayerApi().pause();
-                                pause = true;
-//                            long postion = lastSongTitle.duration - 10000;
-//                            Log.d(NAME, "SEEK TO: " + postion);
-//                            mSpotifyAppRemote.getPlayerApi().seekTo(postion);
-                                if(spotifyPlayerCallback != null)
-                                    spotifyPlayerCallback.setPlayImage(true);
-                                return;
-                            } else if(tracks.size() == 0 && lastSongTitle != null) {
-                                return;
-                            }
-                            lastSongTitle = nowPlaying;
-                            Log.d(TAG, "New song has been started " + track.uri.split(":")[2]);
-                            stopped = false;
-                            new Thread(()->{
-                                try {
-                                    sendToAll(Commands.PLAYING, getNowPlaying().serialize());
-                                } catch (IOException | JSONException e) {
-                                    Log.e(TAG, e.getMessage(), e);
-                                }
-                            }).start();
-
-                            if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
-                                tracks.remove(0);
-                            }
-                        }
-                        pause = playerState.isPaused;
-                        if(tracks.size() > 0 && nowPlaying.uri.equals(tracks.get(0).getURI()))
-                            tracks.remove(0);
-                        Log.d(TAG, "addEventListener: " + track + " - " + spotifyPlayerCallback);
-                        if (track != null && spotifyPlayerCallback != null) {
-                            Log.d(TAG, track.name + " by " + track.artist.name);
-                            //if (playerState.playbackPosition == 0)
-                            //nextSong();
-                            spotifyPlayerCallback.setNowPlaying(getNowPlaying());
-                        }
-
-                        if(spotifyPlayerCallback != null) spotifyPlayerCallback.setPlayImage(pause);
-                    }*/
-                });
-    }
 
     // Interaction with Server
 
     private void startServer(){
-        Log.d(TAG, "Try to start server");
         this.serverThread = new Thread(new ServerThread());
         this.serverThread.start();
     }
 
-    public void updateServiceNotifaction() {
-        String text = getString(R.string.service_serverMsg, partyName);
-        String peopleCount = getString(R.string.service_serverPeople, clientThreads.size());
-        NotificationManagerCompat mNotificationManager = NotificationManagerCompat.from(this);
-        Notification notificationUpdate = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
-                .setContentTitle(text)
-                .setContentText(peopleCount)
-                .setSmallIcon(R.drawable.logo_service_notification)
-                .setContentIntent(pendingIntent)
-                .addAction(R.drawable.icon_exit_room, getString(R.string.text_end), pendingIntentButton)
-                .build();
-        mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
-    }
-
-
     class ServerThread implements Runnable {
-
         @Override
         public void run() {
             try {
-                serverSocket = new ServerSocket(Constants.PORT);
                 Log.d(TAG, "Server Started on port " + Constants.PORT);
+                serverSocket = new ServerSocket(Constants.PORT);
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
@@ -839,6 +826,7 @@ public class HostService extends Service implements Parcelable {
             }
         }
     }
+
 
 
     // Interaction with Clients
@@ -858,12 +846,12 @@ public class HostService extends Service implements Parcelable {
     }
 
     class CommunicationThread extends Thread {
-        private Socket clientSocket;
+        private final Socket clientSocket;
+        private final long createdTime;
         private BufferedReader input;
         private DataOutputStream out;
         private boolean login = false;
         private String username;
-        private final long createdTime;
 
         public CommunicationThread(Socket socket) {
             this.clientSocket = socket;
@@ -871,8 +859,8 @@ public class HostService extends Service implements Parcelable {
         }
 
         public void sendMessage(Commands command, String message) throws IOException {
-            Log.d(TAG, "~" + command.toString() + "~" + message);
-            out.writeBytes("~" + command.toString() + "~" + message + "\n\r");
+            Log.d(TAG, "Send Message to User: " + username + ", Command: " + command.toString() + ", Message: " + message);
+            out.writeBytes(Constants.DELIMITER + command.toString() + Constants.DELIMITER + message + "\n\r");
             out.flush();
         }
 
@@ -890,7 +878,7 @@ public class HostService extends Service implements Parcelable {
                 try {
                     line = input.readLine();
                     if (line != null){
-                        String [] parts = line.split("~");
+                        String [] parts = line.split(Constants.DELIMITER);
                         if (parts.length > 1) {
                             Commands command = Commands.valueOf(parts[1]);
                             String attribute = "";
@@ -906,14 +894,14 @@ public class HostService extends Service implements Parcelable {
                                     return;
                                 case LOGIN:
                                     if (parts.length > 3) {
-                                        String pass = parts[3];
-                                        Log.d(TAG, "New login attempt from user " + attribute +" with password: " + pass);
-                                        if (login(pass)) {
+                                        String password = parts[3];
+                                        Log.d(TAG, "New login attempt from user " + attribute +" with password: " + password);
+                                        if (login(password)) {
                                             username = attribute;
                                             if (getNowPlaying() == null)
                                                 sendMessage(Commands.LOGIN, partyName);
                                             else
-                                                sendMessage(Commands.LOGIN, partyName + "~" + getNowPlaying().serialize());
+                                                sendMessage(Commands.LOGIN, partyName + Constants.DELIMITER + getNowPlaying().serialize());
                                             if(hostServiceCallback != null) hostServiceCallback.setPeopleCount(clientThreads.size());
                                         } else {
                                             sendMessage(Commands.QUIT, "Login Failed");
@@ -929,7 +917,6 @@ public class HostService extends Service implements Parcelable {
                                         addItemToPlaylist(track);
                                         //addItem(track.getURI(), track.getName());
                                         hostServiceCallback.reloadPlaylistFragment();
-                                        //sendToAll(Commands.QUEUE, track.serialize());
                                     }
                                     break;
                                 case PLAYING:
@@ -940,11 +927,11 @@ public class HostService extends Service implements Parcelable {
                                 case PLAYLIST:
                                     StringBuilder response = new StringBuilder();
                                     if(getNowPlaying() != null) {
-                                        response.append("~");
+                                        response.append(Constants.DELIMITER);
                                         response.append(getNowPlaying().serialize());
                                     }
                                     for (Track track: que.getQueList()) {
-                                        response.append("~");
+                                        response.append(Constants.DELIMITER);
                                         response.append(track.serialize());
                                     }
                                     sendMessage(Commands.PLAYLIST, response.toString());

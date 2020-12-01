@@ -194,7 +194,7 @@ public class ClientService extends Service {
 
         public void sendMessage(Commands commands, String message) throws IOException {
             Log.d(TAG, "sending command: " + commands.toString() + ", message: " + message);
-            out.writeBytes(String.format("~%s~%s\n\r" , commands.toString(), message));
+            out.writeBytes(String.format("%s%s%s%s\n\r" , Constants.DELIMITER, commands.toString(), Constants.DELIMITER, message));
             out.flush();
         }
 
@@ -217,12 +217,12 @@ public class ClientService extends Service {
                 }).start();
                 input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.ISO_8859_1));
                 out = new DataOutputStream(clientSocket.getOutputStream());
-                sendMessage(Commands.LOGIN, this.username + "~" + this.password);
+                sendMessage(Commands.LOGIN, this.username + Constants.DELIMITER + this.password);
                 Log.d(TAG, "Connect successful");
                 while (!this.isInterrupted() && !clientSocket.isClosed())  {
                     String line = input.readLine();
                     if (line != null) {
-                        String [] parts = line.split("~");
+                        String [] parts = line.split(Constants.DELIMITER);
                         String attribute = "";
                         if (parts.length > 2)
                             attribute = parts[2];
