@@ -19,6 +19,14 @@ import com.tinf19.musicparty.R;
 
 import org.json.JSONException;
 
+/**
+ * Fragment where the host can end the party and save the current queue state to his
+ * SharedPreferences so he can listen to it again.
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @see android.content.SharedPreferences
+ * @since 1.1
+ */
 public class HostClosePartyFragment extends Fragment {
 
     private static final String TAG = HostClosePartyFragment.class.getName();
@@ -32,8 +40,16 @@ public class HostClosePartyFragment extends Fragment {
         void createPlaylistFromArrayList(String name) throws JSONException;
     }
 
+    /**
+     * Constructor to set the callback
+     * @param hostClosePartyCallback Communication callback for
+     * {@link com.tinf19.musicparty.server.HostActivity}
+     */
     public HostClosePartyFragment(HostClosePartyCallback hostClosePartyCallback) { this.hostClosePartyCallback = hostClosePartyCallback; }
 
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
     public HostClosePartyFragment() { }
 
 

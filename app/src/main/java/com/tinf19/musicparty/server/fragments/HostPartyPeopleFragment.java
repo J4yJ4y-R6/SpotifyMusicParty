@@ -13,24 +13,37 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.tinf19.musicparty.R;
-import com.tinf19.musicparty.music.PartyPeople;
-import com.tinf19.musicparty.server.Adapter.HostPartyPeopleAdapter;
+import com.tinf19.musicparty.music.PartyPerson;
+import com.tinf19.musicparty.server.adapter.HostPartyPeopleAdapter;
 
 import java.util.ArrayList;
 
+/**
+ * Fragment where the host can see who is connected to his party.
+ * He sees the username and the time the client is at the party.
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class HostPartyPeopleFragment extends Fragment {
 
-    private static final String TAG = HostPartyPeopleFragment.class.getName();
-    private RecyclerView recyclerView;
     private HostPartyPeopleAdapter hostPartyPeopleAdapter;
     private HostPartyPeopleCallback hostPartyPeopleCallback;
 
     public interface HostPartyPeopleCallback {
-        ArrayList<PartyPeople> getPartyPeopleList();
+        ArrayList<PartyPerson> getPartyPeopleList();
     }
 
+    /**
+     * Constructor to set the callback
+     * @param hostPartyPeopleCallback Communication callback for
+     *                                {@link com.tinf19.musicparty.server.HostActivity}
+     */
     public HostPartyPeopleFragment(HostPartyPeopleCallback hostPartyPeopleCallback) { this.hostPartyPeopleCallback = hostPartyPeopleCallback; }
 
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
     public HostPartyPeopleFragment() { }
 
 
@@ -55,7 +68,7 @@ public class HostPartyPeopleFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_host_party_people, container, false);
-        recyclerView = view.findViewById(R.id.partyPeopleRecyclerView);
+        RecyclerView recyclerView = view.findViewById(R.id.partyPeopleRecyclerView);
         if(recyclerView != null) {
             hostPartyPeopleAdapter = new HostPartyPeopleAdapter(new ArrayList<>());
             recyclerView.setAdapter(hostPartyPeopleAdapter);

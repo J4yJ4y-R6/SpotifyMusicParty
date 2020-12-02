@@ -1,9 +1,10 @@
-package com.tinf19.musicparty.server.Adapter;
+package com.tinf19.musicparty.server.adapter;
 
 import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -20,6 +21,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * HostPlaylistAdapter
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class HostPlaylistAdapter extends RecyclerView.Adapter<HostPlaylistAdapter.MyViewHolder> implements HostPlaylistItemMoveHelper.HostPlaylistItemMoveHelperCallback {
 
     private final HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
@@ -30,13 +37,22 @@ public class HostPlaylistAdapter extends RecyclerView.Adapter<HostPlaylistAdapte
         void swapPlaylistItems(int from, int to);
         void removeItem(Track toRemove, int position, HostService.AfterCallback callback);
     }
-
+    /**
+     * This ViewHolder is assigning the objects from row_host_playlist.xml to the global view-variables
+     * @see RecyclerView.ViewHolder
+     * @see TextView
+     * @see View
+     */
     public class MyViewHolder extends RecyclerView.ViewHolder {
 
         private final TextView songTitleTextView;
         private final TextView songArtistTextView;
         private final View rowView;
 
+        /**
+         * Constructor to assign the parent view of each row
+         * @param itemView parent view from row_host_playlist.xml
+         */
         public MyViewHolder(View itemView) {
             super(itemView);
             rowView = itemView;
@@ -45,6 +61,13 @@ public class HostPlaylistAdapter extends RecyclerView.Adapter<HostPlaylistAdapte
         }
     }
 
+    /**
+     * Constructor to assign the current state of the playlist to the local array list and to set
+     * the callback
+     * @param mDataset {@link ArrayList} of type {@link Track} with all songs in the playlist
+     * @param hostPlaylistAdapterCallback Communication callback for
+     * {@link com.tinf19.musicparty.server.fragments.HostPlaylistFragment}
+     */
     public HostPlaylistAdapter(ArrayList<Track> mDataset, HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
         this.mdataset = mDataset;
         this.hostPlaylistAdapterCallback = hostPlaylistAdapterCallback;
@@ -112,7 +135,10 @@ public class HostPlaylistAdapter extends RecyclerView.Adapter<HostPlaylistAdapte
     }
 
 
-
+    /**
+     * Constructor to assign the current state of the playlist to the local array list
+     * @param mDataset {@link ArrayList} of type {@link Track} with all songs in the playlist
+     */
     public void setDataset(List<Track> mDataset) {
         this.mdataset = mDataset;
     }

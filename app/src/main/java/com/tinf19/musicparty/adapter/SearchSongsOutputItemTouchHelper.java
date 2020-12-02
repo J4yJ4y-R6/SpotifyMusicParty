@@ -8,10 +8,18 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.tinf19.musicparty.util.Constants;
 
+/**
+ * SearchSongsSoutputItemTouchHelper is managing the touch events in the RecyclerView of
+ * {@link com.tinf19.musicparty.fragments.SearchSongsOutputFragment}
+ * It enables the possibility to add a song to queue by swiping it to the right
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class SearchSongsOutputItemTouchHelper extends ItemTouchHelper.Callback {
 
     private final SearchSongOutputItemTouchHelperCallback mAdapter;
-    private SearchSongsOutputAdapter adapter;
+    private final SearchSongsOutputAdapter adapter;
 
     public interface SearchSongOutputItemTouchHelperCallback {
         void sendToPlaylist(int position);
@@ -22,6 +30,10 @@ public class SearchSongsOutputItemTouchHelper extends ItemTouchHelper.Callback {
         void onItemClear();
     }
 
+    /**
+     * Constructor
+     * @param adapter Adapter of the RecyclerView in {@link com.tinf19.musicparty.fragments.SearchSongsOutputFragment}
+     */
     public SearchSongsOutputItemTouchHelper(SearchSongOutputItemTouchHelperCallback adapter) {
         mAdapter = adapter;
         this.adapter = (SearchSongsOutputAdapter) adapter;

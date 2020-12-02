@@ -19,12 +19,21 @@ import android.widget.TextView;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.DownloadImageTask;
-import com.tinf19.musicparty.server.Adapter.HostPlaylistAdapter;
-import com.tinf19.musicparty.server.Adapter.HostPlaylistItemMoveHelper;
+import com.tinf19.musicparty.server.adapter.HostPlaylistAdapter;
+import com.tinf19.musicparty.server.adapter.HostPlaylistItemMoveHelper;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Fragment where the host can see the current queue state. Also he can change it by swapping two
+ * items or deleting one by swiping it to the left and commit this action with a click on the trash
+ * can. These actions are managed by the
+ * {@link com.tinf19.musicparty.server.adapter.HostPlaylistItemMoveHelper}
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class HostPlaylistFragment extends Fragment {
 
     private static final String TAG = HostPlaylistFragment.class.getName();
@@ -41,11 +50,21 @@ public class HostPlaylistFragment extends Fragment {
         Track getCurrentPlaying();
     }
 
+    /**
+     * Constructor to set the callbacks
+     * @param hostPlaylistCallback Communication callback for
+     *                             {@link com.tinf19.musicparty.server.HostActivity}.
+     * @param hostPlaylistAdapterCallback Communication callback which is given by the
+     *                                    {@link HostPlaylistAdapter}
+     */
     public HostPlaylistFragment(HostPlaylistCallback hostPlaylistCallback, HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
         this.hostPlaylistCallback = hostPlaylistCallback;
         this.hostPlaylistAdapterCallback = hostPlaylistAdapterCallback;
     }
 
+    /**
+     * Empty-Constructor which is necessary at fragments
+     */
     public HostPlaylistFragment() { }
 
 
@@ -57,8 +76,8 @@ public class HostPlaylistFragment extends Fragment {
         super.onStart();
         hostPlaylistCallback.showPlaylist();
         Track currentPlaying = hostPlaylistCallback.getCurrentPlaying();
-        Log.d(TAG, "set current track to " + currentPlaying.getName());
         if(currentPlaying != null) {
+            Log.d(TAG, "set current track to " + currentPlaying.getName());
             if (currentSongTitleTextView != null)
                 currentSongTitleTextView.setText(currentPlaying.getName());
             if (currentSongArtistTextView != null)
@@ -67,6 +86,8 @@ public class HostPlaylistFragment extends Fragment {
                 String coverURL = "https://i.scdn.co/image/" + currentPlaying.getCoverFull();
                 new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
             }
+        } else {
+            Log.d(TAG, "no song has been started yet");
         }
     }
 
@@ -102,6 +123,10 @@ public class HostPlaylistFragment extends Fragment {
         return view;
     }
 
+    /**
+     * Display the current queue state with all songs currently in the queue.
+     * @param tracks {@link List} of type {@link Track} of all songs currently in the queue
+     */
     public void showResult(List<Track> tracks) {
         if(hostPlaylistAdapter != null) {
             Log.d(TAG, "playlist has been updated with new size: " + tracks.size());
@@ -110,6 +135,9 @@ public class HostPlaylistFragment extends Fragment {
         }
     }
 
+    /**
+     * Reloading the fragment because the queue has been updated by the client.
+     */
     public void updateRecyclerView() {
         Log.d(TAG, "playlist has been updated - notify RecyclerView");
         hostPlaylistAdapter.notifyDataSetChanged();

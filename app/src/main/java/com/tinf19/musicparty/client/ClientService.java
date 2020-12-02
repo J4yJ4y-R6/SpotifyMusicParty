@@ -10,6 +10,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.tinf19.musicparty.receiver.ActionReceiver;
 import com.tinf19.musicparty.util.Commands;
@@ -29,6 +30,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service for background communication with Spotify and all clients
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class ClientService extends Service {
 
     private static final String TAG = ClientService.class.getName();
@@ -38,10 +45,20 @@ public class ClientService extends Service {
     private Socket clientSocket;
     private Track nowPlaying;
     private boolean stopped;
+    /**
+     * Boolean to decide if the service is connected for the first time.
+     */
     private boolean first = true;
+    /**
+     * Spotify connection token which is refreshing every hour
+     */
     private String token;
+    /**
+     * Intent for the service notification
+     */
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
+
 
 
     public interface ClientServiceCallback {
@@ -53,6 +70,13 @@ public class ClientService extends Service {
         void showFragments();
     }
 
+    /**
+     * Binder for Bound Service
+     * @author Jannik Junker
+     * @author Silas Wessely
+     * @see ClientService
+     * @since 1.1
+     */
     public class LocalBinder extends Binder {
         ClientService getService() {
             return ClientService.this;
@@ -66,7 +90,7 @@ public class ClientService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        Intent notificationIntent = new Intent(this, ClientActivity.class);
+        Intent notificationIntent = new Intent(this, ClientActivity.class).putExtra(Constants.FROM_NOTIFICATION, true);
         pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
         Intent intentAction = new Intent(this, ActionReceiver.class);
@@ -115,10 +139,17 @@ public class ClientService extends Service {
 
 
     //Getter
+
+    /**
+     * @return Get the current life state of the service
+     */
     public boolean isStopped() {
         return stopped;
     }
 
+    /**
+     * @return Get the Spotify connection token
+     */
     public String getToken() {
         return token;
     }
@@ -126,6 +157,11 @@ public class ClientService extends Service {
 
 
     //Setter
+
+    /**
+     * Set the {@link ClientServiceCallback}
+     * @param clientServiceCallback Communication callback to the {@link ClientActivity}
+     */
     public void setClientServiceCallback(ClientServiceCallback clientServiceCallback) {
         this.clientServiceCallback = clientServiceCallback;
     }
@@ -134,6 +170,9 @@ public class ClientService extends Service {
 
     //Service methods
 
+    /**
+     * Updating the service foreground notification after the party name has changed
+     */
     public void updateServiceNotifaction() {
         Log.d(TAG, "update ClientService-Notification");
         String text = getString(R.string.service_clientMsg, clientThread.getPartyName());
@@ -147,15 +186,29 @@ public class ClientService extends Service {
         mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
     }
 
+    /**
+     * Creating a new ClientThread to communicate with the
+     * {@link com.tinf19.musicparty.server.HostService}
+     * @param ipAddress Connection ip-address inserted by the user
+     * @param password Connection password inserted by the user
+     * @param username Username inserted by the user
+     */
     public void connect(String ipAddress, String password, String username){
         clientThread = new ClientThread(ipAddress, password, username);
         clientThread.start();
     }
 
+    /**
+     * @return Get ClientThread
+     */
     public ClientThread getClientThread() {
         return clientThread;
     }
 
+    /**
+     * Leaving the connection to the server and closing the ClientThread
+     * @throws IOException when the thread or the socket cannot be closed
+     */
     public void exit() throws IOException {
         Log.d(TAG, "ClientThread exits service");
         stopped = true;
@@ -171,33 +224,62 @@ public class ClientService extends Service {
     }
 
 
-
+    /**
+     * Subclass for managing the communication with the server
+     * @author Jannik Junker
+     * @author Silas Wessely
+     * @see com.tinf19.musicparty.server.HostService
+     * @since 1.1
+     */
     class ClientThread extends Thread {
 
         private final String address;
-        private BufferedReader input;
-        private DataOutputStream out;
         private final String password;
         private final String username;
+        private BufferedReader input;
+        private DataOutputStream out;
         private String partyName;
 
 
+        /**
+         * Constructor
+         * @param address IP-Address to connect to the server in the same network
+         * @param password Password for guarantee a save connection
+         * @param username Username to identify the user from the server
+         */
         public ClientThread(String address, String password, String username) {
             this.address = address;
             this.password = password;
             this.username = username;
         }
 
+        /**
+         * @return Get the current party name
+         */
         public String getPartyName() {
             return partyName;
         }
 
+        /**
+         * Sending a command and a message to the server
+         * @param commands communication command for the server
+         * @param message attributes for mapping the command successfully
+         * @throws IOException when the output-stream cannot write or flush
+         */
         public void sendMessage(Commands commands, String message) throws IOException {
             Log.d(TAG, "sending command: " + commands.toString() + ", message: " + message);
             out.writeBytes(String.format("%s%s%s%s\n\r" , Constants.DELIMITER, commands.toString(), Constants.DELIMITER, message));
             out.flush();
         }
 
+        /**
+         * Splitting the client message to communicate with the server by different commands:
+         * LOGIN:       logging in to the server with a username, ip-address and a password
+         * QUIT:        quit the connection to the server
+         * PLAYING:     get the current playling track from the server
+         * PLAYLIST:    get a list of tracks which is equal to the current state of the playlist in
+         *              the server
+         */
         @Override
         public void run() {
             try {

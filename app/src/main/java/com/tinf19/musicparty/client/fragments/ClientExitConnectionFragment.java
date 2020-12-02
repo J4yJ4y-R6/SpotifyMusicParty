@@ -18,6 +18,13 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 
+/**
+ * Fragment where the client can leave the party
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @see com.tinf19.musicparty.client.ClientActivity
+ * @since 1.1
+ */
 public class ClientExitConnectionFragment extends Fragment {
 
     public ClientExitConnectionCallback clientExitConnectionCallback;
@@ -29,10 +36,18 @@ public class ClientExitConnectionFragment extends Fragment {
         String getPartyName();
     }
 
+    /**
+     * Constructor to set the callback
+     * @param clientExitConnectionCallback communication callback for
+     * {@link com.tinf19.musicparty.client.ClientActivity}
+     */
     public ClientExitConnectionFragment(ClientExitConnectionCallback clientExitConnectionCallback) {
         this.clientExitConnectionCallback = clientExitConnectionCallback;
     }
 
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
     public ClientExitConnectionFragment() { }
 
 
@@ -67,7 +82,10 @@ public class ClientExitConnectionFragment extends Fragment {
     }
 
 
-
+    /**
+     * Set party name in the leaveTextView
+     * @param name current party name
+     */
     public void setPartyName(String name) {
         if(leaveTextView != null) {
             leaveTextView.setText(getString(R.string.text_leaveParty, name), TextView.BufferType.SPANNABLE);

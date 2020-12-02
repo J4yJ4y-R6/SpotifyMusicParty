@@ -22,15 +22,20 @@ import com.tinf19.musicparty.util.DownloadImageTask;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Fragment where the client can see the current playlist
+ */
 public class ClientPlaylistFragment extends Fragment {
 
     private static final String TAG = ClientPlaylistFragment.class.getName();
     private ClientPlaylistAdapter clientPlaylistAdapter;
-    private RecyclerView recyclerView;
     private ImageView currentSongCoverImageView;
     private TextView currentSongTitleTextView;
     private TextView currentSongArtistTextView;
 
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
     public ClientPlaylistFragment() { }
 
 
@@ -43,7 +48,7 @@ public class ClientPlaylistFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_client_playlist, container, false);
 
-        recyclerView = view.findViewById(R.id.clientPlaylistRecyclerView);
+        RecyclerView recyclerView = view.findViewById(R.id.clientPlaylistRecyclerView);
         if(recyclerView != null) {
             clientPlaylistAdapter = new ClientPlaylistAdapter(new ArrayList<Track>());
             recyclerView.setAdapter(clientPlaylistAdapter);
@@ -59,7 +64,10 @@ public class ClientPlaylistFragment extends Fragment {
     }
 
 
-
+    /**
+     * Set the information about the currently playing track in the views
+     * @param track currently playing track
+     */
     public void setCurrentPlaying(Track track) {
         if(track != null) {
             Log.d(TAG, "current track has been changed to: " + track.getName());
@@ -76,6 +84,10 @@ public class ClientPlaylistFragment extends Fragment {
         }
     }
 
+    /**
+     * Display the tracklist in the playlist RecyclerView
+     * @param tracks {@link List} with all tracks from the playlist
+     */
     public void showResult(List<Track> tracks) {
         if(clientPlaylistAdapter != null) {
             Log.d(TAG, "playlist has been updated with new size: " + tracks.size());

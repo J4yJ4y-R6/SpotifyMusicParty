@@ -20,6 +20,13 @@ import android.widget.ImageView;
 
 import com.tinf19.musicparty.util.Constants;
 
+/**
+ * Start Activity where the user can decide whether he wants to open or join a party.
+ * Also there is an information view for some instructions as how to use the app.
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getName();
@@ -55,6 +62,10 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Animate the App-Logo at the top
+     * @param v {@link ImageView} which will be animated
+     */
     public void animate(ImageView v) {
         Drawable d = v.getDrawable();
         if(d instanceof AnimatedVectorDrawableCompat) {
@@ -66,21 +77,37 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Opening a party by starting the {@link HostActivity}
+     * @param view Clicked view
+     */
     public void changeHost(View view){
         Log.d(TAG, "starting HostActivity");
         startActivity(new Intent(this, HostActivity.class));
     }
 
+    /**
+     * Opening the {@link JoinActivity} to join a party
+     * @param view Clicked view
+     */
     public void changeClient(View view){
         Log.d(TAG, "starting ClientLoginActivity");
         startActivity(new Intent(this, JoinActivity.class));
     }
 
+    /**
+     * Showing the information card
+     * @param view Clicked view
+     */
     public void showInfoText(View view) {
         Log.d(TAG, "info text is visible");
         binding.infoCardView.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * Hiding the information card
+     * @param view Clicked view
+     */
     public void hideInfoText(View view) {
         Log.d(TAG, "info field is invisible");
         binding.infoCardView.setVisibility(View.INVISIBLE);

@@ -16,7 +16,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.tinf19.musicparty.music.Artist;
-import com.tinf19.musicparty.music.PartyPeople;
+import com.tinf19.musicparty.music.PartyPerson;
 import com.tinf19.musicparty.music.Que;
 import com.tinf19.musicparty.receiver.ActionReceiver;
 import com.tinf19.musicparty.util.Commands;
@@ -27,7 +27,6 @@ import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.SpotifyHelper;
 import com.tinf19.musicparty.util.TokenRefresh;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,12 +42,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class HostService extends Service implements Parcelable {
@@ -82,7 +75,7 @@ public class HostService extends Service implements Parcelable {
     private boolean previous;
 
 
-    
+
     public interface HostServiceCallback {
         void setNowPlaying(Track nowPlaying);
         void setPeopleCount(int count);
@@ -193,7 +186,7 @@ public class HostService extends Service implements Parcelable {
             first = false;
         }
 
-        Intent notificationIntent = new Intent(this, HostActivity.class);
+        Intent notificationIntent = new Intent(this, HostActivity.class).putExtra(Constants.FROM_NOTIFICATION, true);
         pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
         Intent intentAction = new Intent(this, ActionReceiver.class);
@@ -389,10 +382,10 @@ public class HostService extends Service implements Parcelable {
 
     public SpotifyAppRemote getmSpotifyAppRemote() { return ( mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()) ? mSpotifyAppRemote : null; }
     
-    public List<PartyPeople> getPeopleList() {
-        List<PartyPeople> tmpPeopleList = new ArrayList<>();
+    public List<PartyPerson> getPeopleList() {
+        List<PartyPerson> tmpPeopleList = new ArrayList<>();
         for (CommunicationThread client: clientThreads) {
-            tmpPeopleList.add(new PartyPeople(client.username, System.currentTimeMillis() - client.createdTime));
+            tmpPeopleList.add(new PartyPerson(client.username, System.currentTimeMillis() - client.createdTime));
         }
         return tmpPeopleList;
     }

@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.content.BroadcastReceiver;
@@ -41,19 +42,39 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.util.List;
 
-
+/**
+ * Activity for Client with communication to the service and the server
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @see AppCompatActivity
+ * @see android.app.Service
+ * @since 1.1
+ */
 public class ClientActivity extends AppCompatActivity {
 
     private static final String TAG = ClientActivity.class.getName();
+    /**
+     * The Client Bound {@link android.app.Service} for connecting background connection with the
+     * {@link com.tinf19.musicparty.server.HostService}
+     */
     private ClientService mBoundService;
     private SearchSongsOutputFragment searchSongsOutputFragment;
     private ClientSongFragment clientSongFragment;
     private ClientPlaylistFragment clientPlaylistFragment;
     private ClientSearchBarFragment clientSearchBarFragment;
     private ClientExitConnectionFragment clientExitConnectionFragment;
+    /**
+     * Identify if Service is currently bounded
+     */
     private boolean mShouldUnbind;
 
     private final ServiceConnection mConnection = new ServiceConnection() {
+        /**
+         * Assining the service after connection to the host and logging in to Spotify or closing
+         * the service after the host stopped the server
+         * @param className Class name of the service
+         * @param service Service binder to assign the service
+         */
         public void onServiceConnected(ComponentName className, IBinder service) {
             Log.d(TAG, "service has been connected");
             mBoundService = ((ClientService.LocalBinder)service).getService();
@@ -63,6 +84,10 @@ public class ClientActivity extends AppCompatActivity {
             }
         }
 
+        /**
+         * Deleteing the current service from the class
+         * @param className Class name of the service
+         */
         public void onServiceDisconnected(ComponentName className) {
             Log.d(TAG, "service has been disconnected");
             mBoundService = null;
@@ -88,12 +113,6 @@ public class ClientActivity extends AppCompatActivity {
 
 
     //Android lifecycle methods
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        doUnbindService();
-    }
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
@@ -125,12 +144,22 @@ public class ClientActivity extends AppCompatActivity {
                         replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
             }
         } else {
-            Log.d(TAG, "Fragment has been changed to LoadingFragment");
-            getSupportFragmentManager().beginTransaction().
-                    replace(R.id.showSongFragmentFrame, new LoadingFragment(getString(R.string.text_loadingClient)), "LoadingFragment").commitAllowingStateLoss();
+            if(!getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false)) {
+                Log.d(TAG, "Fragment has been changed to LoadingFragment");
+                getSupportFragmentManager().beginTransaction().
+                        replace(R.id.showSongFragmentFrame, new LoadingFragment(getString(R.string.text_loadingClient)), "LoadingFragment").commitAllowingStateLoss();
+            } else
+                showDefaultFragments();
             doBindService();
         }
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        doUnbindService();
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -174,6 +203,10 @@ public class ClientActivity extends AppCompatActivity {
 
     //Getter and Setter
 
+    /**
+     * @return  Get current party name from server if the service is connected or get default
+     *          party name: Party Name.
+     */
     private String getPartyName() {
         if(mBoundService != null)
             return mBoundService.getClientThread().getPartyName();
@@ -181,6 +214,10 @@ public class ClientActivity extends AppCompatActivity {
             return getString(R.string.text_hintPartyName);
     }
 
+    /**
+     * Set new party name in the {@link ClientSongFragment}
+     * @param partyName New party name after change
+     */
     private void setPartyName(String partyName) {
         Log.d(TAG, "party name got changed to: " + partyName);
         runOnUiThread(() -> clientSongFragment.setPartyName(partyName));
@@ -190,6 +227,12 @@ public class ClientActivity extends AppCompatActivity {
 
     //Show or change Fragments in PartyActivity
 
+    /**
+     * Opening the {@link ClientSongFragment}.
+     * In a new Thread: Set the currently playing track and the party name in the
+     * {@link ClientSongFragment} after the fragment has been started and the server is connected
+     * with a party name
+     */
     private void showShowSongFragment() {
         animateFragmentChange(false, clientSongFragment, "ShowSongFragment");
         new Thread(()->{
@@ -201,6 +244,13 @@ public class ClientActivity extends AppCompatActivity {
         }).start();
     }
 
+    /**
+     * Change the current visible fragment in the big fragment in activity_client.xml and adding
+     * an animation to the change.
+     * @param direction Animation direction if the fragment should slide in or out
+     * @param fragment Fragment which shall be opened
+     * @param tag Tag of the new fragment
+     */
     public void animateFragmentChange(boolean direction, Fragment fragment, String tag) {
         Log.d(TAG, "Fragment has been changed to " + tag);
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -216,6 +266,10 @@ public class ClientActivity extends AppCompatActivity {
 
     //Service methods
 
+    /**
+     * The client binds the service and set mShouldUnbind true, so the client knows a service is
+     * connected
+     */
     void doBindService() {
         if (bindService(new Intent(this, ClientService.class),
                 mConnection, Context.BIND_AUTO_CREATE)) {
@@ -227,6 +281,10 @@ public class ClientActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * The client unbinds the service and set mShouldUnbind false, so the client knows no service
+     * is connected
+     */
     void doUnbindService() {
         if (mShouldUnbind) {
             Log.d(TAG, "service has been unbound");
@@ -235,6 +293,11 @@ public class ClientActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * The client is leaving the the service with a message and the app returns to the
+     * {@link MainActivity}
+     * @param text Reason for leaving the service
+     */
     private void exitService(String text) {
         Log.d(TAG, "exit service because: " + text + ". Go back to MainActivity.");
         mBoundService.getClientThread().interrupt();
@@ -244,6 +307,10 @@ public class ClientActivity extends AppCompatActivity {
         startActivity((new Intent(ClientActivity.this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
     }
 
+    /**
+     * The client is opening the log-in-mask from Spotify to insert his credentials and connect
+     * to his Spotify account.
+     */
     public void loginToSpotify() {
         Log.d(TAG, "Trying to get auth token");
         AuthorizationRequest.Builder builder =
@@ -253,6 +320,9 @@ public class ClientActivity extends AppCompatActivity {
         AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);
     }
 
+    /**
+     * Set {@link com.tinf19.musicparty.client.ClientService.ClientServiceCallback}
+     */
     private void setServiceCallback() {
         if(mBoundService != null)
             mBoundService.setClientServiceCallback(new ClientService.ClientServiceCallback() {
@@ -281,6 +351,28 @@ public class ClientActivity extends AppCompatActivity {
                     ClientActivity.this.runOnUiThread(() -> clientPlaylistFragment.setCurrentPlaying(track));
                 }
 
+                /**
+                 * Initializing the global fragments with callbacks and opening the default
+                 * fragments
+                 * {@link SearchSongsOutputFragment.SearchSongsOutputCallback}: Queueing a track in
+                 * the server
+                 * {@link ClientSongFragment.ClientSongCallback#exitConnection()}: Opening the exit
+                 * fragment in the big fragment in activity_client.xml
+                 * {@link ClientSongFragment.ClientSongCallback#showPlaylist()}: Asking the server
+                 * for the playlist at the current state and opening the playlist fragment in the
+                 * big fragment in activity_client.xml
+                 * {@link ClientSearchBarFragment.ClientSearchBarCallback#searchForSongs(List)}:
+                 * Display a new list of tracks in the SearchSongOutputFragment and opening it in
+                 * the big fragment in activity_client.xml
+                 * {@link ClientSearchBarFragment.ClientSearchBarCallback#getToken()}: Get current
+                 * Spotify token
+                 * {@link ClientExitConnectionFragment.ClientExitConnectionCallback#denyExit()}:
+                 * Opening the ClientSongFragment in the big fragment in activity_client.xml
+                 * {@link ClientExitConnectionFragment.ClientExitConnectionCallback#acceptExit()}:
+                 * Disconnection vom the server and the service
+                 * {@link ClientExitConnectionFragment.ClientExitConnectionCallback#getPartyName()}:
+                 * Get the current party name
+                 */
                 @Override
                 public void showFragments() {
                     Log.d(TAG, "initializing global fragments with callbacks");
@@ -350,13 +442,19 @@ public class ClientActivity extends AppCompatActivity {
                             return ClientActivity.this.getPartyName();
                         }
                     });
-
-                    Log.d(TAG, "Fragment has been changed to SearchBarFragment");
-                    getSupportFragmentManager().beginTransaction().
-                            replace(R.id.searchBarFragmentFrame, clientSearchBarFragment, "SearchBarFragment").commitAllowingStateLoss();
-                    showShowSongFragment();
+                    showDefaultFragments();
                 }
             });
+    }
+
+    /**
+     * Showing the default fragments, when the party starts
+     */
+    private void showDefaultFragments() {
+        Log.d(TAG, "Fragment has been changed to SearchBarFragment");
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.searchBarFragmentFrame, clientSearchBarFragment, "SearchBarFragment").commitAllowingStateLoss();
+        showShowSongFragment();
     }
 
 }

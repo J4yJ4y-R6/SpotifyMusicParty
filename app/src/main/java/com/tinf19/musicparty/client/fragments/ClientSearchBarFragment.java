@@ -41,6 +41,14 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/**
+ * Fragment where the client can search for songs with the Spotify-API and show the response in
+ * {@link com.tinf19.musicparty.fragments.SearchSongsOutputFragment}
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @see com.tinf19.musicparty.fragments.SearchSongsOutputFragment
+ * @since 1.1
+ */
 public class ClientSearchBarFragment extends Fragment {
 
     private static final String TAG = ClientSearchBarFragment.class.getName();
@@ -53,9 +61,16 @@ public class ClientSearchBarFragment extends Fragment {
 
     public interface ClientSearchBarCallback extends ForAllCallback { void searchForSongs(List<Track> tracks);}
 
-    public ClientSearchBarFragment() { }
-
+    /**
+     * Constructor to set the callback
+     * @param clientSearchBarCallback Communication callback to {@link com.tinf19.musicparty.client.ClientActivity}
+     */
     public ClientSearchBarFragment(ClientSearchBarCallback clientSearchBarCallback) { this.clientSearchBarCallback = clientSearchBarCallback; }
+
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
+    public ClientSearchBarFragment() { }
 
 
 
@@ -157,7 +172,10 @@ public class ClientSearchBarFragment extends Fragment {
     }
 
 
-
+    /**
+     * Showing guesses to automatically fill the search input field below the field
+     * @param data Response data from the http-request with song titles
+     */
     public void showAutofills(String data) {
         try {
             if(searchText != null) {
@@ -171,6 +189,9 @@ public class ClientSearchBarFragment extends Fragment {
         }
     }
 
+    /**
+     * Clearing the search input field
+     */
     public void clearSearch() {
         if(searchText != null)
             searchText.getText().clear();

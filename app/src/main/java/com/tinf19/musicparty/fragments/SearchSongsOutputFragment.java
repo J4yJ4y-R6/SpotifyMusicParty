@@ -23,6 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+/**
+ * Fragment where the user get the output of the http-request from the search input field
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @see com.tinf19.musicparty.client.fragments.ClientSearchBarFragment
+ * @see com.tinf19.musicparty.server.fragments.HostSearchBarFragment
+ * @since 1.1
+ */
 public class SearchSongsOutputFragment extends Fragment {
 
     private static final String TAG = SearchSongsOutputFragment.class.getName();
@@ -33,10 +41,19 @@ public class SearchSongsOutputFragment extends Fragment {
         void addSong(Track track);
     }
 
+    /**
+     * Constructor to set the callback
+     * @param searchSongsOutputCallback Communication callback for
+     * {@link com.tinf19.musicparty.client.ClientActivity} or
+     * {@link com.tinf19.musicparty.server.HostActivity} depending where the search was done
+     */
     public SearchSongsOutputFragment(SearchSongsOutputCallback searchSongsOutputCallback) {
         this.searchSongsOutputCallback = searchSongsOutputCallback;
     }
 
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
     public SearchSongsOutputFragment() { }
 
 
@@ -71,7 +88,10 @@ public class SearchSongsOutputFragment extends Fragment {
     }
 
 
-
+    /**
+     * Display the tracklist in the playlist RecyclerView
+     * @param tracks {@link List} with all tracks from the search
+     */
     public void showResult(List<Track> tracks) {
         if(mAdapter != null) {
             Log.d(TAG, "show list of songs in the output-fragment");

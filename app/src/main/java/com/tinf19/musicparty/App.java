@@ -7,6 +7,12 @@ import android.util.Log;
 
 import com.tinf19.musicparty.util.Constants;
 
+/**
+ * Managing the action of the service notifications.
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class App extends Application {
 
     @Override
@@ -15,6 +21,9 @@ public class App extends Application {
         createNotificationChannel();
     }
 
+    /**
+     * Creating a new notification channel which is listening to the button action.
+     */
     private void createNotificationChannel() {
         Log.d(App.class.getName(), "App created a notification channel");
         NotificationChannel serviceChannel = new NotificationChannel(

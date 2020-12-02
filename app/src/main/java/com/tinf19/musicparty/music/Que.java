@@ -7,6 +7,20 @@ import com.tinf19.musicparty.util.Constants;
 
 import java.util.ArrayList;
 
+/**
+ * Que object to create a queue which is used like a Spotify playlist.
+ * The queue is used as a ArrayList filled with tracks.
+ * While a track is playing a synchronous timer is running which counts the time that a track is
+ * playing. The timer gets controlled synchronous with the track.
+ * The queue object can pause, resume, skip and go back to last track.
+ * Also tracks can get added or removed from the current queue state.
+ * Also it can be cleared when the user is starting another playlist from Spotify or
+ * {@link com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment}.
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @see Playlist
+ * @since 1.1
+ */
 public class Que {
 
     public interface QueCallback {
@@ -25,6 +39,10 @@ public class Que {
     private long pauseTime;
     private boolean paused;
 
+    /**
+     * Constructor to set the callback
+     * @param queCallback Communication callback for {@link com.tinf19.musicparty.server.HostService}
+     */
     public Que(QueCallback queCallback) {
         this.queCallback = queCallback;
     }
@@ -33,10 +51,18 @@ public class Que {
 
     //Setter
 
+    /**
+     * Set queue after restarting it
+     * @param queList list of type {@link Track}
+     */
     public void setQueList(ArrayList<Track> queList) {
         this.queList = queList;
     }
 
+    /**
+     * Set the boolean if the playlist is at the end
+     * @param playlistEnded Boolean if playlist is at the end
+     */
     public void setPlaylistEnded(boolean playlistEnded) {
         this.playlistEnded = playlistEnded;
     }
@@ -45,14 +71,23 @@ public class Que {
 
     //Getter
 
+    /**
+     * @return Get true if playlist is at the and or false if it is not
+     */
     public boolean isPlaylistEnded() {
         return playlistEnded;
     }
 
+    /**
+     * @return Get a ArrayList with all tracks currently in the queue
+     */
     public ArrayList<Track> getQueList() {
         return queList;
     }
 
+    /**
+     * @return Get currently playing track
+     */
     public Track getNowPlaying() {
         return nowPlaying;
     }
@@ -61,6 +96,12 @@ public class Que {
 
     //Timer-Control
 
+    /**
+     * Set timer duration equals zero when a new track started.
+     * Set timer synchronously to the already played duration when a track is paused or resumed.
+     * @param duration Duration track already played or zero if a new track started
+     * @param start True when a new track started, false when a track get paused or resumed.
+     */
     public void setTimer(long duration, boolean start) {
         if(countDownTimer != null) {
             countDownTimer.cancel();
@@ -83,6 +124,9 @@ public class Que {
             pause();
     }
 
+    /**
+     * Pause the currently playing track
+     */
     public void pause() {
         if (countDownTimer != null && !paused) {
             Log.d(TAG, "timer got paused, remaining time: " + remainingTime);
@@ -92,6 +136,9 @@ public class Que {
         }
     }
 
+    /**
+     * Resume the currently playing track
+     */
     public void resume() {
         if (countDownTimer != null && paused) {
             Log.d(TAG, "timer got resumed, remaining time: " + remainingTime);
@@ -104,6 +151,9 @@ public class Que {
 
     //Que-Control
 
+    /**
+     * Skip to the next track in the queue
+     */
     public void next() {
         Log.d(TAG, "next track, tracks remaining in que: " + queList.size());
         if(queList.size() > 0) {
@@ -116,6 +166,11 @@ public class Que {
         }
     }
 
+    /**
+     * Play last track when the currently playing track was played less then two seconds or go back
+     * to start of the track when it is played at least two seconds
+     * @param lastTrack Las {@link Track} in the queue
+     */
     public void back(Track lastTrack) {
         Log.d(TAG, "last track, tracks remaining in que " + queList.size());
         queList.add(0, nowPlaying);
@@ -124,18 +179,33 @@ public class Que {
         next();
     }
 
+    /**
+     * Add track to the end of the queue
+     * @param track {@link Track} to add to queue
+     */
     public void addItem(Track track) {
         this.queList.add(track);
     }
 
+    /**
+     * Remove track from the queue at a given position
+     * @param index Position of the track which will be removed
+     */
     public void remove(int index) {
         queList.remove(index);
     }
 
+    /**
+     * Clear playlist when the host starts another playlist from Spotify-App or from
+     * {@link com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment}
+     */
     public void clear() {
         queList.clear();
     }
 
+    /**
+     * @return Get current size of the queue.
+     */
     public int size() {
         return queList.size();
     }

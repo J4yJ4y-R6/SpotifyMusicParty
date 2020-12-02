@@ -1,10 +1,20 @@
-package com.tinf19.musicparty.server.Adapter;
+package com.tinf19.musicparty.server.adapter;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 
+/**
+ * The HostPlaylistItemMoveHelper is managing all touch events in the RecylcerView of
+ * {@link com.tinf19.musicparty.server.fragments.HostPlaylistFragment}.
+ * It enables the host to delete songs from the queue by swiping to the left and confirm this by
+ * clicking the trash can. Also by holding the item and swapping it with another one, the host can
+ * change the sequence of the queue.
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class HostPlaylistItemMoveHelper extends ItemTouchHelper.Callback {
 
     private final HostPlaylistItemMoveHelperCallback mAdapter;
@@ -16,6 +26,10 @@ public class HostPlaylistItemMoveHelper extends ItemTouchHelper.Callback {
         void onRowDeleted(int position);
     }
 
+    /**
+     * Constructor to assign the {@link RecyclerView.Adapter} which gets managed by this helper
+     * @param adapter {@link RecyclerView.Adapter} which is assigning all songs to the view
+     */
     public HostPlaylistItemMoveHelper(HostPlaylistItemMoveHelperCallback adapter) { this.mAdapter = adapter; }
 
 

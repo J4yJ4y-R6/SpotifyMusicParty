@@ -12,14 +12,27 @@ import android.widget.TextView;
 import com.tinf19.musicparty.R;
 
 
+/**
+ * Fragment to show that the user is connecting to Spotify
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class LoadingFragment extends Fragment {
 
     private String message;
 
+    /**
+     * Constructor to set the message depending if the call came from client or server
+     * @param message Message the user see in the fragment
+     */
     public LoadingFragment(String message) {
         this.message = message;
     }
 
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
     public LoadingFragment() { }
 
     @Override

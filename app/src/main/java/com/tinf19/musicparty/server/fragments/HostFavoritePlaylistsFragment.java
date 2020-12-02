@@ -26,7 +26,8 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Playlist;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.ForAllCallback;
-import com.tinf19.musicparty.server.Adapter.HostFavoritePlaylistsAdapter;
+import com.tinf19.musicparty.server.adapter.HostFavoritePlaylistsAdapter;
+import com.tinf19.musicparty.util.SpotifyHelper;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
@@ -48,10 +49,31 @@ import okhttp3.Response;
 
 import static android.app.Activity.RESULT_OK;
 
+
+/**
+ * Fragment where the host can see the playlist he saved from passed parties.
+ * The id and the name of the playlist are saved in SharedPreferences
+ * By clicking one of the cards the host is able to interact with the playlist by
+ * {@link android.app.Dialog}. His options are:
+ * <ol>
+ *     <li>Play the playlist.</li>
+ *     <li>Deleting the playlist from his Shared Preferences. By that he will unfollow the playlist
+ *     in Spotify automatically so he cannot see it in the Spotify-App. This action has to be
+ *     confirmed in another {@link android.app.Dialog}.</li>
+ *     <li>Changing the name of the playlist. The name will change in the SharedPreferences and
+ *     in Spotify synchronous. This action has to be confirmed.</li>
+ * </ol>
+ * All of these on click methods are set by the {@link HostFavoritePlaylistsAdapter}.
+ * @auhtor Jannik Junker
+ * @author Silas Wessely
+ * @see SharedPreferences
+ * @see android.app.Dialog
+ * @since 1.1
+ */
 public class HostFavoritePlaylistsFragment extends Fragment implements HostFavoritePlaylistsAdapter.GalleryCallback {
 
     private static final String TAG = HostFavoritePlaylistsFragment.class.getName();
-    private String token;
+    private final SpotifyHelper spotifyHelper = new SpotifyHelper();
     private SharedPreferences savePlaylistMemory;
     private Playlist[] playlists;
     private HostFavoritePlaylistCallback favoritePlaylistsCallback;
@@ -65,25 +87,26 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
         void changePlaylistCover(String id, Bitmap image);
     }
 
+    /**
+     * Constructor to set the callbacks
+     * @param favoritePlaylistsCallback Communication callback for
+     * {@link com.tinf19.musicparty.server.HostActivity}
+     * @param hostFavoritePlaylistAdapterCallback Communication callback which is given by the
+     *                                            {@link HostFavoritePlaylistsAdapter}
+     */
     public HostFavoritePlaylistsFragment(HostFavoritePlaylistCallback favoritePlaylistsCallback, HostFavoritePlaylistsAdapter.HostFavoritePlaylistAdapterCallback hostFavoritePlaylistAdapterCallback) {
         this.favoritePlaylistsCallback = favoritePlaylistsCallback;
         this.hostFavoritePlaylistCallback = hostFavoritePlaylistAdapterCallback;
     }
 
-    public HostFavoritePlaylistsFragment() {
-        // Required empty public constructor
-    }
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
+    public HostFavoritePlaylistsFragment() { }
 
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putString(Constants.TOKEN, token);
-    }
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+
+    //Android lifecycle methods
 
     @Override
     public void onStart() {
@@ -104,15 +127,13 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
         for(int i = 0; i < savePlaylistMemory.getAll().size(); i++) {
             setPlaylists(i);
         }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(counter < savePlaylistMemory.getAll().size());
-                getActivity().runOnUiThread(() -> {
-                    hostFavoritePlaylistsAdapter.setPlaylists(new ArrayList<Playlist>(Arrays.asList(playlists)), idList);
-                    hostFavoritePlaylistsAdapter.notifyDataSetChanged();
-                });
-            }
+        new Thread(() -> {
+            while(counter < savePlaylistMemory.getAll().size());
+            Log.d(TAG, savePlaylistMemory.getAll().size() + " playlists are assigned to the RecyclerView");
+            getActivity().runOnUiThread(() -> {
+                hostFavoritePlaylistsAdapter.setPlaylists(new ArrayList<>(Arrays.asList(playlists)), idList);
+                hostFavoritePlaylistsAdapter.notifyDataSetChanged();
+            });
         }).start();
     }
 
@@ -128,10 +149,6 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_host_favorite_playlists, container, false);
-
-        if(savedInstanceState != null)
-            token = savedInstanceState.getString(Constants.TOKEN, "");
-
         RecyclerView recyclerView = view.findViewById(R.id.gridRecyclerview);
         hostFavoritePlaylistsAdapter = new HostFavoritePlaylistsAdapter(new ArrayList<>(), this, hostFavoritePlaylistCallback);
         if(recyclerView != null) {
@@ -145,21 +162,24 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
         return view;
     }
 
+    /**
+     * Updating the dataset because an image has changed or a playlist got deleted.
+     */
     public void updateRecyclerView() {
-        Log.d(TAG, "updateRecyclerView: notify");
+        Log.d(TAG, "notifying the adapter that the dataset has changed");
         getActivity().runOnUiThread( () -> {
-            Log.d(TAG, "updateRecyclerView: runonui");
             try {
                 Thread.sleep(2000);
-                Log.d(TAG, "updateRecyclerView: wait over");
                 hostFavoritePlaylistsAdapter.notifyDataSetChanged();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
         });
     }
 
+    /**
+     * @return Get thee current orientation of the screen.
+     */
     public int getScreenOrientation()
     {
         int screenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
@@ -170,57 +190,60 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
         } else {
                 orientation = Configuration.ORIENTATION_LANDSCAPE;
         }
+        Log.d(TAG, "current screen orientation is: " + orientation);
         return orientation;
     }
 
+    /**
+     * For each playlist we are getting the url of the playlist cover with a http request in the
+     * {@link SpotifyHelper}.
+     * @param id Playlist-ID
+     * @param name Playlist-Name
+     * @param key Pointer for the playlists array for which playlist we are trying to get the cover
+     *            url
+     */
     private void getPlaylistCoverUrl(String id, String name, int key) {
         String token = favoritePlaylistsCallback.getToken();
-        if(token == null) return;
-        OkHttpClient client = new OkHttpClient();
-        HttpUrl completeURL = new HttpUrl.Builder()
-                .scheme("https")
-                .host(Constants.HOST)
-                .addPathSegment("v1")
-                .addPathSegment("playlists")
-                .addPathSegment(id)
-                .addPathSegment("images")
-                .build();
-        Request request = new Request.Builder()
-                .url(completeURL)
-                .addHeader("Authorization", "Bearer " + token)
-                .build();
-        client.newCall(request).enqueue(new Callback() {
+        spotifyHelper.getPlaylistCoverUrl(token, id, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
-            public void onFailure(@NotNull Call call, @NotNull IOException e) {
-                e.printStackTrace();
-                Log.d(TAG, "onFailure: failed to get autofillHints");
+            public void onFailure() {
+                Log.d(TAG, "Request Failed");
             }
 
             @Override
-            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+            public void onResponse(Response response) {
                 if (!response.isSuccessful()) {
-                    Log.d(TAG, "onResponse: " + response.body().string());
-                    throw new IOException("Error : " + response);
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
                 } else {
                     try {
+                        Log.d(TAG, "Request successfully");
                         final String data = response.body().string();
                         response.close();
                         JSONArray jsonArray = new JSONArray(data);
                         JSONObject jsonObject = jsonArray.getJSONObject(0);
                         playlistCoverUrl = jsonObject.getString("url");
                         Playlist playlist = new Playlist(id, name, playlistCoverUrl);
-                        Log.d(TAG, "onResponse: " + playlist.toString());
                         playlists[key] = playlist;
                         counter++;
 
-                    } catch (JSONException e) {
-                        e.printStackTrace();
+                    } catch (JSONException | IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
                     }
                 }
             }
         });
     }
 
+    /**
+     * Set all playlist in the playlists array to attach them to the RecyclerView with the
+     * {@link HostFavoritePlaylistsAdapter}.
+     * @param key Pointer for the playlists array for which playlist we are trying to get the cover
+     *            url
+     */
     private void setPlaylists(int key) {
         try {
             String response = savePlaylistMemory.getString("" + key, "");
@@ -235,6 +258,11 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
         }
     }
 
+    /**
+     * Opening the local gallery to pick a new playlist cover.
+     * @param intent Intent from the ImagePicker
+     * @param playlistID Id from the playlist which cover gets to be changed
+     */
     @Override
     public void openGalleryForUpload(Intent intent, String playlistID) {
         this.playlistID = playlistID;

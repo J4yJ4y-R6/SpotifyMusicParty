@@ -14,15 +14,31 @@ import com.tinf19.musicparty.music.Track;
 
 import java.util.List;
 
+/**
+ * ClientPlaylistAdapter
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @see RecyclerView.Adapter
+ * @since 1.1
+ */
 public class ClientPlaylistAdapter extends RecyclerView.Adapter<ClientPlaylistAdapter.ViewHolder> {
     
     private List<Track> mDataset;
 
+    /**
+     * This ViewHolder is assigning the objects from row_client_playlist.xml to the global view-variables
+     * @see RecyclerView.ViewHolder
+     * @see TextView
+     */
     public class ViewHolder extends RecyclerView.ViewHolder {
 
         public TextView songTitleTextView;
         public TextView artistNameTextView;
 
+        /**
+         * Constructor
+         * @param itemView parent view from row_client_playlist.xml
+         */
         public ViewHolder(View itemView) {
             super(itemView);
             songTitleTextView = (TextView) itemView.findViewById(R.id.playlistSongTitleTextView);
@@ -30,6 +46,10 @@ public class ClientPlaylistAdapter extends RecyclerView.Adapter<ClientPlaylistAd
         }
     }
 
+    /**
+     * Constructor
+     * @param trackList {@link List} of type {@link Track} from the server-playlist
+     */
     public ClientPlaylistAdapter(List<Track> trackList) {
         this.mDataset = trackList;
     }
@@ -58,6 +78,10 @@ public class ClientPlaylistAdapter extends RecyclerView.Adapter<ClientPlaylistAd
     @Override
     public int getItemCount() { return mDataset.size(); }
 
+    /**
+     * Set a new List of data to the adapter
+     * @param mDataset {@link List} of type {@link Track} from a new request to the server-playlist
+     */
     public void setDataset(List<Track> mDataset) {
         this.mDataset = mDataset;
     }

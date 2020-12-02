@@ -41,23 +41,38 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+/**
+ * Fragment where the host can search for songs with the Spotify-API and show the response in
+ * {@link com.tinf19.musicparty.fragments.SearchSongsOutputFragment}
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class HostSearchBarFragment extends Fragment {
 
     private static final String TAG = HostSearchBarFragment.class.getName();
+    private final SpotifyHelper spotifyHelper = new SpotifyHelper();
     private final List<Track> tracks = new ArrayList<>();
     private HostSearchBarCallback hostSearchBarCallback;
     private AutoCompleteTextView searchText;
     private ImageButton searchButton;
     private ArrayAdapter<String> adapter;
-    private SpotifyHelper spotifyHelper = new SpotifyHelper();
 
     public interface HostSearchBarCallback extends ForAllCallback {
         void searchForSongs(List<Track> tracks);
         void openSavedPlaylistsFragment();
     }
 
+    /**
+     * Constructor to set the callback
+     * @param hostSearchBarCallback Communication callback for
+     * {@link com.tinf19.musicparty.server.HostActivity}
+     */
     public HostSearchBarFragment(HostSearchBarCallback hostSearchBarCallback) { this.hostSearchBarCallback = hostSearchBarCallback; }
 
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
     public HostSearchBarFragment() { }
 
 
@@ -168,19 +183,26 @@ public class HostSearchBarFragment extends Fragment {
         return view;
     }
 
+    /**
+     * Showing guesses to automatically fill the search input field below the field
+     * @param data Response data from the http-request with song titles
+     */
     public void showAutofills(String data) {
         try {
             if(searchText != null) {
                 adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line, spotifyHelper.showAutofills(data));
                 getActivity().runOnUiThread( () -> searchText.setAdapter(adapter));
             } else {
-                Log.d(TAG, "showAutofills: not able to show the hints under searchText");
+                Log.d(TAG, "not able to show the hints under searchText");
             }
         } catch (JSONException e) {
             Log.e(TAG, e.getMessage(), e);
         }
     }
 
+    /**
+     * Clearing the search input field
+     */
     public void clearSearch() {
         if(searchText != null)
             searchText.getText().clear();

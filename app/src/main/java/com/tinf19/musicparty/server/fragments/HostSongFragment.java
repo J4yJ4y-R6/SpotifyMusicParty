@@ -22,6 +22,15 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.DownloadImageTask;
 
+/**
+ * Fragment where the host sees the current playing song. He can also go to other fragments from
+ * this one.
+ * Also he can interact with the queue. He can pause / resume the currently playing song, skip to
+ * the next one or go back to the last one.
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class HostSongFragment extends Fragment {
 
     private static final String TAG = HostSongFragment.class.getName();
@@ -51,8 +60,16 @@ public class HostSongFragment extends Fragment {
     }
 
 
+    /**
+     * Constructor to set the callback
+     * @param hostSongCallback Communication callback for
+     *                         {@link com.tinf19.musicparty.server.HostActivity}.
+     */
     public HostSongFragment(HostSongCallback hostSongCallback) { this.hostSongCallback = hostSongCallback; }
 
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
     public HostSongFragment() { }
 
 
@@ -148,12 +165,21 @@ public class HostSongFragment extends Fragment {
     }
 
 
-
+    /**
+     * Set the information header with the party name and the count of people currently connected
+     * to the party.
+     * @param count Count of people currently connected to the party
+     */
     public void setPartyNameCount(int count) {
         if(partyNameTextView != null)
             partyNameTextView.setText(getString(R.string.text_hostsongfragment_header, partyName, count));
     }
 
+    /**
+     * Changing the image of the play button. If pause is true it will be the play icon and if it is
+     * false it will change to the pause button
+     * @param pause Boolean to decide whether the current song is paused.
+     */
     public void setPlayTrackButtonImage(boolean pause) {
         if(playTrackImageButton != null) {
             if(pause) playTrackImageButton.setImageResource(R.drawable.icon_play_cycle);
@@ -161,6 +187,11 @@ public class HostSongFragment extends Fragment {
         }
     }
 
+    /**
+     * Set the information about the currently playing song in the TextViews. This method will be
+     * called when another songs starts playing.
+     * @param nowPlaying Currently playing song of type {@link Track}
+     */
     public void setNowPlaying(Track nowPlaying) {
         Log.d(TAG, "set current track to: " + nowPlaying.getName());
         if(playBarLinearLayout != null && playBarLinearLayout.getVisibility() == View.INVISIBLE) {
@@ -180,6 +211,10 @@ public class HostSongFragment extends Fragment {
         }
     }
 
+    /**
+     * Changing the background color of the button after clicking it to give the user a feedback.
+     * @param button Clicked button view
+     */
     public static void buttonEffect(View button){
         button.setOnTouchListener((v, event) -> {
             v.performClick();

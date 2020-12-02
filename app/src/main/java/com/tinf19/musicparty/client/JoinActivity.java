@@ -22,6 +22,14 @@ import org.json.JSONObject;
 
 import java.util.Random;
 
+/**
+ * Activity to join a existing party by inserting an ip-address and a password.
+ * The user can choose a username, if he does not, he will be assigned with a randomly generated
+ * username.
+ * @author Jannik Junker
+ * @auther Silas Wessely
+ * @since 1.1
+ */
 public class JoinActivity extends AppCompatActivity {
 
     private static final String TAG = JoinActivity.class.getName();
@@ -98,7 +106,10 @@ public class JoinActivity extends AppCompatActivity {
     }
 
 
-    
+    /**
+     * Trying to connect to the server and opening the {@link ClientActivity}
+     * @param view view element of the clicked "create party" button
+     */
     public void nextPage(View view) {
         Intent intent = new Intent(this, ClientActivity.class);
         intent.putExtra(Constants.PASSWORD, binding.etPassword.getText().toString());
@@ -110,6 +121,9 @@ public class JoinActivity extends AppCompatActivity {
         view.getContext().startActivity(intent);
     }
 
+    /**
+     * @return a random generated username between 5 and 10 chars
+     */
     public String randomIdentifier() {
         StringBuilder builder = new StringBuilder();
         while(builder.toString().length() == 0) {

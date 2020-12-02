@@ -17,6 +17,14 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+/**
+ * Spotify requires a unique token from each Spotify-User to make request to the Spotify-API.
+ * This token needs to be refreshed every 60 Seconds. The TokenRefresh-Class is managing the refresh
+ * request and set the new token.
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class TokenRefresh implements Runnable {
 
     private final String CODE;
@@ -30,6 +38,11 @@ public class TokenRefresh implements Runnable {
         void afterRefresh(String token);
     }
 
+    /**
+     * Constructor to set the code and the callback
+     * @param code Code necessary to get a Spotify-API-Token
+     * @param tokenRefreshCallback Communication callback to set the new token
+     */
     public TokenRefresh( String code, TokenRefreshCallback tokenRefreshCallback) {
         this.CODE = code;
         this.tokenRefreshCallback = tokenRefreshCallback;
@@ -53,6 +66,11 @@ public class TokenRefresh implements Runnable {
         }
     }
 
+    /**
+     * Get a new token from the Spotify-API and set it in the activities.
+     * @throws JSONException when jsonObject could not be created
+     * @throws IOException when the response did not work
+     */
     private void setToken() throws JSONException, IOException {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()
@@ -82,6 +100,11 @@ public class TokenRefresh implements Runnable {
         response.close();
     }
 
+    /**
+     * Refreshing the token from the Spotify-API every 60 Minutes.
+     * @throws JSONException when jsonObject could not be created
+     * @throws IOException when the response did not work
+     */
     private void refreshToken() throws JSONException, IOException {
         OkHttpClient client = new OkHttpClient();
         HttpUrl completeURL = new HttpUrl.Builder()

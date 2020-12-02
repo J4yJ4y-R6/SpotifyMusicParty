@@ -35,6 +35,22 @@ import org.json.JSONObject;
 
 import static android.graphics.Color.WHITE;
 
+/**
+ * Fragment where the host can change the settings of the party and share the connection variables
+ * via link, qr-code or plain text.
+ * Also he can change the type of the party. There are currently two types of partys
+ * <ol>
+ *     <li>All-In: Every song send to the queue is added.</li>
+ *     <li>Voting: Each song send to the queue starts a new
+ *     {@link com.tinf19.musicparty.util.Voting} where everybody can vote whether they want to add
+ *     it or not. The same kind of voting is called when someone wants to skip the current track.
+ *     </li>
+ * </ol>
+ * There will be more options in the future.
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class HostSettingsFragment extends Fragment {
 
     private static final String TAG = HostSettingsFragment.class.getName();
@@ -43,6 +59,9 @@ public class HostSettingsFragment extends Fragment {
     private TextView passwordTextView;
     private HostSettingsCallback hostSettingsCallback;
     private String partyName = "Music Party";
+    /**
+     * A bitmap for the connection QR-Code.
+     */
     private Bitmap bitmap;
 
     public interface HostSettingsCallback {
@@ -51,8 +70,16 @@ public class HostSettingsFragment extends Fragment {
         void setNewPartyName(String newPartyName);
     }
 
+    /**
+     * Constructor to set the callback
+     * @param hostSettingsCallback Communication callback for
+     *                             {@link com.tinf19.musicparty.server.HostActivity}.
+     */
     public HostSettingsFragment(HostSettingsCallback hostSettingsCallback) { this.hostSettingsCallback = hostSettingsCallback; }
 
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
     public HostSettingsFragment() { }
 
 
@@ -189,7 +216,9 @@ public class HostSettingsFragment extends Fragment {
     }
 
 
-
+    /**
+     * @return Get the join link with the connection variables.
+     */
     public String getURI() {
         Log.d(TAG, "generating join-link with connection information");
         return "http://musicparty.join?" +

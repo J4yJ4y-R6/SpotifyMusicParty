@@ -1,4 +1,4 @@
-package com.tinf19.musicparty.server.Adapter;
+package com.tinf19.musicparty.server.adapter;
 
 import android.content.Context;
 import android.content.Intent;
@@ -26,6 +26,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment;
 import com.tinf19.musicparty.music.Playlist;
 import com.tinf19.musicparty.server.HostActivity;
@@ -37,13 +38,25 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * HostFavoritePlaylistAdapter
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @since 1.1
+ */
 public class HostFavoritePlaylistsAdapter extends RecyclerView.Adapter<HostFavoritePlaylistsAdapter.ViewHolder> {
 
     private static final String TAG = HostFavoritePlaylistsAdapter.class.getName();
     private final GalleryCallback galleryCallback;
     private final HostFavoritePlaylistAdapterCallback hostFavoritePlaylistCallback;
     private final HostFavoritePlaylistsFragment hostFavoritePlaylistsFragment = new HostFavoritePlaylistsFragment();
+    /**
+     * The intern app storage where all saved playlist ids and names are saved.
+     * Here it is only used to be able to delete a playlist or change their name.
+     * After deleting the app, the storage will be cleaned up.
+     */
     private SharedPreferences savePlaylistMemory;
     private ArrayList<Playlist> playlists;
     private Context context;
@@ -59,13 +72,25 @@ public class HostFavoritePlaylistsAdapter extends RecyclerView.Adapter<HostFavor
         void deletePlaylist(String id);
     }
 
+    /**
+     * Constructor to set the callbacks and a array list with all stored playlists
+     * @param playlists {@link ArrayList} of the type {@link Playlist} with all stored playlists
+     * @param gCallback Communication callback for {@link HostActivity}
+     * @param fCallback Communication callback for {@link HostFavoritePlaylistsFragment}
+     */
     public HostFavoritePlaylistsAdapter(ArrayList<Playlist> playlists, GalleryCallback gCallback, HostFavoritePlaylistAdapterCallback fCallback) {
         this.playlists = playlists;
         this.galleryCallback = gCallback;
         this.hostFavoritePlaylistCallback = fCallback;
     }
 
-
+    /**
+     * This ViewHolder is assigning the objects from row_song_output.xml to the global view-variables
+     * @see TextView
+     * @see EditText
+     * @see ViewSwitcher
+     * @see ImageView
+     */
     public class ViewHolder extends RecyclerView.ViewHolder {
 
         public TextView headerTextView;
@@ -74,6 +99,10 @@ public class HostFavoritePlaylistsAdapter extends RecyclerView.Adapter<HostFavor
         public ViewSwitcher switcher;
 
 
+        /**
+         * Constructor to assign the parent view of each row
+         * @param itemView parent view from row_host_favorite_playlist.xml
+         */
         ViewHolder(View itemView) {
             super(itemView);
             headerTextView = itemView.findViewById(R.id.favoriteHeaderTextView);
@@ -222,12 +251,26 @@ public class HostFavoritePlaylistsAdapter extends RecyclerView.Adapter<HostFavor
     public int getItemCount() { return playlists.size(); }
 
 
-
+    /**
+     * Set a new List of data to the adapter
+     * @param playlists {@link ArrayList} of type {@link Playlist} from a request to the
+     *                                   SharedPreferences
+     * @param idList {@link ArrayList} of type String with all playlist ids
+     */
     public void setPlaylists(ArrayList<Playlist> playlists, ArrayList<String> idList) {
         this.playlists = playlists;
         this.idList = idList;
     }
 
+    /**
+     * This method is generating a bitmap from an url.
+     * It generates a {@link Palette} which stores 30 different colors from the bitmap to get the
+     * most common color in the bitmap. This color is used for the background of the card where the
+     * playlist is visible.
+     * @param url_value A url to the current playlist cover
+     * @return Get the most common color from the playlist cover
+     * @throws IOException when the stream connection failed
+     */
     public static int convertToBitmap(URL url_value) throws IOException {
         Bitmap mIcon1 =
                 BitmapFactory.decodeStream(url_value.openConnection().getInputStream());

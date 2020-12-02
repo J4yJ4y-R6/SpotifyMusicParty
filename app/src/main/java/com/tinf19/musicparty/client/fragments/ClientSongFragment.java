@@ -23,24 +23,37 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 
 
+/**
+ * Fragment where the client can see the playlist
+ */
 public class ClientSongFragment extends Fragment {
 
     private static final String TAG = ClientSongFragment.class.getName();
     public ClientSongCallback clientSongCallback;
+    /**
+     * Boolean to decide if the fragment is started or not
+     */
+    private boolean started;
     private ImageView songCover;
     private TextView songTitle;
     private TextView songArtist;
     private TextView songAlbum;
     private TextView connectedToParty;
-    private boolean started;
 
     public interface ClientSongCallback {
         void exitConnection();
         void showPlaylist();
     }
 
+    /**
+     * Constructor to set the callback
+     * @param clientSongCallback Communication callback for {@link com.tinf19.musicparty.client.ClientActivity}
+     */
     public ClientSongFragment(ClientSongCallback clientSongCallback) { this.clientSongCallback = clientSongCallback; }
 
+    /**
+     * Empty-Constructor which is necessary in fragments
+     */
     public ClientSongFragment() { }
 
 
@@ -92,10 +105,16 @@ public class ClientSongFragment extends Fragment {
     }
 
 
+    /**
+     * @return Get the current state of the fragment
+     */
     public boolean getStarted() { return started; }
 
 
-
+    /**
+     * Set currently playing track in the views
+     * @param track currently playing track
+     */
     public void showSongs(Track track) {
         if(track != null && songTitle.getHeight() > 150) {
             Log.d(TAG, "welcome message gets changed to first song");
@@ -112,6 +131,10 @@ public class ClientSongFragment extends Fragment {
     }
 
 
+    /**
+     * Set current party name in the connectedToParty view
+     * @param name
+     */
     public void setPartyName(String name) {
         String conTo = getString(R.string.text_connectedTo);
         String partyName = conTo + name;

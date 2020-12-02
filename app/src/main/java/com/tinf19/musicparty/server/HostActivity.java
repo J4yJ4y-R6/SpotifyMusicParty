@@ -36,14 +36,14 @@ import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.server.fragments.HostSettingsFragment;
 import com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment;
 import com.tinf19.musicparty.server.fragments.HostSongFragment;
-import com.tinf19.musicparty.music.PartyPeople;
+import com.tinf19.musicparty.music.PartyPerson;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
-import com.tinf19.musicparty.server.Adapter.HostPlaylistAdapter;
-import com.tinf19.musicparty.server.Adapter.HostFavoritePlaylistsAdapter;
+import com.tinf19.musicparty.server.adapter.HostPlaylistAdapter;
+import com.tinf19.musicparty.server.adapter.HostFavoritePlaylistsAdapter;
 import com.tinf19.musicparty.util.WiFiDirectBroadcastReceiver;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
@@ -282,7 +282,7 @@ public class HostActivity extends AppCompatActivity {
             }
         });
         hostPartyPeopleFragment = new HostPartyPeopleFragment(() -> {
-            if (mBoundService != null) return (ArrayList<PartyPeople>) mBoundService.getPeopleList();
+            if (mBoundService != null) return (ArrayList<PartyPerson>) mBoundService.getPeopleList();
             else return new ArrayList<>();
         });
         hostFavoritePlaylistsFragment = new HostFavoritePlaylistsFragment(new HostFavoritePlaylistsFragment.HostFavoritePlaylistCallback() {
@@ -345,8 +345,12 @@ public class HostActivity extends AppCompatActivity {
                         replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
             }
         } else {
-            getSupportFragmentManager().beginTransaction().
+            if(!getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false))
+                getSupportFragmentManager().beginTransaction().
                     replace(R.id.showSongHostFragmentFrame, loadingFragment, "LoadingFragment").commitAllowingStateLoss();
+            else
+                showDefaultFragments();
+
         }
 
         manager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
@@ -419,7 +423,7 @@ public class HostActivity extends AppCompatActivity {
           stopService();
         } else {
             hostSearchBarFragment.clearSearch();
-            animateFragmentChange(false, showSongFragment, "ShowSongFragment");
+            animateFragmentChange(false, showSongFragment, "ShowSongHostFragment");
         }
     }
 
@@ -462,13 +466,22 @@ public class HostActivity extends AppCompatActivity {
             mBoundService.setHostServiceCallback(new HostService.HostServiceCallback() {
 
                 @Override
-                public void setNowPlaying(Track nowPlaying) { runOnUiThread(() ->showSongFragment.setNowPlaying(nowPlaying)); }
+                public void setNowPlaying(Track nowPlaying) {
+                    if(!showSongFragment.isDetached())
+                        runOnUiThread(() ->showSongFragment.setNowPlaying(nowPlaying));
+                }
 
                 @Override
-                public void setPeopleCount(int count) { runOnUiThread(() -> showSongFragment.setPartyNameCount(count)); }
+                public void setPeopleCount(int count) {
+                    if(!showSongFragment.isDetached())
+                        runOnUiThread(() -> showSongFragment.setPartyNameCount(count));
+                }
 
                 @Override
-                public void setPlayImage(boolean pause) { showSongFragment.setPlayTrackButtonImage(pause); }
+                public void setPlayImage(boolean pause) {
+                    if(!showSongFragment.isDetached())
+                        showSongFragment.setPlayTrackButtonImage(pause);
+                }
 
                 @Override
                 public void connect(HostActivityCallback hostActivityCallback) {
@@ -552,12 +565,7 @@ public class HostActivity extends AppCompatActivity {
 
                 @Override
                 public void showDefault() {
-                    Log.d(TAG, "Fragment has been changed to: HostSongFragment");
-                    getSupportFragmentManager().beginTransaction().
-                            replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
-                    Log.d(TAG, "TopFragment has been changed to: HostSearchBarFragment");
-                    getSupportFragmentManager().beginTransaction().
-                            replace(R.id.searchBarHostFragmentFrame, hostSearchBarFragment, "HostSearchBarFragment").commitAllowingStateLoss();
+                    showDefaultFragments();
                 }
 
                 @Override
@@ -567,6 +575,12 @@ public class HostActivity extends AppCompatActivity {
             });
             if(mBoundService.isFirst())
                 loginToSpotify();
+            else {
+                if(getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false) && showSongFragment != null && !showSongFragment.isDetached()) {
+                    showSongFragment.setNowPlaying(mBoundService.getNowPlaying());
+                    showSongFragment.setPartyNameCount(mBoundService.getClientListSize());
+                }
+            }
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -631,6 +645,15 @@ public class HostActivity extends AppCompatActivity {
             fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_out_down, R.anim.fragment_slide_in_down);
         fragmentTransaction.replace(R.id.showSongHostFragmentFrame, fragment, tag);
         fragmentTransaction.commitAllowingStateLoss();
+    }
+
+    private void showDefaultFragments() {
+        Log.d(TAG, "Fragment has been changed to: HostSongFragment");
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
+        Log.d(TAG, "TopFragment has been changed to: HostSearchBarFragment");
+        getSupportFragmentManager().beginTransaction().
+                replace(R.id.searchBarHostFragmentFrame, hostSearchBarFragment, "HostSearchBarFragment").commitAllowingStateLoss();
     }
 
     private void notifyFavPlaylistAdapter() {
