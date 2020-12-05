@@ -70,7 +70,7 @@ public class ClientActivity extends AppCompatActivity {
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         /**
-         * Assining the service after connection to the host and logging in to Spotify or closing
+         * Assigning the service after connecting to the host and logging in to Spotify or closing
          * the service after the host stopped the server
          * @param className Class name of the service
          * @param service Service binder to assign the service
@@ -220,7 +220,8 @@ public class ClientActivity extends AppCompatActivity {
      */
     private void setPartyName(String partyName) {
         Log.d(TAG, "party name got changed to: " + partyName);
-        runOnUiThread(() -> clientSongFragment.setPartyName(partyName));
+        if(clientSongFragment.isVisible())
+            runOnUiThread(() -> clientSongFragment.setPartyName(partyName));
     }
 
 

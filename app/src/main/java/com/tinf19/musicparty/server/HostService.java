@@ -50,6 +50,10 @@ public class HostService extends Service implements Parcelable {
     private final IBinder mBinder = new LocalBinder();
     private final SpotifyHelper spotifyHelper = new SpotifyHelper();
     private final List<Track> playlist = new ArrayList<>();
+    /**
+     * A List of all client connected to the server. Each CommunicationThread has a
+     * {@link Socket} and a timestamp from the time he connected to the server.
+     */
     private final List<CommunicationThread> clientThreads = new ArrayList<>();
 
     private Thread serverThread = null;
@@ -230,6 +234,11 @@ public class HostService extends Service implements Parcelable {
 
     //Service - Methods
 
+    /**
+     * If there is no next song in the queue, it will be restarted by the play button or by the next
+     * song button. To restart the queue will be reseted by assigning the playlist array list to the
+     * queue list. In the playlist array list all songs, played by the queue, are saved.
+     */
     public void restartQue() {
         Log.d(TAG, "que has been restarted");
         if(que.size() == 0) {
@@ -241,6 +250,14 @@ public class HostService extends Service implements Parcelable {
         que.next();
     }
 
+    /**
+     * When the host is deleting an item from the queue it also has to be deleted from the playlist
+     * array list. So in both lists the song at the given position will be removed.
+     * @param position Position of the song in the playlist and in the queue list
+     * @param callback Communication callback to notify the
+     *                 {@link com.tinf19.musicparty.server.adapter.HostPlaylistAdapter} that the
+     *                 data has changed
+     */
     public void deleteFromQue(int position, AfterCallback callback) {
         callback.deleteFromDataset();
         playlist.remove(position);
@@ -251,6 +268,10 @@ public class HostService extends Service implements Parcelable {
         que.next();
     }
 
+    /**
+     * In our implementation the back method will restart the currently playing song if it was
+     * played at least two seconds. Otherwise it will start the last played song.
+     */
     public void back() {
         previous = true;
         if(playlist.size() - que.size() - 2 >= 0)
@@ -259,6 +280,11 @@ public class HostService extends Service implements Parcelable {
             mSpotifyAppRemote.getPlayerApi().play(nowPlaying.uri);
     }
 
+    /**
+     * When an item is added to the queue it also has to be added to the playlist array list. So in
+     * both list the {@link Track} will be added at the end of the list.
+     * @param track
+     */
     public void addItemToPlaylist(Track track) {
         Log.d(TAG, "added track (" + track.getName() + ") to playlist");
         playlist.add(track);
@@ -269,6 +295,12 @@ public class HostService extends Service implements Parcelable {
 
     public void addItemToTrackList(Track track) { que.addItem(track); }
 
+    /**
+     * This method is the local control for the play button. If the current song is paused, it is
+     * necessary to check whether the playlist is at the end or not.If the playlist is at the end,
+     * it will restart from the beginning. If not the current song will resume. If the current song
+     * is not paused it will get paused.
+     */
     public void togglePlayback() {
         if (pause && getmSpotifyAppRemote() != null) {
             if(que.isPlaylistEnded()) {
@@ -285,6 +317,15 @@ public class HostService extends Service implements Parcelable {
         }
     }
 
+    //TODO: javadoc fertig machen
+
+    /**
+     * A Listener which is reacting on the {@link android.content.BroadcastReceiver} which is
+     * listening for changes in the Spotify-Remote-Control. With this method the user gets the
+     * opportunity to control the player outside the MusicParty-App (ex. in the Spotify-App).
+     * So if the Playback-Change-BroadcastReceiver triggers this method has to handle it.
+     * ??????
+     */
     public void addEventListener() {
         Log.d(TAG, "Playbackchanged-EventListener added to remote control");
         mSpotifyAppRemote.getPlayerApi()
@@ -359,6 +400,10 @@ public class HostService extends Service implements Parcelable {
                 });
     }
 
+    /**
+     * Updating the service notification after the party name changed or the count of currently
+     * connected clients has changed. So the host always knows how many people have joined hin party
+     */
     public void updateServiceNotifaction() {
         String text = getString(R.string.service_serverMsg, partyName);
         String peopleCount = getString(R.string.service_serverPeople, clientThreads.size());
@@ -378,10 +423,20 @@ public class HostService extends Service implements Parcelable {
 
     // Getter
 
+    /**
+     * @return Get true if the queue is at the end or false if there is a next song
+     */
     public boolean isPlaylistEnded() { return que.isPlaylistEnded(); }
 
+    /**
+     * @return Get the Spotify-Remote-Control if is connected
+     */
     public SpotifyAppRemote getmSpotifyAppRemote() { return ( mSpotifyAppRemote != null && mSpotifyAppRemote.isConnected()) ? mSpotifyAppRemote : null; }
-    
+
+    /**
+     * @return Transforming the CommunicationThreads in PartyPerson so they can be displayed at the
+     * {@link com.tinf19.musicparty.server.fragments.HostPartyPeopleFragment}.
+     */
     public List<PartyPerson> getPeopleList() {
         List<PartyPerson> tmpPeopleList = new ArrayList<>();
         for (CommunicationThread client: clientThreads) {
@@ -390,22 +445,39 @@ public class HostService extends Service implements Parcelable {
         return tmpPeopleList;
     }
 
+    /**
+     * @return Get true if the host has started the party or false if the token has been refreshed
+     * once.
+     */
     public boolean isFirst() {
         return first;
     }
 
+    /**
+     * @return Get the count of all currently connected clients
+     */
     public int getClientListSize() {
         return clientThreads.size();
     }
 
+    /**
+     * @return Get the party name which can be changed by the host in the
+     * {@link com.tinf19.musicparty.server.fragments.HostSettingsFragment}.
+     */
     public String getPartyName() {
         return partyName;
     }
 
+    /**
+     * @return Get the Spotify-Connection-Token
+     */
     public String getToken() {
         return token;
     }
 
+    /**
+     * @return Get the currently playing song as a {@link Track}.
+     */
     public Track getNowPlaying(){
         return nowPlaying != null ? new Track(
                 nowPlaying.uri.split(":")[2],
@@ -418,10 +490,16 @@ public class HostService extends Service implements Parcelable {
         ) : null;
     }
 
+    /**
+     * @return Get the current state of the queue list with all songs that are going to be played
+     */
     public List<Track> getPlaylist() {
         return que.getQueList();
     }
 
+    /**
+     * @return Get true if the current song is paused or false if it's currently playing
+     */
     public boolean getPause() {
         return pause;
     }
@@ -430,12 +508,26 @@ public class HostService extends Service implements Parcelable {
 
     // Setter
 
+    /**
+     * Set the playlist id when a external playlist has been started from Spotify or the
+     * {@link com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment}.
+     * @param id Playlist-Id of the started playlist given by the Spotify-API
+     */
     public void setPlaylistID(String id) { this.playlistID = id; }
 
+    /**
+     * Set the party name after changing it in the
+     * {@link com.tinf19.musicparty.server.fragments.HostSettingsFragment}.
+     * @param partyName New party name
+     */
     public void setPartyName(String partyName) {
         this.partyName = partyName;
     }
 
+    /**
+     * Set callback
+     * @param hostServiceCallback Communication callback for {@link HostActivity}.
+     */
     public void setHostServiceCallback(HostServiceCallback hostServiceCallback) {
         this.hostServiceCallback = hostServiceCallback;
     }
@@ -445,6 +537,9 @@ public class HostService extends Service implements Parcelable {
 
     // HTTP Requests
 
+    /**
+     * Get the user id from the Spotify-API saving it in the global variable userID.
+     */
     private void getUserID() {
         spotifyHelper.getUserID(token, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
@@ -474,6 +569,15 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
+    /**
+     * Making a HttpRequest to the Spotify-API to create a new Spotify-Playlist from the current
+     * state of the playlist array list. Afterwards the playlist id and name are going to be saved
+     * in the SharedPreferences.
+     * @param name Name of the new playlist
+     * @param exit Boolean to decide whether the party shall be closed after creating a new playlist
+     *             or not.
+     * @throws JSONException when the call was not successful
+     */
     public void createPlaylist(String name, boolean exit) throws JSONException {
         if (userID == null ) return;
         spotifyHelper.createPlaylist(token, name, userID, getString(R.string.service_playlistDescription, partyName), new SpotifyHelper.SpotifyHelperCallback() {
@@ -509,12 +613,24 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
+    /**
+     * Clearing the to lists because it will be filled with songs from another playlist.
+     * @param id Id of the started playlist.
+     */
     public void getQueFromPlaylist(String id) {
         que.clear();
         playlist.clear();
         getQueFromPlaylist(id, 0);
     }
 
+    /**
+     * Making a HttpRequest to get all songs from a existing playlist to fill them into the playlist
+     * and the queue lists.
+     * @param id Id of the started playlist
+     * @param page The Spotify-API only allows to get a maximum of 100
+     *             {@link com.spotify.protocol.types.Track} within one request. So the page is
+     *             counting the calls to this method.
+     */
     private void getQueFromPlaylist(String id, int page) {
         spotifyHelper.getQueFromPlaylist(token, id, page, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
@@ -581,6 +697,12 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
+    /**
+     * Making a HttpRequest to follow the Spotify-Playlist so the user sees it in the Spotify-
+     * Client
+     * @param id Id of the playlist which shound be followed
+     * @throws JSONException when the call was not successful
+     */
     public void checkPlaylistFollowStatus(String id) throws JSONException {
         spotifyHelper.checkPlaylistFollowStatus(token, id, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
@@ -603,6 +725,11 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
+    /**
+     * Making a HttpRequest to unfollow the Spotify-Playlist so the user does not see the Playlist
+     * in the Spotify-Client
+     * @param id Id of the playlist which should be unfollowed
+     */
     public void deletePlaylist(String id) {
         spotifyHelper.deletePlaylist(token, id, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
@@ -626,6 +753,16 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
+    /**
+     * Making a HttpRequest to add Songs at the end of a specific playlist.
+     * @param id Id of the playlist
+     * @param page The Spotify-API only allows to add a maximum of 100
+     *             {@link com.spotify.protocol.types.Track} within one request. So the page is
+     *             counting the calls to this method.
+     * @param exit Host closes the party after adding the items to the playlist if exit is true
+     *             otherwise the party stays open.
+     * @throws JSONException when the call was not successful
+     */
     public void addItemsToPlaylist(String id, int page, boolean exit) throws JSONException {
         spotifyHelper.addItemsToPlaylist(token, playlist, id, page, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
@@ -658,6 +795,17 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
+    /**
+     * Making a HttpRequest to delete a Song from the current Spotify-Playlist.
+     * Currently not in usage because queue is managed by {@link Que}
+     * @param uri Track-URI which identifies the song in the Spotify-API
+     * @param name Song-Title to log the deletion
+     * @param position The position of the song in the current Spotify-Playlist
+     * @param callback Communication callback for
+     *                 {@link com.tinf19.musicparty.server.fragments.HostPlaylistFragment} to notify the adapter
+     *                 that the dataset has changed.
+     * @throws JSONException when the call was not successful
+     */
     public void deleteItem(String uri, String name, int position, AfterCallback callback) throws JSONException {
         spotifyHelper.deleteItem(token, playlistID, uri, size, que.size(), position, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
@@ -685,6 +833,13 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
+    /**
+     * Making a HttpRequest to swap two songs in the current Spotify-Playlist.
+     * Currently not in usage because queue is managed by {@link Que}
+     * @param from Position of the first song
+     * @param to Position of the second song
+     * @throws JSONException when the call was not successful
+     */
     public void moveItem(int from, int to) throws JSONException {
         int position = size - que.size();
         Log.d(TAG, "moveItem: From " + from + " To: " + to + " Position: " + position);
@@ -713,6 +868,14 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
+    /**
+     * Making a HttpRequest to update the cover of a chosen playlist. The user choose the playlist
+     * in the {@link com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment}
+     * and the new image from his gallery. To update the cover, the image has to be converted into a
+     * encoded byte array.
+     * @param id Id of the chosen playlist
+     * @param image Chosen image as a Bitmap.
+     */
     public void updatePlaylistCover(String id, Bitmap image) {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
@@ -741,6 +904,13 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
+    /**
+     * Making a HttpRequest to update the name of a chosen playlist. The user enters the new name in
+     * the {@link com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment}.
+     * @param name New playlist name - entered by the host
+     * @param id Id of the chosen playlist
+     * @throws JSONException when the call was not successful
+     */
     public void updatePlaylistName(String name, String id) throws JSONException {
         spotifyHelper.updatePlaylistName(token, name, id, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
@@ -792,11 +962,18 @@ public class HostService extends Service implements Parcelable {
 
     // Interaction with Server
 
+    /**
+     * Opening a server where all clients can connect with.
+     */
     private void startServer(){
         this.serverThread = new Thread(new ServerThread());
         this.serverThread.start();
     }
 
+    /**
+     * The ServerThread is unique at a party and is managing the connection between the host and the
+     * clients.
+     */
     class ServerThread implements Runnable {
         @Override
         public void run() {
@@ -824,6 +1001,10 @@ public class HostService extends Service implements Parcelable {
 
     // Interaction with Clients
 
+    /**
+     * Disconnecting all clients from the sever after the host closed the party.
+     * @throws IOException
+     */
     private void stopAll() throws IOException {
         for(CommunicationThread client : clientThreads) {
             client.sendMessage(Commands.QUIT, "Session has been closed");
@@ -831,6 +1012,13 @@ public class HostService extends Service implements Parcelable {
         }
     }
 
+    /**
+     * Sending a command and a message to all clients
+     * @param command Communication command for actions in the client
+     * @param message Attributes for mapping the command successfully
+     * @throws IOException when the Output-Stream in
+     * {@link CommunicationThread#sendMessage(Commands, String)} is not writing bytes.
+     */
     public void sendToAll(Commands command, String message) throws IOException {
         for(CommunicationThread client : clientThreads) {
             if (client.login)
@@ -838,6 +1026,10 @@ public class HostService extends Service implements Parcelable {
         }
     }
 
+    /**
+     * Each CommunicationThread represents a client connection and is managing the communication
+     * between client and host.
+     */
     class CommunicationThread extends Thread {
         private final Socket clientSocket;
         private final long createdTime;
@@ -846,17 +1038,41 @@ public class HostService extends Service implements Parcelable {
         private boolean login = false;
         private String username;
 
+        /**
+         * Constructor to set the client-attributes
+         * @param socket {@link Socket} to connect to the serverSocket.
+         */
         public CommunicationThread(Socket socket) {
             this.clientSocket = socket;
             this.createdTime = System.currentTimeMillis();
         }
 
+        /**
+         * Sending a command and a message to a client
+         * @param command Communication command for actions in the client
+         * @param message Attributes for mapping the command successfully
+         * @throws IOException when the Output-Stream is not writing bytes.
+         */
         public void sendMessage(Commands command, String message) throws IOException {
             Log.d(TAG, "Send Message to User: " + username + ", Command: " + command.toString() + ", Message: " + message);
             out.writeBytes(Constants.DELIMITER + command.toString() + Constants.DELIMITER + message + "\n\r");
             out.flush();
         }
 
+        /**
+         * Splitting the client message to communicate with the client by different commands:
+         * QUIT:        A client has been disconnected. The server has to recognize this and change
+         *              the current count of {@link PartyPerson}.
+         * LOGIN:       Checking the login credentials from the login-request and open the
+         *              connection if they are correct. Otherwise the Client gets a message that
+         *              the login failed.
+         * QUEUE:       Adding a new song at the end of the queue and reload the
+         *              {@link com.tinf19.musicparty.server.fragments.HostPlaylistFragment} if it
+         *              is opened.
+         * PLAYING:     After starting a new song all clients get the new {@link Track}-Object to
+         *              change all information about the currently playing song.
+         * PLAYLIST:    Returning the current queue state after a client request.
+         */
         @Override
         public void run() {
             try {
@@ -941,12 +1157,21 @@ public class HostService extends Service implements Parcelable {
             }
         }
 
+        /**
+         * Closing the client connection to the server
+         * @throws IOException when the input and output streams could not be closed.
+         */
         private void close() throws IOException {
             out.close();
             input.close();
             clientSocket.close();
         }
 
+        /**
+         * Check the login-credentials to verify a login request
+         * @param input Entered password from the login-request
+         * @return True if the password is correct or false if it is wrong.
+         */
         private boolean login(String input) {
             if(input.equals(password))
                 login = true;

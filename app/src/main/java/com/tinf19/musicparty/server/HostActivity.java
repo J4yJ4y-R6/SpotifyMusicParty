@@ -60,19 +60,79 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Activity to ensure the communication between every action the host does and the service which is
+ * managing the background communication when the app is closed and with the Spotify-API. In this
+ * way the connection between the server and the clients can be hold up, even if the host switches
+ * between apps.
+ * <br>
+ * <b>Main exercice of the activity</b>
+ * Also this activity is managing the visibility off all fragments, so the host can switch between
+ * then without losing any information. There are two {@link android.widget.FrameLayout} in this
+ * activity. The upper one is constantly visible and displays a input field for searching about
+ * songs in the Spotify-API and a button formed as a heart which is opening the
+ * {@link HostFavoritePlaylistsFragment} where all saved playlist from passed parties are shown.
+ * The lower, bigger fragment is change its content depending on the user input. But mainly it is
+ * used to diplay information about the currently playing song and the current state of the queue.
+ * In this way the host is always able to check on these information.
+ * These fragments are initialized in the {@link HostActivity#onCreate(Bundle)} method. Closely
+ * every fragment has its own callback to communicate with the {@link HostActivity}. So the main
+ * exercise of this activity is to hand off the given information to the {@link HostService}.
+ * <br>
+ * <b>Connection between server and client</b>
+ * At the initialization of this activity the app is connecting to Spoitfy by opening a login mask
+ * given by the Spotify-API. If the user has signed in once, these information will be saved and the
+ * at the next app start, it will automatically connect to Spoitfy. In the next step the activity is
+ * opening a server and simultaneously with it a port {@value #PORT} so clients can connect to it.
+ * Here clients are users who choose "join party" in the {@link MainActivity}. The connection can is
+ * build with a {@link java.net.Socket} and can only build up when the end devices are connected to
+ * the same network. The client is typing in a IP-Address and a password and only if they are
+ * similar to the once offered by the host, a connection will build up.
+ * <br>
+ * <b>Connection between server and Spotify-Remote-Control</b>
+ * The Spotify-Remote-Control controls actions in the Spotify-App. It offers the opportunity to
+ * pause and resume a song, play the next song in the queue or go one song backwards to listen to it
+ * again. In our integration the back-button will go to the start of the currently playing song if
+ * it is playing at least for two seconds. If the played duration is below that time, the last song
+ * will be started. In the {@link HostPlaylistFragment} the host can change the queue order or
+ * delete songs from the queue. And from the {@link HostFavoritePlaylistsFragment} the host can
+ * start any stored playlist from as passed party.
+ * The connection to the remote control ist opened in the {@link HostActivity#mConnection} with its
+ * own callback for controlling. Highly necessary for this are the CLIENT_ID which is stored
+ * secretly and die REDIRECT_URI: {@value REDIRECT_URI}. These are also used to authenticate in
+ * front of the Spotify-API
+ * @author Jannik Junker
+ * @author Silas Wessely
+ * @see android.app.Service
+ * @see SpotifyAppRemote
+ * @see Constants
+ * @see java.net.Socket
+ * @since 1.1
+ */
 public class HostActivity extends AppCompatActivity {
 
     private static final String TAG = HostActivity.class.getName();
-    private String password;
-
+    public static final int PORT = Constants.PORT;
+    public static final String REDIRECT_URI = Constants.REDIRECT_URI;
     private Channel channel;
     private WifiP2pManager manager;
     private BroadcastReceiver receiver;
     private IntentFilter intentFilter;
+    /**
+     * The server Bound {@link android.app.Service} for connecting background connection with the
+     * {@link com.tinf19.musicparty.client.ClientService} and the {@link SpotifyAppRemote}
+     */
     private HostService mBoundService;
+    /**
+     * Indentify if the service is currently bound
+     */
     private boolean mShouldUnbind;
+    /**
+     * A boolean to decide in the {@link HostActivity#onStart()} method whether the service should
+     * be stopped or not. If it is true the service get stopped if not the activity and the service
+     * will keep running.
+     */
     private boolean stopped;
-
     private HostSongFragment showSongFragment;
     private HostSearchBarFragment hostSearchBarFragment;
     private SearchSongsOutputFragment searchSongsOutputFragment;
@@ -82,6 +142,7 @@ public class HostActivity extends AppCompatActivity {
     private HostPartyPeopleFragment hostPartyPeopleFragment;
     private HostFavoritePlaylistsFragment hostFavoritePlaylistsFragment;
     private LoadingFragment loadingFragment;
+    private String password;
 
 
     public interface HostActivityCallback {
@@ -459,7 +520,14 @@ public class HostActivity extends AppCompatActivity {
 
 
     //Service methods
+
     private ServiceConnection mConnection = new ServiceConnection() {
+        /**
+         * Assigning the service after logging in to Spotify or closing the service after ending
+         * the party
+         * @param className Class name of the service
+         * @param service Service binder to assign the service
+         */
         public void onServiceConnected(ComponentName className, IBinder service) {
             Log.d(TAG, "Service has been connected");
             mBoundService = ((HostService.LocalBinder) service).getService();
@@ -467,19 +535,19 @@ public class HostActivity extends AppCompatActivity {
 
                 @Override
                 public void setNowPlaying(Track nowPlaying) {
-                    if(!showSongFragment.isDetached())
+                    if(showSongFragment.isVisible())
                         runOnUiThread(() ->showSongFragment.setNowPlaying(nowPlaying));
                 }
 
                 @Override
                 public void setPeopleCount(int count) {
-                    if(!showSongFragment.isDetached())
+                    if(showSongFragment.isVisible())
                         runOnUiThread(() -> showSongFragment.setPartyNameCount(count));
                 }
 
                 @Override
                 public void setPlayImage(boolean pause) {
-                    if(!showSongFragment.isDetached())
+                    if(showSongFragment.isVisible())
                         showSongFragment.setPlayTrackButtonImage(pause);
                 }
 
@@ -576,13 +644,17 @@ public class HostActivity extends AppCompatActivity {
             if(mBoundService.isFirst())
                 loginToSpotify();
             else {
-                if(getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false) && showSongFragment != null && !showSongFragment.isDetached()) {
+                if(getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false) && showSongFragment != null && showSongFragment.isVisible()) {
                     showSongFragment.setNowPlaying(mBoundService.getNowPlaying());
                     showSongFragment.setPartyNameCount(mBoundService.getClientListSize());
                 }
             }
         }
 
+        /**
+         * Deleting the current service from the class
+         * @param className Class name of the service
+         */
         public void onServiceDisconnected(ComponentName className) {
             Log.d(TAG, "Service has been disconnected");
             mBoundService = null;
@@ -591,6 +663,10 @@ public class HostActivity extends AppCompatActivity {
         }
     };
 
+    /**
+     * The server binds the service and set mShouldUnbind true, so the server knows a service is
+     * connected
+     */
     void doBindService() {
         if (bindService(new Intent(this, HostService.class),
                 mConnection, Context.BIND_AUTO_CREATE)) {
@@ -602,6 +678,10 @@ public class HostActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * The server unbinds the service and set mShouldUnbind false, so the server knows no service
+     * is connected
+     */
     void doUnbindService() {
         if (mShouldUnbind) {
             Log.d(TAG, "Service has been unbound");
@@ -612,6 +692,10 @@ public class HostActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * The service is disconnecting the Spotify-Remote-Control after pausing the currently playing
+     * song. Afterwards he gets unbound and stopped. The App will return to the {@link MainActivity}
+     */
     public void stopService() {
         Log.d(TAG, "spotify remote control disconnected");
         if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null) {
@@ -623,6 +707,10 @@ public class HostActivity extends AppCompatActivity {
         startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
     }
 
+    /**
+     * The service is opening the log-in-mask from Spotify to insert his credentials and connect
+     * to his Spotify account.
+     */
     public void loginToSpotify() {
         Log.d(TAG, "Trying to get auth token");
         AuthorizationRequest.Builder builder =
@@ -636,6 +724,13 @@ public class HostActivity extends AppCompatActivity {
 
     //Fragment methods
 
+    /**
+     * This method is animating the change between two fragments. The animation type depends on the
+     * direction given as an attribute but it's always sliding in or out.
+     * @param direction Animation direction
+     * @param fragment New fragment to open in the bigger Framelayout
+     * @param tag Tag of the new fragment
+     */
     public void animateFragmentChange(boolean direction, Fragment fragment, String tag) {
         Log.d(TAG, "Fragment has been changed to " + tag);
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
@@ -647,6 +742,11 @@ public class HostActivity extends AppCompatActivity {
         fragmentTransaction.commitAllowingStateLoss();
     }
 
+    /**
+     * Showing the default fragments at the activity start. The default fragment for the lower
+     * FrameLayout is the {@link HostSongFragment} where all information about the current song are
+     * displayed and the control bar to switch to another fragment.
+     */
     private void showDefaultFragments() {
         Log.d(TAG, "Fragment has been changed to: HostSongFragment");
         getSupportFragmentManager().beginTransaction().
@@ -656,6 +756,10 @@ public class HostActivity extends AppCompatActivity {
                 replace(R.id.searchBarHostFragmentFrame, hostSearchBarFragment, "HostSearchBarFragment").commitAllowingStateLoss();
     }
 
+    /**
+     * Reloading the {@link HostFavoritePlaylistsFragment} because a playlist cover got updated or
+     * a playlist has been deleted from the SharedPreferences.
+     */
     private void notifyFavPlaylistAdapter() {
         Fragment frg = null;
         frg = getSupportFragmentManager().findFragmentByTag("ShowSavedPlaylistFragment");
@@ -666,15 +770,25 @@ public class HostActivity extends AppCompatActivity {
     }
 
 
-
-
+    /**
+     * @return Get the current Spotify-Token which is necessary for API-Requests and needs to be
+     * refreshed every 60 Minutes
+     */
     private String getHostToken() { return mBoundService != null ? mBoundService.getToken() : null; }
 
+    /**
+     * @return Gernerating a random number with 4 chars which is used as the password to join the
+     * party
+     */
     private String generatePassword() {
         if(password == null) password = String.valueOf((new Random()).nextInt((9999 - 1000) + 1) + 1000);
         return password;
     }
 
+    /**
+     * @param useIPv4 Decide whether the host has a IPv4-Address or an IPv6-Address
+     * @return Get the IP-Address from the host
+     */
     private String getIPAddress(boolean useIPv4) {
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());

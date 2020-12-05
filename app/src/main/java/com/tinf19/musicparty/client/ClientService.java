@@ -273,7 +273,7 @@ public class ClientService extends Service {
         }
 
         /**
-         * Splitting the client message to communicate with the server by different commands:
+         * Splitting the server message to communicate with the server by different commands:
          * LOGIN:       logging in to the server with a username, ip-address and a password
          * QUIT:        quit the connection to the server
          * PLAYING:     get the current playling track from the server
