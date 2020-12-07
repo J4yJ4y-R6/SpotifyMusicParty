@@ -10,14 +10,17 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.recyclerview.widget.RecyclerView;
 
+import com.tinf19.musicparty.adapter.VotingAdapter;
 import com.tinf19.musicparty.receiver.ActionReceiver;
+import com.tinf19.musicparty.util.ClientVoting;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.TokenRefresh;
+import com.tinf19.musicparty.util.HostVoting;
+import com.tinf19.musicparty.util.Voting;
 
 import org.json.JSONException;
 
@@ -36,7 +39,7 @@ import java.util.List;
  * @author Silas Wessely
  * @since 1.1
  */
-public class ClientService extends Service {
+public class ClientService extends Service implements VotingAdapter.VotingAdapterCallback {
 
     private static final String TAG = ClientService.class.getName();
     private final IBinder mBinder = new LocalBinder();
@@ -58,6 +61,7 @@ public class ClientService extends Service {
      */
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
+    private List<ClientVoting> clientVotings = new ArrayList<>();
 
 
 
@@ -67,6 +71,7 @@ public class ClientService extends Service {
         void exitService(String text);
         void setPlaylist(List<Track> trackList);
         void setCurrentTrack(Track track);
+        void setVotings(List<Voting> ClientVotings);
         void showFragments();
     }
 
@@ -154,7 +159,13 @@ public class ClientService extends Service {
         return token;
     }
 
+    @Override
+    public Thread getCurrentThread() { return clientThread; }
 
+    /**
+     * @return Get all currently opened votings
+     */
+    public List<Voting> getClientVotings() { return new ArrayList<>(clientVotings); }
 
     //Setter
 
@@ -166,6 +177,13 @@ public class ClientService extends Service {
         this.clientServiceCallback = clientServiceCallback;
     }
 
+    /**
+     * Set all currently opened votings
+     * @param clientVotings List of all currently opened votings
+     */
+    public void setHostVotings(List<ClientVoting> clientVotings) {
+        this.clientVotings = clientVotings;
+    }
 
 
     //Service methods
@@ -279,6 +297,7 @@ public class ClientService extends Service {
          * PLAYING:     get the current playling track from the server
          * PLAYLIST:    get a list of tracks which is equal to the current state of the playlist in
          *              the server
+         * VOTING:      get a list of all currently opened votings
          */
         @Override
         public void run() {
@@ -344,6 +363,24 @@ public class ClientService extends Service {
                                     Log.d(TAG, "client got playlist with length: " + tracks.size());
                                     clientServiceCallback.setPlaylist(tracks);
                                     break;
+                                case VOTING:
+                                    clientVotings.clear();
+                                    for(int i = 3; i < parts.length; i++) {
+                                        if(!parts[i].equals("")){
+                                            Log.d(TAG, "run: " + parts[i]);
+                                            clientVotings.add(new ClientVoting(parts[i], (vote, id) -> {
+                                                new Thread(() -> {
+                                                    try {
+                                                        sendMessage(Commands.VOTE, id + Constants.DELIMITER + vote);
+                                                    } catch (IOException e) {
+                                                        Log.e(TAG, e.getMessage(), e);
+                                                    }
+                                                }).start();
+                                            }));
+                                        }
+                                    }
+                                    clientServiceCallback.setVotings(getClientVotings());
+                                    setHostVotings(clientVotings);
                             }
                         }
                     }

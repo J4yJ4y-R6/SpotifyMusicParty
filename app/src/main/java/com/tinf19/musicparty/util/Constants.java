@@ -27,6 +27,16 @@ public class Constants {
     public static final String ALBUM = "album";
     public static final String COVER_FULL = "cover_full";
 
+    public static final int IGNORED = 0;
+    public static final int YES = 1;
+    public static final int NO = 2;
+
+    public static final String TYPE = "type";
+    public static final String THRESHOLD = "threshold";
+    public static final String CREATED = "created";
+    public static final String TRACK = "track";
+    public static final String VOTINGCALLBACK = "votingcallback";
+
 
     /**
      * Channel-Id used for creating or updating a notification

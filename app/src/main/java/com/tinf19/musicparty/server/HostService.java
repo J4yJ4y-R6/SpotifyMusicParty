@@ -15,6 +15,7 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.tinf19.musicparty.adapter.VotingAdapter;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPerson;
 import com.tinf19.musicparty.music.Que;
@@ -26,6 +27,9 @@ import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.SpotifyHelper;
 import com.tinf19.musicparty.util.TokenRefresh;
+import com.tinf19.musicparty.util.HostVoting;
+import com.tinf19.musicparty.util.Type;
+import com.tinf19.musicparty.util.Voting;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -41,10 +45,11 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import okhttp3.Response;
 
-public class HostService extends Service implements Parcelable {
+public class HostService extends Service implements Parcelable, VotingAdapter.VotingAdapterCallback {
 
     private static final String TAG = HostService.class.getName();
     private final IBinder mBinder = new LocalBinder();
@@ -55,6 +60,7 @@ public class HostService extends Service implements Parcelable {
      * {@link Socket} and a timestamp from the time he connected to the server.
      */
     private final List<CommunicationThread> clientThreads = new ArrayList<>();
+    private final List<HostVoting> hostVotings = new ArrayList<>();
 
     private Thread serverThread = null;
     private ServerSocket serverSocket;
@@ -77,7 +83,6 @@ public class HostService extends Service implements Parcelable {
     private boolean newSong;
     private boolean stopped;
     private boolean previous;
-
 
 
     public interface HostServiceCallback {
@@ -134,6 +139,28 @@ public class HostService extends Service implements Parcelable {
             }
         });
         startServer();
+        HostVoting hostVoting = new HostVoting(Type.QUE, new Track("123", "name", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 1, new HostVoting.VotingCallback() {
+            @Override
+            public void skipNext(int id) {
+                //Skip
+            }
+
+            @Override
+            public void addAndClose(int id) {
+                //addandclose
+            }
+
+            @Override
+            public int getClientCount() {
+                return getClientListSize();
+            }
+
+            @Override
+            public void close(int id) {
+                //close
+            }
+        });
+        hostVotings.add(hostVoting);
     }
 
     @Override
@@ -423,6 +450,8 @@ public class HostService extends Service implements Parcelable {
 
     // Getter
 
+
+
     /**
      * @return Get true if the queue is at the end or false if there is a next song
      */
@@ -504,7 +533,10 @@ public class HostService extends Service implements Parcelable {
         return pause;
     }
 
+    @Override
+    public Thread getCurrentThread() { return serverThread; }
 
+    public List<Voting> getHostVotings() { return hostVotings.stream().filter(v -> !v.containsThread(serverThread)).collect(Collectors.toList()); }
 
     // Setter
 
@@ -1072,6 +1104,7 @@ public class HostService extends Service implements Parcelable {
          * PLAYING:     After starting a new song all clients get the new {@link Track}-Object to
          *              change all information about the currently playing song.
          * PLAYLIST:    Returning the current queue state after a client request.
+         * VOTING:      Returning all currently opened votings for Que and for Skip
          */
         @Override
         public void run() {
@@ -1144,6 +1177,26 @@ public class HostService extends Service implements Parcelable {
                                         response.append(track.serialize());
                                     }
                                     sendMessage(Commands.PLAYLIST, response.toString());
+                                    break;
+                                case VOTING:
+                                    StringBuilder votingResponse = new StringBuilder();
+                                    for(HostVoting hostVoting : hostVotings) {
+                                        if(!hostVoting.containsThread(this)) {
+                                            votingResponse.append(Constants.DELIMITER);
+                                            votingResponse.append(hostVoting.serialize());
+                                        }
+                                    }
+                                    sendMessage(Commands.VOTING, votingResponse.toString());
+                                    break;
+                                case VOTE:
+                                    if(parts.length > 3) {
+                                        for (HostVoting voting : hostVotings) {
+                                            if (attribute.equals("" + voting.getId())) {
+                                                voting.addVoting(Integer.parseInt(parts[3]), this);
+                                                break;
+                                            }
+                                        }
+                                    }
                                     break;
                                 default:
                                     Log.d(TAG, "No such command: " + command);

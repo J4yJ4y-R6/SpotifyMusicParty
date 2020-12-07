@@ -29,7 +29,6 @@ import com.tinf19.musicparty.util.ForAllCallback;
 import com.tinf19.musicparty.server.adapter.HostFavoritePlaylistsAdapter;
 import com.tinf19.musicparty.util.SpotifyHelper;
 
-import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -40,11 +39,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.HttpUrl;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.Response;
 
 import static android.app.Activity.RESULT_OK;
@@ -149,7 +143,7 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_host_favorite_playlists, container, false);
-        RecyclerView recyclerView = view.findViewById(R.id.gridRecyclerview);
+        RecyclerView recyclerView = view.findViewById(R.id.skipVotingRecyclerview);
         hostFavoritePlaylistsAdapter = new HostFavoritePlaylistsAdapter(new ArrayList<>(), this, hostFavoritePlaylistCallback);
         if(recyclerView != null) {
             recyclerView.setAdapter(hostFavoritePlaylistsAdapter);

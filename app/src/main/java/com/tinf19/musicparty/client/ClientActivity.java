@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
-import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.content.BroadcastReceiver;
@@ -27,6 +26,8 @@ import com.tinf19.musicparty.BuildConfig;
 import com.tinf19.musicparty.client.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.databinding.ActivityClientBinding;
 import com.tinf19.musicparty.fragments.LoadingFragment;
+import com.tinf19.musicparty.fragments.VotingFragment;
+import com.tinf19.musicparty.util.ClientVoting;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.client.fragments.ClientExitConnectionFragment;
@@ -36,10 +37,13 @@ import com.tinf19.musicparty.client.fragments.ClientSearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.client.fragments.ClientSongFragment;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.util.HostVoting;
+import com.tinf19.musicparty.util.Voting;
 
 import org.json.JSONException;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -63,6 +67,7 @@ public class ClientActivity extends AppCompatActivity {
     private ClientPlaylistFragment clientPlaylistFragment;
     private ClientSearchBarFragment clientSearchBarFragment;
     private ClientExitConnectionFragment clientExitConnectionFragment;
+    private VotingFragment votingFragment;
     /**
      * Identify if Service is currently bounded
      */
@@ -352,6 +357,11 @@ public class ClientActivity extends AppCompatActivity {
                     ClientActivity.this.runOnUiThread(() -> clientPlaylistFragment.setCurrentPlaying(track));
                 }
 
+                @Override
+                public void setVotings(List<Voting> clientVotings) {
+                    ClientActivity.this.runOnUiThread( () -> votingFragment.showVotings(clientVotings));
+                }
+
                 /**
                  * Initializing the global fragments with callbacks and opening the default
                  * fragments
@@ -369,6 +379,10 @@ public class ClientActivity extends AppCompatActivity {
                  * Spotify token
                  * {@link ClientExitConnectionFragment.ClientExitConnectionCallback#denyExit()}:
                  * Opening the ClientSongFragment in the big fragment in activity_client.xml
+                 * {@link com.tinf19.musicparty.adapter.VotingAdapter.VotingAdapterCallback}
+                 * Get the client or server thread for voting
+                 * {@link com.tinf19.musicparty.fragments.VotingFragment.VotingCallback}
+                 * Get a List of all currently opened votings.
                  * {@link ClientExitConnectionFragment.ClientExitConnectionCallback#acceptExit()}:
                  * Disconnection vom the server and the service
                  * {@link ClientExitConnectionFragment.ClientExitConnectionCallback#getPartyName()}:
@@ -404,6 +418,18 @@ public class ClientActivity extends AppCompatActivity {
                                 }
                             }
                             animateFragmentChange(true, clientPlaylistFragment, "ClientPlaylistFragment");
+                        }
+
+                        @Override
+                        public void openVotingFragment() {
+                            if(mBoundService != null) {
+                                try {
+                                    mBoundService.getClientThread().sendMessage(Commands.VOTING, "User request all current votings");
+                                } catch (IOException e) {
+                                    Log.e(TAG, e.getMessage(), e);
+                                }
+                            }
+                            animateFragmentChange(true, votingFragment, "VotingFragment");
                         }
                     });
                     clientPlaylistFragment = new ClientPlaylistFragment();
@@ -443,6 +469,9 @@ public class ClientActivity extends AppCompatActivity {
                             return ClientActivity.this.getPartyName();
                         }
                     });
+                    votingFragment = new VotingFragment(
+                            () -> mBoundService != null ? mBoundService.getClientThread() : null,
+                            () -> mBoundService != null ? mBoundService.getClientVotings() : new ArrayList<>());
                     showDefaultFragments();
                 }
             });

@@ -183,7 +183,6 @@ public class Track {
      * @throws JSONException when the serialize failed
      */
     public String serialize() throws JSONException {
-        Log.d(TAG, "serialize artist (" + name + ") from json");
         JSONObject tempObject = new JSONObject();
         JSONArray artistTemp = new JSONArray();
         for (Artist x : artist) {

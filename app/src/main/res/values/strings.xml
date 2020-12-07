@@ -73,6 +73,7 @@
     <string name="text_openExitFragment_ContentD">Party verlassen</string>
     <string name="text_openSettingsFragment_ContentD">Einstellungen öffnen</string>
     <string name="text_openPeopleFragment_ContentD">Anwesende Personen anzeigen</string>
+    <string name="text_openVotingFragment_ContentD">Abstimmungen abrufen</string>
 
     <string name="text_toastPlaylistNotSaved">Playlist konnte nicht gespeichert werden. Prüfe ob du schon 30 Playlisten gespeichert hast.</string>
     <string name="text_toastPlaylistNameNeeded">Playlist konnte nicht gespeichert werden. Du musst einen Namen Hinzufügen</string>
@@ -115,6 +116,11 @@
     <string name="text_enterNewPartyName">Gibt hier den Playlistnamen ein</string>
     <string name="text_lastSong">letzten Song abspielen</string>
     <string name="text_zeroMinutes">0 Minuten</string>
+    <string name="text_currentVotings">Aktuelle Abstimmungen</string>
+    <string name="text_noCurrentQueVotings">Du hast aktuell keine offenen Que-Abstimmungen</string>
+    <string name="text_noCurrentSkipVotings">Du hast aktuell keine offenen Skip-Abstimmungen</string>
+    <string name="text_currentQueVotings">Deine offenen Que-Abstimmungen</string>
+    <string name="text_currentSkipVotings">Deine offenen Skip-Abstimmungen</string>
 
 
 </resources>

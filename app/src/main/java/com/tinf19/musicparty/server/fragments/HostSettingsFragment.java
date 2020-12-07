@@ -29,6 +29,7 @@ import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.HostVoting;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -42,7 +43,7 @@ import static android.graphics.Color.WHITE;
  * <ol>
  *     <li>All-In: Every song send to the queue is added.</li>
  *     <li>Voting: Each song send to the queue starts a new
- *     {@link com.tinf19.musicparty.util.Voting} where everybody can vote whether they want to add
+ *     {@link HostVoting} where everybody can vote whether they want to add
  *     it or not. The same kind of voting is called when someone wants to skip the current track.
  *     </li>
  * </ol>

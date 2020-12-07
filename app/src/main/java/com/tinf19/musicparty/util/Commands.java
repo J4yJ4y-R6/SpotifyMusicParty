@@ -8,5 +8,6 @@ public enum Commands {
     REMOVE,
     ERROR,
     PLAYLIST,
-    VOTING
+    VOTING,
+    VOTE
 }

@@ -21,7 +21,20 @@
             android:src="@drawable/icon_queue"
             android:contentDescription="@string/text_openPlaylistFragment_ContentD"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/optionsButton" />
+            app:layout_constraintEnd_toStartOf="@+id/votingButtonHostImageButton" />
+
+        <ImageButton
+            android:id="@+id/votingButtonHostImageButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="@string/text_openVotingFragment_ContentD"
+            android:background="@drawable/background_transparent"
+            android:src="@drawable/icon_thumb_up"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/optionsButton"/>
+
 
         <ImageButton
             android:id="@+id/optionsButton"

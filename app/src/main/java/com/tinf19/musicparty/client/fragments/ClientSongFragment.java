@@ -43,6 +43,7 @@ public class ClientSongFragment extends Fragment {
     public interface ClientSongCallback {
         void exitConnection();
         void showPlaylist();
+        void openVotingFragment();
     }
 
     /**
@@ -101,6 +102,10 @@ public class ClientSongFragment extends Fragment {
 
         ImageButton playlistButton = rootView.findViewById(R.id.playlistButtonImageButton);
         if(playlistButton != null) playlistButton.setOnClickListener(v -> new Thread(() -> clientSongCallback.showPlaylist()).start());
+
+        ImageButton votingButton = rootView.findViewById(R.id.votingButtonClientImageButton);
+        if(votingButton != null) votingButton.setOnClickListener(v -> new Thread( () -> clientSongCallback.openVotingFragment()).start());
+
         return rootView;
     }
 

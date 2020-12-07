@@ -107,29 +107,65 @@
             app:layout_constraintTop_toBottomOf="@+id/connectedTo"
             app:srcCompat="@drawable/icon_cover_placeholder" />
 
-        <ImageButton
-            android:id="@+id/playlistButtonImageButton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="34dp"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/background_transparent"
-            android:contentDescription="@string/text_openPlaylistFragment_ContentD"
-            app:srcCompat="@drawable/icon_queue"
+        <LinearLayout
+            android:id="@+id/linearLayout2"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:baselineAligned="false">
 
-        <ImageButton
-            android:id="@+id/exitButton"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginEnd="34dp"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/background_transparent"
-            android:contentDescription="@string/text_openExitFragment_ContentD"
-            app:srcCompat="@drawable/icon_exit_room"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal">
+                <ImageButton
+                    android:id="@+id/playlistButtonImageButton"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/background_transparent"
+                    android:contentDescription="@string/text_openPlaylistFragment_ContentD"
+                    android:src="@drawable/icon_queue" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/votingButtonClientImageButton"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_marginBottom="16dp"
+                    android:contentDescription="@string/text_openVotingFragment_ContentD"
+                    android:background="@drawable/background_transparent"
+                    android:src="@drawable/icon_thumb_up" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:orientation="horizontal">
+                <ImageButton
+                    android:id="@+id/exitButton"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/background_transparent"
+                    android:contentDescription="@string/text_openExitFragment_ContentD"
+                    android:src="@drawable/icon_exit_room"/>
+            </LinearLayout>
+        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

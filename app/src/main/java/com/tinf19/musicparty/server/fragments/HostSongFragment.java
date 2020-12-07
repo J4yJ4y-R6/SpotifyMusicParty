@@ -43,6 +43,7 @@ public class HostSongFragment extends Fragment {
     private ImageView currentPlayingCoverTextView;
     private TextView partyNameTextView;
     private LinearLayout playBarLinearLayout;
+    private ImageView newVotingsIndicator;
 
 
     public interface HostSongCallback {
@@ -50,6 +51,7 @@ public class HostSongFragment extends Fragment {
         void openPeopleFragment();
         void openPlaylistFragment();
         void openExitFragment();
+        void openVotingFragment();
         void nextTrack();
         void lastTrack();
         void playTrack();
@@ -121,6 +123,11 @@ public class HostSongFragment extends Fragment {
         ImageButton openSettingsButton = view.findViewById(R.id.optionsButton);
         if(openSettingsButton != null) {
             openSettingsButton.setOnClickListener(v -> hostSongCallback.openSettingsFragment());
+        }
+
+        ImageButton openVotingButton = view.findViewById(R.id.votingButtonHostImageButton);
+        if(openVotingButton != null) {
+            openVotingButton.setOnClickListener(v -> hostSongCallback.openVotingFragment());
         }
 
         ImageButton openPeopleButton = view.findViewById(R.id.partyPeopleButton);

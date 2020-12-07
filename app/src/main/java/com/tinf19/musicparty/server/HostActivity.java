@@ -38,6 +38,7 @@ import com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment;
 import com.tinf19.musicparty.server.fragments.HostSongFragment;
 import com.tinf19.musicparty.music.PartyPerson;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.fragments.VotingFragment;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
@@ -141,6 +142,7 @@ public class HostActivity extends AppCompatActivity {
     private HostPlaylistFragment hostPlaylistFragment;
     private HostPartyPeopleFragment hostPartyPeopleFragment;
     private HostFavoritePlaylistsFragment hostFavoritePlaylistsFragment;
+    private VotingFragment votingFragment;
     private LoadingFragment loadingFragment;
     private String password;
 
@@ -205,6 +207,11 @@ public class HostActivity extends AppCompatActivity {
             @Override
             public void openExitFragment() {
                 animateFragmentChange(true, hostClosePartyFragment, "HostClosePartyFragment");
+            }
+
+            @Override
+            public void openVotingFragment() {
+                animateFragmentChange(true, votingFragment, "HostVotingFragment");
             }
 
             @Override
@@ -394,6 +401,9 @@ public class HostActivity extends AppCompatActivity {
                     mBoundService.deletePlaylist(id);
             }
         });
+        votingFragment = new VotingFragment(
+                () -> mBoundService != null ? mBoundService.getCurrentThread() : null,
+                () -> mBoundService != null ? mBoundService.getHostVotings() : new ArrayList<>());
         loadingFragment = new LoadingFragment(getString(R.string.text_loadingServer));
 
         if(savedInstanceState != null) {
