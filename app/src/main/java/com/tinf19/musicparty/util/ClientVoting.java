@@ -9,6 +9,12 @@ import org.json.JSONObject;
 
 import io.reactivex.CompletableOnSubscribe;
 
+/**
+ * Voting class for the client with less information about the voting as the {@link HostVoting}.
+ * Every voting has their current results fetched to the local variables after submitting a vote.
+ * Also they get updated after someone submitted a voting and the client is currently in the
+ * {@link com.tinf19.musicparty.fragments.VotingFragment}.
+ */
 public class ClientVoting implements Voting {
 
     private static final String TAG = ClientVoting.class.getName();
@@ -25,6 +31,13 @@ public class ClientVoting implements Voting {
         void submitVoting(int vote, int id);
     }
 
+    /**
+     * Constructor to initialize the variables after getting it from the host as a Json-String.
+     * @param json Json-String with all information about the voting
+     * @param clientVotingCallback Communication callback for
+     *                             {@link com.tinf19.musicparty.client.ClientActivity}
+     * @throws JSONException when the creation of the JSONObject failed
+     */
     public ClientVoting(String json, ClientVotingCallback clientVotingCallback) throws JSONException {
         JSONObject tempObject = new JSONObject(json);
         this.track = new Track(tempObject.getString(Constants.TRACK));
@@ -37,6 +50,12 @@ public class ClientVoting implements Voting {
         this.clientVotingCallback = clientVotingCallback;
     }
 
+    /**
+     * Updating the voting results after fetching them from the server
+     * @param yes Count of yes-votes
+     * @param no Count of no-votes
+     * @param grey Count of all votes or threads who did not voted yet
+     */
     public void updateVotingResult(int yes, int no, int grey) {
         this.yes = yes;
         this.no = no;
