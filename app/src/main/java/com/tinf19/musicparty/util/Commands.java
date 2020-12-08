@@ -9,5 +9,6 @@ public enum Commands {
     ERROR,
     PLAYLIST,
     VOTING,
-    VOTE
+    VOTE,
+    VOTE_RESULT
 }

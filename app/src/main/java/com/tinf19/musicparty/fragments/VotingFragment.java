@@ -2,13 +2,18 @@ package com.tinf19.musicparty.fragments;
 
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.ramotion.cardslider.CardSliderLayoutManager;
@@ -38,11 +43,12 @@ public class VotingFragment extends Fragment {
     private VotingAdapter votingSkipAdapter;
     private TextView queueHeaderTextView;
     private TextView skipHeaderTextView;
-    private TextView noVotingsTextView;
     private View view;
+    private CardSliderLayoutManager cardSliderLayoutManager;
 
     public interface VotingCallback {
         List<Voting> getVotings();
+        void stopTimer();
     }
 
     /**
@@ -50,7 +56,8 @@ public class VotingFragment extends Fragment {
      * @param votingAdapterCallback Communication callback for
      *                              {@link com.tinf19.musicparty.server.HostService}
      */
-    public VotingFragment(VotingAdapter.VotingAdapterCallback votingAdapterCallback, VotingCallback votingCallback) {
+    public VotingFragment(VotingAdapter.VotingAdapterCallback votingAdapterCallback,
+                          VotingCallback votingCallback) {
         this.votingAdapterCallback = votingAdapterCallback;
         this.votingCallback = votingCallback;
     }
@@ -79,45 +86,70 @@ public class VotingFragment extends Fragment {
         view = inflater.inflate(R.layout.fragment_host_voting, container, false);
         RecyclerView skipVotingRecyclerView = view.findViewById(R.id.skipVotingRecyclerview);
         RecyclerView queueVotingRecyclerView = view.findViewById(R.id.queueVotingRecyclerview);
-        votingQueAdapter = new VotingAdapter(votingCallback.getVotings().stream().filter(v->
-                v.getType().equals(Type.QUE)).collect(Collectors.toList()), votingAdapterCallback);
+        queueHeaderTextView = view.findViewById(R.id.queueHeaderTextView);
+        skipHeaderTextView = view.findViewById(R.id.skipHeaderTextView);
+        cardSliderLayoutManager = new CardSliderLayoutManager(
+                (int) (50 * getContext().getResources().getDisplayMetrics().density),
+                (int) (148 * getContext().getResources().getDisplayMetrics().density),
+                0);
         if(queueVotingRecyclerView != null) {
+            votingQueAdapter = new VotingAdapter(votingCallback.getVotings().stream().filter(v->
+                    v.getType().equals(Type.QUE)).collect(Collectors.toList()),
+                    votingAdapterCallback);
             queueVotingRecyclerView.setAdapter(votingQueAdapter);
             queueVotingRecyclerView.setHasFixedSize(true);
-            queueVotingRecyclerView.setLayoutManager(new CardSliderLayoutManager((int) (50 * getContext().getResources().getDisplayMetrics().density), (int) (148 * getContext().getResources().getDisplayMetrics().density), 0));
+            queueVotingRecyclerView.setLayoutManager(cardSliderLayoutManager);
             new CardSnapHelper().attachToRecyclerView(queueVotingRecyclerView);
         }
-        votingSkipAdapter = new VotingAdapter(votingCallback.getVotings().stream().filter(v->
-                v.getType().equals(Type.SKIP)).collect(Collectors.toList()), votingAdapterCallback);;
+        votingSkipAdapter = new VotingAdapter(votingCallback.getVotings().stream().filter(v ->
+                v.getType().equals(Type.SKIP)).collect(Collectors.toList()),
+                votingAdapterCallback);
         if(skipVotingRecyclerView != null) {
             skipVotingRecyclerView.setAdapter(votingSkipAdapter);
             skipVotingRecyclerView.setHasFixedSize(true);
-            skipVotingRecyclerView.setLayoutManager(new CardSliderLayoutManager((int) (50 * getContext().getResources().getDisplayMetrics().density), (int) (148 * getContext().getResources().getDisplayMetrics().density), 0));
+            skipVotingRecyclerView.setLayoutManager(new CardSliderLayoutManager(
+                    (int) (50 * getContext().getResources().getDisplayMetrics().density),
+                    (int) (148 * getContext().getResources().getDisplayMetrics().density),
+                    0));
             new CardSnapHelper().attachToRecyclerView(skipVotingRecyclerView);
         }
-
-        queueHeaderTextView = view.findViewById(R.id.queueHeaderTextView);
-        skipHeaderTextView = view.findViewById(R.id.skipHeaderTextView);
-        noVotingsTextView = view.findViewById(R.id.noVotingsTextView);
-
         return view;
     }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        votingCallback.stopTimer();
+    }
+
+    public void notifySingleVote(int id) {
+        int position = votingQueAdapter.getVotingPosition(id);
+        Log.d(VotingFragment.class.getName(), "Id: " + id + ", position: " + position);
+        if(position >= 0) votingQueAdapter.notifyItemChanged(id-1);
+    }
+
 
     public void showVotings(List<Voting> votings) {
         Log.d(VotingFragment.class.getName(), "votings has been updated: " + votings.size());
         if(votingQueAdapter != null) {
-            votingQueAdapter.setDataset(votings.stream().filter(v->
-                    v.getType().equals(Type.QUE)).collect(Collectors.toList()), Type.QUE);
-            queueHeaderTextView.setText(view.getContext().getString(votings.size() == 0 ?
+            List<Voting> filteredVotings = votings.stream().filter(v->
+                    v.getType().equals(Type.QUE)).collect(Collectors.toList());
+            votingQueAdapter.setDataset(filteredVotings);
+            queueHeaderTextView.setText(view.getContext().getString(filteredVotings.size() == 0 ?
                     R.string.text_noCurrentQueVotings : R.string.text_currentQueVotings));
             votingQueAdapter.notifyDataSetChanged();
         }
         if(votingSkipAdapter != null) {
-            votingSkipAdapter.setDataset(votings.stream().filter(v->
-                    v.getType().equals(Type.SKIP)).collect(Collectors.toList()), Type.SKIP);
-            skipHeaderTextView.setText(view.getContext().getString(votings.size() == 0 ?
+            List<Voting> filteredVotings = votings.stream().filter(v->
+                    v.getType().equals(Type.SKIP)).collect(Collectors.toList());
+            votingSkipAdapter.setDataset(filteredVotings);
+            skipHeaderTextView.setText(view.getContext().getString(filteredVotings.size() == 0 ?
                     R.string.text_noCurrentSkipVotings : R.string.text_currentSkipVotings));
             votingSkipAdapter.notifyDataSetChanged();
         }
+    }
+
+    public int getVotingId() {
+        return votingQueAdapter.getVotingId(cardSliderLayoutManager.getActiveCardPosition());
     }
 }

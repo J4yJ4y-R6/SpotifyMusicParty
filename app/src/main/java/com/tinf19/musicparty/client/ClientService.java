@@ -23,6 +23,7 @@ import com.tinf19.musicparty.util.HostVoting;
 import com.tinf19.musicparty.util.Voting;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
@@ -31,7 +32,9 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Service for background communication with Spotify and all clients
@@ -61,7 +64,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
      */
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
-    private List<ClientVoting> clientVotings = new ArrayList<>();
+    private Map<Integer, ClientVoting> clientVotings = new HashMap<>();
 
 
 
@@ -73,6 +76,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
         void setCurrentTrack(Track track);
         void setVotings(List<Voting> ClientVotings);
         void showFragments();
+        void notifyVotingAdapter(int id);
     }
 
     /**
@@ -165,7 +169,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
     /**
      * @return Get all currently opened votings
      */
-    public List<Voting> getClientVotings() { return new ArrayList<>(clientVotings); }
+    public List<Voting> getClientVotings() { return new ArrayList<>(clientVotings.values()); }
 
     //Setter
 
@@ -181,7 +185,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
      * Set all currently opened votings
      * @param clientVotings List of all currently opened votings
      */
-    public void setHostVotings(List<ClientVoting> clientVotings) {
+    public void setClientVotings(Map<Integer, ClientVoting> clientVotings) {
         this.clientVotings = clientVotings;
     }
 
@@ -239,6 +243,16 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
     public void setTrack() {
         if(nowPlaying != null)
             clientServiceCallback.setTrack(nowPlaying);
+    }
+
+    public void fetchVotingResult() {
+        clientVotings.keySet().forEach(v-> {
+            try {
+                clientThread.sendMessage(Commands.VOTE_RESULT, String.valueOf(v));
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+        });
     }
 
 
@@ -367,8 +381,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                                     clientVotings.clear();
                                     for(int i = 3; i < parts.length; i++) {
                                         if(!parts[i].equals("")){
-                                            Log.d(TAG, "run: " + parts[i]);
-                                            clientVotings.add(new ClientVoting(parts[i], (vote, id) -> {
+                                            ClientVoting voting = new ClientVoting(parts[i], (vote, id) -> {
                                                 new Thread(() -> {
                                                     try {
                                                         sendMessage(Commands.VOTE, id + Constants.DELIMITER + vote);
@@ -376,11 +389,25 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                                                         Log.e(TAG, e.getMessage(), e);
                                                     }
                                                 }).start();
-                                            }));
+                                            });
+                                            clientVotings.put(voting.getId(), voting);
                                         }
                                     }
                                     clientServiceCallback.setVotings(getClientVotings());
-                                    setHostVotings(clientVotings);
+                                    setClientVotings(clientVotings);
+                                    break;
+                                case VOTE_RESULT:
+                                    JSONObject tempObject = new JSONObject(attribute);
+                                    int votingID = tempObject.getInt(Constants.ID);
+                                    ClientVoting voting = clientVotings.get(votingID);
+                                    if(voting != null) {
+                                        voting.updateVotingResult(
+                                                tempObject.getInt(Constants.YES_VOTE),
+                                                tempObject.getInt(Constants.NO_VOTE),
+                                                tempObject.getInt(Constants.GREY_VOTE));
+                                        if(clientServiceCallback != null)
+                                            clientServiceCallback.notifyVotingAdapter(votingID);
+                                    }
                             }
                         }
                     }

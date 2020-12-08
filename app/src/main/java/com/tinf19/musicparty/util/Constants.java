@@ -30,6 +30,10 @@ public class Constants {
     public static final int IGNORED = 0;
     public static final int YES = 1;
     public static final int NO = 2;
+    public static final String YES_VOTE = "yes";
+    public static final String NO_VOTE = "no";
+    public static final String GREY_VOTE = "grey";
+    public static final String HAS_VOTED = "has_voted";
 
     public static final String TYPE = "type";
     public static final String THRESHOLD = "threshold";

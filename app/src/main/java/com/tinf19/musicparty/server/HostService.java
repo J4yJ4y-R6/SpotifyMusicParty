@@ -44,7 +44,9 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import okhttp3.Response;
@@ -60,7 +62,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
      * {@link Socket} and a timestamp from the time he connected to the server.
      */
     private final List<CommunicationThread> clientThreads = new ArrayList<>();
-    private final List<HostVoting> hostVotings = new ArrayList<>();
+    private final Map<Integer, HostVoting> hostVotings = new HashMap<>();
 
     private Thread serverThread = null;
     private ServerSocket serverSocket;
@@ -95,6 +97,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
         void addToSharedPreferances(String name, String id);
         void acceptEndParty();
         void notifyFavPlaylistAdapter();
+        void notifyVotingAdapter(int id);
     }
 
     public interface AfterCallback {
@@ -139,7 +142,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             }
         });
         startServer();
-        HostVoting hostVoting = new HostVoting(Type.QUE, new Track("123", "name", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 1, new HostVoting.VotingCallback() {
+        HostVoting hostVoting = new HostVoting(Type.QUE, new Track("123", "Jannik", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 1, new HostVoting.VotingCallback() {
             @Override
             public void skipNext(int id) {
                 //Skip
@@ -160,7 +163,95 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                 //close
             }
         });
-        hostVotings.add(hostVoting);
+        HostVoting hostVoting2 = new HostVoting(Type.QUE, new Track("123", "Silas", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 2, new HostVoting.VotingCallback() {
+            @Override
+            public void skipNext(int id) {
+                //Skip
+            }
+
+            @Override
+            public void addAndClose(int id) {
+                //addandclose
+            }
+
+            @Override
+            public int getClientCount() {
+                return getClientListSize();
+            }
+
+            @Override
+            public void close(int id) {
+                //close
+            }
+        });
+        HostVoting hostVoting3 = new HostVoting(Type.QUE, new Track("123", "Tim", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 3, new HostVoting.VotingCallback() {
+            @Override
+            public void skipNext(int id) {
+                //Skip
+            }
+
+            @Override
+            public void addAndClose(int id) {
+                //addandclose
+            }
+
+            @Override
+            public int getClientCount() {
+                return getClientListSize();
+            }
+
+            @Override
+            public void close(int id) {
+                //close
+            }
+        });
+        HostVoting hostVoting4 = new HostVoting(Type.QUE, new Track("123", "Hung", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 4, new HostVoting.VotingCallback() {
+            @Override
+            public void skipNext(int id) {
+                //Skip
+            }
+
+            @Override
+            public void addAndClose(int id) {
+                //addandclose
+            }
+
+            @Override
+            public int getClientCount() {
+                return getClientListSize();
+            }
+
+            @Override
+            public void close(int id) {
+                //close
+            }
+        });
+        HostVoting hostVoting5 = new HostVoting(Type.QUE, new Track("123", "Olli", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 5, new HostVoting.VotingCallback() {
+            @Override
+            public void skipNext(int id) {
+                //Skip
+            }
+
+            @Override
+            public void addAndClose(int id) {
+                //addandclose
+            }
+
+            @Override
+            public int getClientCount() {
+                return getClientListSize();
+            }
+
+            @Override
+            public void close(int id) {
+                //close
+            }
+        });
+        hostVotings.put(hostVoting.getId(), hostVoting);
+        hostVotings.put(hostVoting2.getId(), hostVoting2);
+        hostVotings.put(hostVoting3.getId(), hostVoting3);
+        hostVotings.put(hostVoting4.getId(), hostVoting4);
+        hostVotings.put(hostVoting5.getId(), hostVoting5);
     }
 
     @Override
@@ -536,7 +627,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
     @Override
     public Thread getCurrentThread() { return serverThread; }
 
-    public List<Voting> getHostVotings() { return hostVotings.stream().filter(v -> !v.containsThread(serverThread)).collect(Collectors.toList()); }
+    public List<Voting> getHostVotings() { return hostVotings.values().stream().filter(v -> !v.containsIgnored(serverThread)).collect(Collectors.toList()); }
 
     // Setter
 
@@ -1129,6 +1220,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                             switch (command) {
                                 case QUIT:
                                     clientThreads.remove(this);
+                                    hostVotings.values().forEach(v->v.removeThread(this));
                                     if(hostServiceCallback != null) hostServiceCallback.setPeopleCount(clientThreads.size());
                                     Log.d(TAG, "User " + username + " has left the party");
                                     updateServiceNotifaction();
@@ -1180,23 +1272,28 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                                     break;
                                 case VOTING:
                                     StringBuilder votingResponse = new StringBuilder();
-                                    for(HostVoting hostVoting : hostVotings) {
-                                        if(!hostVoting.containsThread(this)) {
+                                    for(HostVoting hostVoting : hostVotings.values()) {
+                                        if(!hostVoting.containsIgnored(this)) {
                                             votingResponse.append(Constants.DELIMITER);
-                                            votingResponse.append(hostVoting.serialize());
+                                            votingResponse.append(hostVoting.serialize(this));
                                         }
                                     }
                                     sendMessage(Commands.VOTING, votingResponse.toString());
                                     break;
                                 case VOTE:
                                     if(parts.length > 3) {
-                                        for (HostVoting voting : hostVotings) {
-                                            if (attribute.equals("" + voting.getId())) {
-                                                voting.addVoting(Integer.parseInt(parts[3]), this);
-                                                break;
-                                            }
-                                        }
+                                        HostVoting voting = hostVotings.get(Integer.parseInt(attribute));
+                                        if(voting != null)
+                                            voting.addVoting(Integer.parseInt(parts[3]), this);
+                                        if(hostServiceCallback != null)
+                                            hostServiceCallback.notifyVotingAdapter(Integer.parseInt(attribute));
+                                        break;
                                     }
+                                    break;
+                                case VOTE_RESULT:
+                                    HostVoting voting = hostVotings.get(Integer.parseInt(attribute));
+                                    if(voting != null)
+                                        sendMessage(Commands.VOTE_RESULT, voting.serializeResult());
                                     break;
                                 default:
                                     Log.d(TAG, "No such command: " + command);

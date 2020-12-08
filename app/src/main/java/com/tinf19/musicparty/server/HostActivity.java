@@ -45,6 +45,8 @@ import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.server.adapter.HostPlaylistAdapter;
 import com.tinf19.musicparty.server.adapter.HostFavoritePlaylistsAdapter;
+import com.tinf19.musicparty.util.HostVoting;
+import com.tinf19.musicparty.util.Voting;
 import com.tinf19.musicparty.util.WiFiDirectBroadcastReceiver;
 import com.spotify.android.appremote.api.ConnectionParams;
 import com.spotify.android.appremote.api.Connector;
@@ -211,7 +213,7 @@ public class HostActivity extends AppCompatActivity {
 
             @Override
             public void openVotingFragment() {
-                animateFragmentChange(true, votingFragment, "HostVotingFragment");
+                animateFragmentChange(true, votingFragment, "VotingFragment");
             }
 
             @Override
@@ -403,7 +405,18 @@ public class HostActivity extends AppCompatActivity {
         });
         votingFragment = new VotingFragment(
                 () -> mBoundService != null ? mBoundService.getCurrentThread() : null,
-                () -> mBoundService != null ? mBoundService.getHostVotings() : new ArrayList<>());
+                new VotingFragment.VotingCallback() {
+                    @Override
+                    public List<Voting> getVotings() {
+                        return mBoundService != null ? mBoundService.getHostVotings()
+                                : new ArrayList<>();
+                    }
+
+                    @Override
+                    public void stopTimer() {
+                        //
+                    }
+                });
         loadingFragment = new LoadingFragment(getString(R.string.text_loadingServer));
 
         if(savedInstanceState != null) {
@@ -609,6 +622,12 @@ public class HostActivity extends AppCompatActivity {
                 }
 
                 @Override
+                public void notifyVotingAdapter(int id) {
+                    Log.d(TAG, "voting submitted has been changed");
+                    votingFragment.notifySingleVote(id);
+                }
+
+                @Override
                 public void addToSharedPreferances(String name, String id) {
                     Log.d(TAG, "playlist " + name + " has been added to favorites");
                     SharedPreferences savePlaylistMemory = getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
@@ -778,7 +797,6 @@ public class HostActivity extends AppCompatActivity {
         ft.attach(frg);
         ft.commit();
     }
-
 
     /**
      * @return Get the current Spotify-Token which is necessary for API-Requests and needs to be

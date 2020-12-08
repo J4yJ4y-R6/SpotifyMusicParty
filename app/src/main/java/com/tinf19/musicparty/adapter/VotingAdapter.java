@@ -7,13 +7,20 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ramotion.cardslider.CardSliderLayoutManager;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.HostVoting;
@@ -22,7 +29,9 @@ import com.tinf19.musicparty.util.Voting;
 
 import org.w3c.dom.Text;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -34,10 +43,10 @@ import java.util.stream.Collectors;
 public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHolder> {
 
     private static final String TAG = VotingAdapter.class.getName();
-    private List<Voting> mDataset;
     private final VotingAdapterCallback votingAdapterCallback;
+    private List<Voting> mDataset;
     private Context context;
-
+    private Map<Integer, Integer> votingPositions = new HashMap<>();
 
     public interface VotingAdapterCallback {
         Thread getCurrentThread();
@@ -58,6 +67,10 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         private final ImageView voteYesButton;
         private final ImageView voteNoButton;
         private final ImageView ignoreVoteImageView;
+        private final LinearLayout votePercentageLinearLayout;
+        private final LinearLayout yesVotePercentage;
+        private final LinearLayout noVotePercentage;
+        private final LinearLayout ignoredVotePercentage;
         private final View itemView;
 
         /**
@@ -72,6 +85,10 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
             voteYesButton = itemView.findViewById(R.id.yesVoteImageView);
             voteNoButton = itemView.findViewById(R.id.noVoteImageView);
             ignoreVoteImageView = itemView.findViewById(R.id.ignoreVoteImageView);
+            votePercentageLinearLayout = itemView.findViewById(R.id.votePercentageLinearLayout);
+            yesVotePercentage = itemView.findViewById(R.id.yesVotePercentage);
+            noVotePercentage = itemView.findViewById(R.id.noVotePercentage);
+            ignoredVotePercentage = itemView.findViewById(R.id.ignoreVotePercentage);
             this.itemView = itemView;
         }
     }
@@ -110,6 +127,11 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         ImageView noButton = holder.voteNoButton;
         ImageView ignoreVoteButton = holder.ignoreVoteImageView;
 
+        votingPositions.put(mDataset.get(position).getId(), position);
+        Log.d(TAG, "position: " + position + ", name: " + mDataset.get(position).getTrack().getName());
+
+        if(mDataset.get(position).isVoted(votingAdapterCallback.getCurrentThread()))
+            showVotingResult(holder, position);
         if(songtitleTV != null)
             songtitleTV.setText(mDataset.get(position).getTrack().getName());
         if(artistTV != null)
@@ -119,18 +141,41 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         if(yesButton != null)
             yesButton.setOnClickListener(v -> {
                 mDataset.get(position).addVoting(Constants.YES, votingAdapterCallback.getCurrentThread());
-                closeVoting(holder, position);
+                showVotingResult(holder, position);
             });
         if(noButton != null)
             noButton.setOnClickListener(v -> {
                 mDataset.get(position).addVoting(Constants.NO, votingAdapterCallback.getCurrentThread());
-                closeVoting(holder, position);
+                showVotingResult(holder, position);
+
             });
         if(ignoreVoteButton != null)
             ignoreVoteButton.setOnClickListener(v -> {
-                mDataset.get(position).addVoting(Constants.IGNORED, votingAdapterCallback.getCurrentThread());
-                closeVoting(holder, position);
+                    mDataset.get(position).addVoting(Constants.IGNORED, votingAdapterCallback.getCurrentThread());
+                    setAnimation(holder, position);
             });
+    }
+
+    private void setAnimation(MyViewHolder holder, int position) {
+            Animation animation = AnimationUtils.loadAnimation(context, R.anim.voting_animation);
+            animation.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    mDataset.remove(position);
+                    VotingAdapter.this.notifyDataSetChanged();
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+            holder.itemView.startAnimation(animation);
     }
 
     @Override
@@ -139,30 +184,43 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
     }
 
     /**
-     * Animating the card upwards after voting
-     * @param holder Card View
-     * @param position Voting position in the dataset
-     */
-    private void closeVoting(MyViewHolder holder, int position) {
-        holder.itemView.animate()
-                .alpha(0f)
-                .translationY(-500)
-                .setDuration(500)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        holder.itemView.setVisibility(View.INVISIBLE);
-                        mDataset.remove(position);
-                        notifyDataSetChanged();
-                    }
-                });
-    }
-
-    /**
      * Set a List of all currently opened votings for Que and for Skip
      * @param votings List of all currently opened votings
      */
-    public void setDataset(List<Voting> votings, Type type) {
+    public void setDataset(List<Voting> votings) {
         this.mDataset = votings;
+    }
+
+    public void showVotingResult( MyViewHolder holder, int position) {
+        LinearLayout votePercentageLL = holder.votePercentageLinearLayout;
+        LinearLayout yesVoteLL = holder.yesVotePercentage;
+        LinearLayout noVoteLL = holder.noVotePercentage;
+        LinearLayout ignoredVoteLL = holder.ignoredVotePercentage;
+        votePercentageLL.setVisibility(View.VISIBLE);
+        votePercentageLL.setClipToOutline(true);
+        Log.d(TAG, "accepted: " + (float)(mDataset.get(position).getVoteListSizes()[0]));
+        Log.d(TAG, "denied: " + (float)(mDataset.get(position).getVoteListSizes()[1]));
+        Log.d(TAG, "ignored: " + (float)(mDataset.get(position).getVoteListSizes()[2]));
+        yesVoteLL.setLayoutParams(new TableRow.LayoutParams(
+                TableRow.LayoutParams.WRAP_CONTENT,
+                (int) (35 * context.getResources().getDisplayMetrics().density),
+                mDataset.get(position).getVoteListSizes()[0]));
+        noVoteLL.setLayoutParams(new TableRow.LayoutParams(
+                TableRow.LayoutParams.WRAP_CONTENT,
+                (int) (35 * context.getResources().getDisplayMetrics().density),
+                mDataset.get(position).getVoteListSizes()[1]));
+        ignoredVoteLL.setLayoutParams(new TableRow.LayoutParams(
+                TableRow.LayoutParams.WRAP_CONTENT,
+                (int) (35 * context.getResources().getDisplayMetrics().density),
+                mDataset.get(position).getVoteListSizes()[2]));
+    }
+
+    public int getVotingPosition(int id) {
+        Integer position = votingPositions.get(id);
+        return position != null ? position : -1;
+    }
+
+    public int getVotingId(int position) {
+        return mDataset.get(position).getId();
     }
 }

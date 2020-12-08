@@ -1,5 +1,6 @@
 package com.tinf19.musicparty.util;
 
+import android.graphics.ColorSpace;
 import android.util.Log;
 
 import com.tinf19.musicparty.music.Track;
@@ -20,7 +21,6 @@ public class HostVoting implements Voting {
     private final double threshold;
     private final int id;
     private final VotingCallback votingCallback;
-    private boolean voted = false;
     private List<Thread> accepted = new ArrayList<>();
     private List<Thread> denied = new ArrayList<>();
     private List<Thread> ignored = new ArrayList<>();
@@ -57,8 +57,17 @@ public class HostVoting implements Voting {
         return created;
     }
 
+    @Override
     public int getId() {
         return id;
+    }
+
+    @Override
+    public int[] getVoteListSizes() {
+        int yes = (100 * accepted.size())/(votingCallback.getClientCount() + 1);
+        int no = (100 * denied.size())/(votingCallback.getClientCount() + 1);
+        int grey = (100 * (votingCallback.getClientCount() + 1))/(votingCallback.getClientCount() + 1) - yes - no;
+        return new int[]{yes, no, grey};
     }
 
     private void makeCallback(){
@@ -76,8 +85,8 @@ public class HostVoting implements Voting {
         }
     }
 
-    public boolean containsThread(Thread thread) {
-        return (accepted.contains(thread) || denied.contains(thread) || ignored.contains(thread));
+    public boolean containsIgnored(Thread thread) {
+        return ignored.contains(thread);
     }
 
     /**
@@ -105,6 +114,8 @@ public class HostVoting implements Voting {
             }
         } else {
             Log.d(TAG, "thread already voted");
+            if(vote == Constants.IGNORED)
+                ignored.add(thread);
             return;
         }
         if((accepted.size() + denied.size() + ignored.size()) >= (votingCallback.getClientCount() + 1))
@@ -114,14 +125,20 @@ public class HostVoting implements Voting {
                     "ignored: " + ignored.size());
     }
 
+    public void removeThread(Thread thread) {
+        accepted.remove(thread);
+        denied.remove(thread);
+        ignored.remove(thread);
+    }
+
     @Override
     public Track getTrack() {
         return track;
     }
 
     @Override
-    public boolean isVoted() {
-        return voted;
+    public boolean isVoted(Thread thread) {
+        return (accepted.contains(thread) || denied.contains(thread));
     }
 
     @Override
@@ -129,14 +146,32 @@ public class HostVoting implements Voting {
         return type;
     }
 
-    public String serialize() throws JSONException {
+    public String serialize(Thread thread) throws JSONException {
         JSONObject tempObject = new JSONObject();
+        int yes = accepted.size();
+        int no = denied.size();
         tempObject = tempObject
                 .put(Constants.TYPE, type)
                 .put(Constants.THRESHOLD, threshold)
                 .put(Constants.ID, id)
                 .put(Constants.CREATED, created)
-                .put(Constants.TRACK, new JSONObject(track.serialize()));
+                .put(Constants.TRACK, new JSONObject(track.serialize()))
+                .put(Constants.YES_VOTE, yes)
+                .put(Constants.NO_VOTE, no)
+                .put(Constants.GREY_VOTE, (votingCallback.getClientCount() + 1) - yes - no)
+                .put(Constants.HAS_VOTED, isVoted(thread));
+        return tempObject.toString();
+    }
+
+    public String serializeResult() throws JSONException {
+        JSONObject tempObject = new JSONObject();
+        int yes = accepted.size();
+        int no = denied.size();
+        tempObject = tempObject
+                .put(Constants.ID, id)
+                .put(Constants.YES_VOTE, yes)
+                .put(Constants.NO_VOTE, no)
+                .put(Constants.GREY_VOTE, (votingCallback.getClientCount() + 1) - yes - no);
         return tempObject.toString();
     }
 }

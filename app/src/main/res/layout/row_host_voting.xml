@@ -69,4 +69,47 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:srcCompat="@drawable/icon_x" />
+
+    <LinearLayout
+        android:id="@+id/votePercentageLinearLayout"
+        android:layout_width="0dp"
+        android:layout_height="35dp"
+        android:layout_marginStart="10dp"
+        android:layout_marginEnd="10dp"
+        android:background="@drawable/backgound_transparent_round"
+        android:orientation="horizontal"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/noVoteImageView"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/yesVoteImageView">
+
+        <LinearLayout
+            android:id="@+id/yesVotePercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="0"
+            android:background="#1DAC23"
+            android:gravity="center|center_horizontal|center_vertical"
+            android:orientation="horizontal" />
+
+        <LinearLayout
+            android:id="@+id/ignoreVotePercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="100"
+            android:background="#434343"
+            android:gravity="center|center_horizontal|center_vertical"
+            android:orientation="horizontal" />
+
+        <LinearLayout
+            android:id="@+id/noVotePercentage"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center|center_horizontal|center_vertical"
+            android:layout_weight="0"
+            android:background="#FA1100"
+            android:gravity="center|center_horizontal|center_vertical"
+            android:orientation="horizontal" />
+    </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -72,6 +73,7 @@ public class ClientActivity extends AppCompatActivity {
      * Identify if Service is currently bounded
      */
     private boolean mShouldUnbind;
+    private CountDownTimer votingFetchResultTimer;
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         /**
@@ -430,6 +432,7 @@ public class ClientActivity extends AppCompatActivity {
                                 }
                             }
                             animateFragmentChange(true, votingFragment, "VotingFragment");
+                            newVotingResultFetchTimer();
                         }
                     });
                     clientPlaylistFragment = new ClientPlaylistFragment();
@@ -471,8 +474,30 @@ public class ClientActivity extends AppCompatActivity {
                     });
                     votingFragment = new VotingFragment(
                             () -> mBoundService != null ? mBoundService.getClientThread() : null,
-                            () -> mBoundService != null ? mBoundService.getClientVotings() : new ArrayList<>());
+                            new VotingFragment.VotingCallback() {
+                                @Override
+                                public List<Voting> getVotings() {
+                                    return mBoundService != null ? mBoundService.getClientVotings()
+                                            : new ArrayList<>();
+                                }
+
+                                @Override
+                                public void stopTimer() {
+                                    if(votingFetchResultTimer != null) {
+                                        votingFetchResultTimer.cancel();
+                                        votingFetchResultTimer = null;
+                                    }
+                                }
+                            });
                     showDefaultFragments();
+                }
+
+                @Override
+                public void notifyVotingAdapter(int id) {
+                    Log.d(TAG, "Voting with id: " + id + "has changed");
+                    votingFragment.notifySingleVote(id);
+                    if(votingFetchResultTimer == null && votingFragment.isVisible())
+                        newVotingResultFetchTimer();
                 }
             });
     }
@@ -485,6 +510,27 @@ public class ClientActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.searchBarFragmentFrame, clientSearchBarFragment, "SearchBarFragment").commitAllowingStateLoss();
         showShowSongFragment();
+    }
+
+    private void newVotingResultFetchTimer() {
+        Log.d(TAG, "newVotingResultFetchTimer");
+        if(votingFetchResultTimer != null) {votingFetchResultTimer.cancel();
+        votingFetchResultTimer = new CountDownTimer(10000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {
+                Log.d(TAG, "onTick: timer tiketitiktak");
+            }
+
+            @Override
+            public void onFinish() {
+                if(mBoundService != null) {
+                    mBoundService.fetchVotingResult();
+                    votingFetchResultTimer = null;
+                    Log.d(TAG, "onFinish: timer finished");
+                }
+            }
+        };
+        votingFetchResultTimer.start();
     }
 
 }
