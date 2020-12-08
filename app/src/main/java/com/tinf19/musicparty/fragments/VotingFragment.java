@@ -122,10 +122,14 @@ public class VotingFragment extends Fragment {
         votingCallback.stopTimer();
     }
 
-    public void notifySingleVote(int id) {
-        int position = votingQueAdapter.getVotingPosition(id);
-        Log.d(VotingFragment.class.getName(), "Id: " + id + ", position: " + position);
-        if(position >= 0) votingQueAdapter.notifyItemChanged(id-1);
+    public void notifySingleVote(int id, Type type) {
+        if(type.equals(Type.QUE)) {
+            int position = votingQueAdapter.getVotingPosition(id);
+            if (position >= 0) votingQueAdapter.notifyItemChanged(position);
+        } else {
+            int position = votingSkipAdapter.getVotingPosition(id);
+            if (position >= 0) votingSkipAdapter.notifyItemChanged(position);
+        }
     }
 
 
@@ -147,9 +151,5 @@ public class VotingFragment extends Fragment {
                     R.string.text_noCurrentSkipVotings : R.string.text_currentSkipVotings));
             votingSkipAdapter.notifyDataSetChanged();
         }
-    }
-
-    public int getVotingId() {
-        return votingQueAdapter.getVotingId(cardSliderLayoutManager.getActiveCardPosition());
     }
 }

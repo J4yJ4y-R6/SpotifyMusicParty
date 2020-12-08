@@ -46,6 +46,7 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.server.adapter.HostPlaylistAdapter;
 import com.tinf19.musicparty.server.adapter.HostFavoritePlaylistsAdapter;
 import com.tinf19.musicparty.util.HostVoting;
+import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
 import com.tinf19.musicparty.util.WiFiDirectBroadcastReceiver;
 import com.spotify.android.appremote.api.ConnectionParams;
@@ -622,9 +623,9 @@ public class HostActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void notifyVotingAdapter(int id) {
+                public void notifyVotingAdapter(int id, Type type) {
                     Log.d(TAG, "voting submitted has been changed");
-                    votingFragment.notifySingleVote(id);
+                    votingFragment.notifySingleVote(id, type);
                 }
 
                 @Override

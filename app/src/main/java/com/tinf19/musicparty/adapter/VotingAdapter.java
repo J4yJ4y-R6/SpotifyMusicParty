@@ -147,7 +147,6 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
             noButton.setOnClickListener(v -> {
                 mDataset.get(position).addVoting(Constants.NO, votingAdapterCallback.getCurrentThread());
                 showVotingResult(holder, position);
-
             });
         if(ignoreVoteButton != null)
             ignoreVoteButton.setOnClickListener(v -> {
@@ -198,9 +197,6 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         LinearLayout ignoredVoteLL = holder.ignoredVotePercentage;
         votePercentageLL.setVisibility(View.VISIBLE);
         votePercentageLL.setClipToOutline(true);
-        Log.d(TAG, "accepted: " + (float)(mDataset.get(position).getVoteListSizes()[0]));
-        Log.d(TAG, "denied: " + (float)(mDataset.get(position).getVoteListSizes()[1]));
-        Log.d(TAG, "ignored: " + (float)(mDataset.get(position).getVoteListSizes()[2]));
         yesVoteLL.setLayoutParams(new TableRow.LayoutParams(
                 TableRow.LayoutParams.WRAP_CONTENT,
                 (int) (35 * context.getResources().getDisplayMetrics().density),
@@ -218,9 +214,5 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
     public int getVotingPosition(int id) {
         Integer position = votingPositions.get(id);
         return position != null ? position : -1;
-    }
-
-    public int getVotingId(int position) {
-        return mDataset.get(position).getId();
     }
 }

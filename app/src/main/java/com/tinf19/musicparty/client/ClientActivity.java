@@ -39,6 +39,7 @@ import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.client.fragments.ClientSongFragment;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.HostVoting;
+import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
 
 import org.json.JSONException;
@@ -84,9 +85,9 @@ public class ClientActivity extends AppCompatActivity {
          */
         public void onServiceConnected(ComponentName className, IBinder service) {
             Log.d(TAG, "service has been connected");
-            mBoundService = ((ClientService.LocalBinder)service).getService();
+            mBoundService = ((ClientService.LocalBinder) service).getService();
             loginToSpotify();
-            if(mBoundService.isStopped()) {
+            if (mBoundService.isStopped()) {
                 exitService(getString(R.string.service_serverClosed));
             }
         }
@@ -107,7 +108,7 @@ public class ClientActivity extends AppCompatActivity {
             new Thread(() -> {
                 Log.d(TAG, "user disconnected from server by service-notification");
                 try {
-                    if(mBoundService != null)
+                    if (mBoundService != null)
                         mBoundService.getClientThread().sendMessage(Commands.QUIT, "User left the channel");
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage(), e);
@@ -118,20 +119,19 @@ public class ClientActivity extends AppCompatActivity {
     };
 
 
-
     //Android lifecycle methods
 
     @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         String tag = "";
-        if(searchSongsOutputFragment != null && searchSongsOutputFragment.isVisible())
+        if (searchSongsOutputFragment != null && searchSongsOutputFragment.isVisible())
             tag = searchSongsOutputFragment.getTag();
-        if(clientSongFragment != null && clientSongFragment.isVisible())
+        if (clientSongFragment != null && clientSongFragment.isVisible())
             tag = clientSongFragment.getTag();
-        if(clientPlaylistFragment != null && clientPlaylistFragment.isVisible())
+        if (clientPlaylistFragment != null && clientPlaylistFragment.isVisible())
             tag = clientPlaylistFragment.getTag();
-        if(clientExitConnectionFragment != null && clientExitConnectionFragment.isVisible())
+        if (clientExitConnectionFragment != null && clientExitConnectionFragment.isVisible())
             tag = clientExitConnectionFragment.getTag();
         outState.putString(Constants.TAG, tag);
     }
@@ -143,15 +143,15 @@ public class ClientActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
 
-        if(savedInstanceState != null){
+        if (savedInstanceState != null) {
             String currentFragmentTag = savedInstanceState.getString(Constants.TAG, "ShowSongFragment");
-            if(!currentFragmentTag.equals("")) {
+            if (!currentFragmentTag.equals("")) {
                 Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
                 getSupportFragmentManager().beginTransaction().
                         replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
             }
         } else {
-            if(!getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false)) {
+            if (!getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false)) {
                 Log.d(TAG, "Fragment has been changed to LoadingFragment");
                 getSupportFragmentManager().beginTransaction().
                         replace(R.id.showSongFragmentFrame, new LoadingFragment(getString(R.string.text_loadingClient)), "LoadingFragment").commitAllowingStateLoss();
@@ -197,25 +197,23 @@ public class ClientActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(clientSongFragment.isVisible()) {
+        if (clientSongFragment.isVisible()) {
             animateFragmentChange(true, clientExitConnectionFragment, "ExitConnectionFragment");
-        }
-        else {
+        } else {
             clientSearchBarFragment.clearSearch();
             showShowSongFragment();
         }
     }
 
 
-
     //Getter and Setter
 
     /**
-     * @return  Get current party name from server if the service is connected or get default
-     *          party name: Party Name.
+     * @return Get current party name from server if the service is connected or get default
+     * party name: Party Name.
      */
     private String getPartyName() {
-        if(mBoundService != null)
+        if (mBoundService != null)
             return mBoundService.getClientThread().getPartyName();
         else
             return getString(R.string.text_hintPartyName);
@@ -223,14 +221,14 @@ public class ClientActivity extends AppCompatActivity {
 
     /**
      * Set new party name in the {@link ClientSongFragment}
+     *
      * @param partyName New party name after change
      */
     private void setPartyName(String partyName) {
         Log.d(TAG, "party name got changed to: " + partyName);
-        if(clientSongFragment.isVisible())
+        if (clientSongFragment.isVisible())
             runOnUiThread(() -> clientSongFragment.setPartyName(partyName));
     }
-
 
 
     //Show or change Fragments in PartyActivity
@@ -243,9 +241,10 @@ public class ClientActivity extends AppCompatActivity {
      */
     private void showShowSongFragment() {
         animateFragmentChange(false, clientSongFragment, "ShowSongFragment");
-        new Thread(()->{
-            while(!clientSongFragment.getStarted() || mBoundService == null || mBoundService.getClientThread().getPartyName() == null);
-            if(mBoundService != null) {
+        new Thread(() -> {
+            while (!clientSongFragment.getStarted() || mBoundService == null || mBoundService.getClientThread().getPartyName() == null)
+                ;
+            if (mBoundService != null) {
                 mBoundService.setTrack();
                 setPartyName(mBoundService.getClientThread().getPartyName());
             }
@@ -255,21 +254,21 @@ public class ClientActivity extends AppCompatActivity {
     /**
      * Change the current visible fragment in the big fragment in activity_client.xml and adding
      * an animation to the change.
+     *
      * @param direction Animation direction if the fragment should slide in or out
-     * @param fragment Fragment which shall be opened
-     * @param tag Tag of the new fragment
+     * @param fragment  Fragment which shall be opened
+     * @param tag       Tag of the new fragment
      */
     public void animateFragmentChange(boolean direction, Fragment fragment, String tag) {
         Log.d(TAG, "Fragment has been changed to " + tag);
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        if(direction)
+        if (direction)
             fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_up, R.anim.fragment_slide_out_up);
         else
             fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_out_down, R.anim.fragment_slide_in_down);
         fragmentTransaction.replace(R.id.showSongFragmentFrame, fragment, tag);
         fragmentTransaction.commitAllowingStateLoss();
     }
-
 
 
     //Service methods
@@ -304,6 +303,7 @@ public class ClientActivity extends AppCompatActivity {
     /**
      * The client is leaving the the service with a message and the app returns to the
      * {@link MainActivity}
+     *
      * @param text Reason for leaving the service
      */
     private void exitService(String text) {
@@ -332,7 +332,7 @@ public class ClientActivity extends AppCompatActivity {
      * Set {@link com.tinf19.musicparty.client.ClientService.ClientServiceCallback}
      */
     private void setServiceCallback() {
-        if(mBoundService != null)
+        if (mBoundService != null)
             mBoundService.setClientServiceCallback(new ClientService.ClientServiceCallback() {
                 @Override
                 public void setTrack(Track track) {
@@ -361,7 +361,7 @@ public class ClientActivity extends AppCompatActivity {
 
                 @Override
                 public void setVotings(List<Voting> clientVotings) {
-                    ClientActivity.this.runOnUiThread( () -> votingFragment.showVotings(clientVotings));
+                    ClientActivity.this.runOnUiThread(() -> votingFragment.showVotings(clientVotings));
                 }
 
                 /**
@@ -397,7 +397,7 @@ public class ClientActivity extends AppCompatActivity {
                         ClientActivity.this.runOnUiThread(() -> Toast.makeText(ClientActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
                         new Thread(() -> {
                             try {
-                                if(mBoundService != null)
+                                if (mBoundService != null)
                                     mBoundService.getClientThread().sendMessage(Commands.QUEUE, track.serialize());
                             } catch (IOException | JSONException e) {
                                 Log.e(TAG, e.getMessage(), e);
@@ -412,7 +412,7 @@ public class ClientActivity extends AppCompatActivity {
 
                         @Override
                         public void showPlaylist() {
-                            if(mBoundService != null) {
+                            if (mBoundService != null) {
                                 try {
                                     mBoundService.getClientThread().sendMessage(Commands.PLAYLIST, "User request the current Playlist");
                                 } catch (IOException e) {
@@ -424,7 +424,7 @@ public class ClientActivity extends AppCompatActivity {
 
                         @Override
                         public void openVotingFragment() {
-                            if(mBoundService != null) {
+                            if (mBoundService != null) {
                                 try {
                                     mBoundService.getClientThread().sendMessage(Commands.VOTING, "User request all current votings");
                                 } catch (IOException e) {
@@ -456,9 +456,9 @@ public class ClientActivity extends AppCompatActivity {
 
                         @Override
                         public void acceptExit() {
-                            new Thread(()->{
+                            new Thread(() -> {
                                 try {
-                                    if(mBoundService != null)
+                                    if (mBoundService != null)
                                         mBoundService.getClientThread().sendMessage(Commands.QUIT, "User left the party");
                                 } catch (IOException e) {
                                     Log.e(TAG, e.getMessage(), e);
@@ -483,7 +483,7 @@ public class ClientActivity extends AppCompatActivity {
 
                                 @Override
                                 public void stopTimer() {
-                                    if(votingFetchResultTimer != null) {
+                                    if (votingFetchResultTimer != null) {
                                         votingFetchResultTimer.cancel();
                                         votingFetchResultTimer = null;
                                     }
@@ -493,10 +493,10 @@ public class ClientActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void notifyVotingAdapter(int id) {
+                public void notifyVotingAdapter(int id, Type type) {
                     Log.d(TAG, "Voting with id: " + id + "has changed");
-                    votingFragment.notifySingleVote(id);
-                    if(votingFetchResultTimer == null && votingFragment.isVisible())
+                    votingFragment.notifySingleVote(id, type);
+                    if (votingFetchResultTimer == null && votingFragment.isVisible())
                         newVotingResultFetchTimer();
                 }
             });
@@ -514,23 +514,24 @@ public class ClientActivity extends AppCompatActivity {
 
     private void newVotingResultFetchTimer() {
         Log.d(TAG, "newVotingResultFetchTimer");
-        if(votingFetchResultTimer != null) {votingFetchResultTimer.cancel();
-        votingFetchResultTimer = new CountDownTimer(10000, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {
-                Log.d(TAG, "onTick: timer tiketitiktak");
-            }
-
-            @Override
-            public void onFinish() {
-                if(mBoundService != null) {
-                    mBoundService.fetchVotingResult();
-                    votingFetchResultTimer = null;
-                    Log.d(TAG, "onFinish: timer finished");
+        if (votingFetchResultTimer != null) {
+            votingFetchResultTimer.cancel();
+            votingFetchResultTimer = new CountDownTimer(10000, 1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    Log.d(TAG, "onTick: timer tiketitiktak");
                 }
-            }
-        };
-        votingFetchResultTimer.start();
-    }
 
+                @Override
+                public void onFinish() {
+                    if (mBoundService != null) {
+                        mBoundService.fetchVotingResult();
+                        votingFetchResultTimer = null;
+                        Log.d(TAG, "onFinish: timer finished");
+                    }
+                }
+            };
+            votingFetchResultTimer.start();
+        }
+    }
 }

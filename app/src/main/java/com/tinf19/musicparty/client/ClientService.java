@@ -20,6 +20,7 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.TokenRefresh;
 import com.tinf19.musicparty.util.HostVoting;
+import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
 
 import org.json.JSONException;
@@ -76,7 +77,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
         void setCurrentTrack(Track track);
         void setVotings(List<Voting> ClientVotings);
         void showFragments();
-        void notifyVotingAdapter(int id);
+        void notifyVotingAdapter(int id, Type type);
     }
 
     /**
@@ -406,7 +407,8 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                                                 tempObject.getInt(Constants.NO_VOTE),
                                                 tempObject.getInt(Constants.GREY_VOTE));
                                         if(clientServiceCallback != null)
-                                            clientServiceCallback.notifyVotingAdapter(votingID);
+                                            clientServiceCallback.notifyVotingAdapter(votingID
+                                                    , voting.getType());
                                     }
                             }
                         }

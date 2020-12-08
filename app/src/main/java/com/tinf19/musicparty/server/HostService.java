@@ -97,7 +97,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
         void addToSharedPreferances(String name, String id);
         void acceptEndParty();
         void notifyFavPlaylistAdapter();
-        void notifyVotingAdapter(int id);
+        void notifyVotingAdapter(int id, Type type);
     }
 
     public interface AfterCallback {
@@ -205,7 +205,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                 //close
             }
         });
-        HostVoting hostVoting4 = new HostVoting(Type.QUE, new Track("123", "Hung", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 4, new HostVoting.VotingCallback() {
+        HostVoting hostVoting4 = new HostVoting(Type.SKIP, new Track("123", "Hung", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 4, new HostVoting.VotingCallback() {
             @Override
             public void skipNext(int id) {
                 //Skip
@@ -226,7 +226,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                 //close
             }
         });
-        HostVoting hostVoting5 = new HostVoting(Type.QUE, new Track("123", "Olli", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 5, new HostVoting.VotingCallback() {
+        HostVoting hostVoting5 = new HostVoting(Type.SKIP, new Track("123", "Olli", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 5, new HostVoting.VotingCallback() {
             @Override
             public void skipNext(int id) {
                 //Skip
@@ -1283,10 +1283,12 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                                 case VOTE:
                                     if(parts.length > 3) {
                                         HostVoting voting = hostVotings.get(Integer.parseInt(attribute));
-                                        if(voting != null)
+                                        if(voting != null) {
                                             voting.addVoting(Integer.parseInt(parts[3]), this);
-                                        if(hostServiceCallback != null)
-                                            hostServiceCallback.notifyVotingAdapter(Integer.parseInt(attribute));
+                                            if (hostServiceCallback != null)
+                                                hostServiceCallback.notifyVotingAdapter(
+                                                        Integer.parseInt(attribute), voting.getType());
+                                        }
                                         break;
                                     }
                                     break;
