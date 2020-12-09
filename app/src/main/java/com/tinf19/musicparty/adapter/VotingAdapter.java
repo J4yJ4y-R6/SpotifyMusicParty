@@ -155,6 +155,12 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
             });
     }
 
+
+    /**
+     * Animate the card itemView and remove the item after ignoring it
+     * @param holder Card of the item
+     * @param position Position of the item
+     */
     private void setAnimation(MyViewHolder holder, int position) {
             Animation animation = AnimationUtils.loadAnimation(context, R.anim.voting_animation);
             animation.setAnimationListener(new Animation.AnimationListener() {
@@ -190,6 +196,11 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         this.mDataset = votings;
     }
 
+    /**
+     * Display the voting result in the percentage bar.
+     * @param holder Card of the item
+     * @param position Position of the item
+     */
     public void showVotingResult( MyViewHolder holder, int position) {
         LinearLayout votePercentageLL = holder.votePercentageLinearLayout;
         LinearLayout yesVoteLL = holder.yesVotePercentage;
@@ -211,6 +222,10 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
                 mDataset.get(position).getVoteListSizes()[2]));
     }
 
+    /**
+     * @param id Voting-Id
+     * @return Get the position of a voting at the local Map
+     */
     public int getVotingPosition(int id) {
         Integer position = votingPositions.get(id);
         return position != null ? position : -1;

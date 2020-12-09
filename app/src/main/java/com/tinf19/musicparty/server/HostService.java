@@ -653,6 +653,9 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
     @Override
     public Thread getCurrentThread() { return serverThread; }
 
+    /**
+     * @return Get all votings which are not ignored by the host
+     */
     public List<Voting> getHostVotings() { return hostVotings.values().stream().filter(v -> !v.containsIgnored(serverThread)).collect(Collectors.toList()); }
 
     // Setter
@@ -1259,6 +1262,8 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
          *              change all information about the currently playing song.
          * PLAYLIST:    Returning the current queue state after a client request.
          * VOTING:      Returning all currently opened votings for Que and for Skip
+         * VOTE:        Process a submitted voting by a client.
+         * VOTE_RESULT: Returning the current result of a specific voting
          */
         @Override
         public void run() {

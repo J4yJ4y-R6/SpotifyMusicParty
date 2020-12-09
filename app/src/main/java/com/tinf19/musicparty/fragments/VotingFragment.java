@@ -44,7 +44,6 @@ public class VotingFragment extends Fragment {
     private TextView queueHeaderTextView;
     private TextView skipHeaderTextView;
     private View view;
-    private CardSliderLayoutManager cardSliderLayoutManager;
 
     public interface VotingCallback {
         List<Voting> getVotings();
@@ -72,7 +71,6 @@ public class VotingFragment extends Fragment {
 
     //Android lifecycle methods
 
-
     @Override
     public void onStart() {
         super.onStart();
@@ -88,7 +86,7 @@ public class VotingFragment extends Fragment {
         RecyclerView queueVotingRecyclerView = view.findViewById(R.id.queueVotingRecyclerview);
         queueHeaderTextView = view.findViewById(R.id.queueHeaderTextView);
         skipHeaderTextView = view.findViewById(R.id.skipHeaderTextView);
-        cardSliderLayoutManager = new CardSliderLayoutManager(
+        CardSliderLayoutManager cardSliderLayoutManager = new CardSliderLayoutManager(
                 (int) (50 * getContext().getResources().getDisplayMetrics().density),
                 (int) (148 * getContext().getResources().getDisplayMetrics().density),
                 0);
@@ -122,6 +120,12 @@ public class VotingFragment extends Fragment {
         votingCallback.stopTimer();
     }
 
+
+    /**
+     * Reloading a single voting card after the current result has changed
+     * @param id Voting-Id of the specific voting
+     * @param type Voting-Type
+     */
     public void notifySingleVote(int id, Type type) {
         if(type.equals(Type.QUE)) {
             int position = votingQueAdapter.getVotingPosition(id);
@@ -133,6 +137,11 @@ public class VotingFragment extends Fragment {
     }
 
 
+    /**
+     * Display the result bar with the current result of all votings where the client or the host
+     * has submitted his vote.
+     * @param votings List of all votings where the client or the host has submitted his vote.
+     */
     public void showVotings(List<Voting> votings) {
         Log.d(VotingFragment.class.getName(), "votings has been updated: " + votings.size());
         if(votingQueAdapter != null) {

@@ -313,6 +313,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
          * PLAYLIST:    get a list of tracks which is equal to the current state of the playlist in
          *              the server
          * VOTING:      get a list of all currently opened votings
+         * VOTE_RESULT: Asking for the current result of a specific voting
          */
         @Override
         public void run() {
