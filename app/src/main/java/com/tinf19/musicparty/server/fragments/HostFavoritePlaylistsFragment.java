@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Playlist;
 import com.tinf19.musicparty.util.Constants;
@@ -38,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 
 import okhttp3.Response;
 
@@ -58,7 +60,7 @@ import static android.app.Activity.RESULT_OK;
  *     in Spotify synchronous. This action has to be confirmed.</li>
  * </ol>
  * All of these on click methods are set by the {@link HostFavoritePlaylistsAdapter}.
- * @auhtor Jannik Junker
+ * @author Jannik Junker
  * @author Silas Wessely
  * @see SharedPreferences
  * @see android.app.Dialog
@@ -105,7 +107,7 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
     @Override
     public void onStart() {
         super.onStart();
-        savePlaylistMemory = getContext().getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
+        savePlaylistMemory = requireContext().getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
         playlists = new Playlist[savePlaylistMemory.getAll().size()];
         counter = 0;
         ArrayList<String> idList = new ArrayList<>();
@@ -284,7 +286,8 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
                 if(selectedImage.getByteCount() > 250000) {
                     Bitmap scaledBitmap = Bitmap.createScaledBitmap(selectedImage, 250, 250, false);
                     if(scaledBitmap.getByteCount() > 250000)
-                        Toast.makeText(getActivity(), "Dein Bild ist zu groß. Die Maximalgröße für Playlist-Cover ist 250KB", Toast.LENGTH_LONG).show();
+                        Snackbar.make(this.requireView(),getString(R.string.snackbar_coverToBig),
+                                Snackbar.LENGTH_LONG).show();
                     else {
                         if(playlistID != null) {
                             favoritePlaylistsCallback.changePlaylistCover(playlistID, scaledBitmap);
@@ -303,10 +306,12 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
                 }
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
-                Toast.makeText(getActivity(), "Something went wrong", Toast.LENGTH_LONG).show();
+                Snackbar.make(this.requireView(), getString(R.string.snackbar_somethingWentWrong),
+                        Snackbar.LENGTH_LONG).show();
             }
         } else {
-            Toast.makeText(getActivity(), "You have picked Image", Toast.LENGTH_LONG).show();
+            Snackbar.make(this.requireView(), getString(R.string.snackbar_pickedImage),
+                    Snackbar.LENGTH_LONG).show();
         }
     }
 }

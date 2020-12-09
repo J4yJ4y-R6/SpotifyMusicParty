@@ -10,6 +10,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.tinf19.musicparty.R;
@@ -85,7 +86,8 @@ public class JoinActivity extends AppCompatActivity {
         if(result != null) {
             if(result.getContents() == null) {
                 Log.d(TAG, "onActivityResult: empty qr code response");
-                Toast.makeText(this, getString(R.string.text_qrCodeNoResult), Toast.LENGTH_LONG).show();
+                Snackbar.make(findViewById(R.id.et_address), getString(R.string.text_qrCodeNoResult),
+                        Snackbar.LENGTH_LONG).show();
             } else {
                 try {
                     JSONObject obj = new JSONObject(result.getContents());
@@ -97,7 +99,8 @@ public class JoinActivity extends AppCompatActivity {
 
                 } catch (JSONException e) {
                     Log.d(TAG, "Wrong QR-Code-Data: " + result.getContents());
-                    Toast.makeText(this, getString(R.string.text_qrCodeNotMusicParty), Toast.LENGTH_LONG).show();
+                    Snackbar.make(findViewById(R.id.et_address), getString(R.string.text_qrCodeNotMusicParty),
+                            Snackbar.LENGTH_LONG).show();
                 }
             }
         } else {

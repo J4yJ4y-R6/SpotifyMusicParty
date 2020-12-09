@@ -224,6 +224,7 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
             LinearLayout noVoteLL = holder.noVotePercentage;
             LinearLayout ignoredVoteLL = holder.ignoredVotePercentage;
             holder.voteYesButton.setVisibility(View.GONE);
+            holder.voteYesButton.setVisibility(View.GONE);
             holder.voteNoButton.setVisibility(View.GONE);
             votePercentageLL.setVisibility(View.VISIBLE);
             votePercentageLL.setClipToOutline(true);

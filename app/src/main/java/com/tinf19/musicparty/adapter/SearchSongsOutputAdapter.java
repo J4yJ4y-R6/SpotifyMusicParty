@@ -7,12 +7,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.DownloadImageTask;
@@ -116,7 +116,7 @@ public class SearchSongsOutputAdapter extends RecyclerView.Adapter<SearchSongsOu
         if(songCoverIV != null)
             new DownloadImageTask(songCoverIV).execute(cover);
         holder.itemView.setOnClickListener(v -> {
-            Toast.makeText(textView.getContext(), textView.getContext().getString(R.string.text_songsOutputSwipeForQue), Toast.LENGTH_LONG).show();
+            Snackbar.make(textView, textView.getContext().getString(R.string.text_songsOutputSwipeForQue), Snackbar.LENGTH_LONG).show();
         });
 
     }
