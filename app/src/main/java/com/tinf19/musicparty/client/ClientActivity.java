@@ -74,7 +74,6 @@ public class ClientActivity extends AppCompatActivity {
      * Identify if Service is currently bounded
      */
     private boolean mShouldUnbind;
-    private CountDownTimer votingFetchResultTimer;
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         /**
@@ -432,7 +431,15 @@ public class ClientActivity extends AppCompatActivity {
                                 }
                             }
                             animateFragmentChange(true, votingFragment, "VotingFragment");
-                            newVotingResultFetchTimer();
+                            if(mBoundService != null) {
+                                new Thread(() -> {
+                                    try {
+                                        mBoundService.getClientThread().sendMessage(Commands.SUBSCRIBE, "Subscribed the update event");
+                                    } catch (IOException e) {
+                                        Log.e(TAG, e.getMessage(), e);
+                                    }
+                                }).start();
+                            }
                         }
                     });
                     clientPlaylistFragment = new ClientPlaylistFragment();
@@ -483,9 +490,14 @@ public class ClientActivity extends AppCompatActivity {
 
                                 @Override
                                 public void stopTimer() {
-                                    if (votingFetchResultTimer != null) {
-                                        votingFetchResultTimer.cancel();
-                                        votingFetchResultTimer = null;
+                                    if(mBoundService != null) {
+                                        new Thread(() -> {
+                                            try {
+                                                mBoundService.getClientThread().sendMessage(Commands.UNSUBSCRIBE, "Unsubscribed the update event");
+                                            } catch (IOException e) {
+                                                Log.e(TAG, e.getMessage(), e);
+                                            }
+                                        }).start();
                                     }
                                 }
                             });
@@ -496,8 +508,6 @@ public class ClientActivity extends AppCompatActivity {
                 public void notifyVotingAdapter(int id, Type type) {
                     Log.d(TAG, "Voting with id: " + id + "has changed");
                     votingFragment.notifySingleVote(id, type);
-                    if (votingFetchResultTimer == null && votingFragment.isVisible())
-                        newVotingResultFetchTimer();
                 }
             });
     }
@@ -510,28 +520,5 @@ public class ClientActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction().
                 replace(R.id.searchBarFragmentFrame, clientSearchBarFragment, "SearchBarFragment").commitAllowingStateLoss();
         showShowSongFragment();
-    }
-
-    private void newVotingResultFetchTimer() {
-        Log.d(TAG, "newVotingResultFetchTimer");
-        if (votingFetchResultTimer != null) {
-            votingFetchResultTimer.cancel();
-            votingFetchResultTimer = new CountDownTimer(10000, 1000) {
-                @Override
-                public void onTick(long millisUntilFinished) {
-                    Log.d(TAG, "onTick: timer tiketitiktak");
-                }
-
-                @Override
-                public void onFinish() {
-                    if (mBoundService != null) {
-                        mBoundService.fetchVotingResult();
-                        votingFetchResultTimer = null;
-                        Log.d(TAG, "onFinish: timer finished");
-                    }
-                }
-            };
-            votingFetchResultTimer.start();
-        }
     }
 }

@@ -625,7 +625,8 @@ public class HostActivity extends AppCompatActivity {
                 @Override
                 public void notifyVotingAdapter(int id, Type type) {
                     Log.d(TAG, "voting submitted has been changed");
-                    votingFragment.notifySingleVote(id, type);
+                    if(votingFragment.isVisible())
+                        votingFragment.notifySingleVote(id, type);
                 }
 
                 @Override

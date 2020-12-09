@@ -62,6 +62,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
      * {@link Socket} and a timestamp from the time he connected to the server.
      */
     private final List<CommunicationThread> clientThreads = new ArrayList<>();
+    private final List<CommunicationThread> subscribedClients = new ArrayList<>();
     private final Map<Integer, HostVoting> hostVotings = new HashMap<>();
 
     private Thread serverThread = null;
@@ -162,6 +163,11 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             public void close(int id) {
                 //close
             }
+
+            @Override
+            public void notifyClients(HostVoting voting, Thread thread) {
+                HostService.this.notifyClients(voting, thread);
+            }
         });
         HostVoting hostVoting2 = new HostVoting(Type.QUE, new Track("123", "Silas", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 2, new HostVoting.VotingCallback() {
             @Override
@@ -182,6 +188,11 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             @Override
             public void close(int id) {
                 //close
+            }
+
+            @Override
+            public void notifyClients(HostVoting voting, Thread thread) {
+                HostService.this.notifyClients(voting, thread);
             }
         });
         HostVoting hostVoting3 = new HostVoting(Type.QUE, new Track("123", "Tim", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 3, new HostVoting.VotingCallback() {
@@ -204,6 +215,11 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             public void close(int id) {
                 //close
             }
+
+            @Override
+            public void notifyClients(HostVoting voting, Thread thread) {
+                HostService.this.notifyClients(voting, thread);
+            }
         });
         HostVoting hostVoting4 = new HostVoting(Type.SKIP, new Track("123", "Hung", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 4, new HostVoting.VotingCallback() {
             @Override
@@ -225,6 +241,11 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             public void close(int id) {
                 //close
             }
+
+            @Override
+            public void notifyClients(HostVoting voting, Thread thread) {
+                HostService.this.notifyClients(voting, thread);
+            }
         });
         HostVoting hostVoting5 = new HostVoting(Type.SKIP, new Track("123", "Olli", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 5, new HostVoting.VotingCallback() {
             @Override
@@ -245,6 +266,11 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             @Override
             public void close(int id) {
                 //close
+            }
+
+            @Override
+            public void notifyClients(HostVoting voting, Thread thread) {
+                HostService.this.notifyClients(voting, thread);
             }
         });
         hostVotings.put(hostVoting.getId(), hostVoting);
@@ -1136,6 +1162,31 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
     }
 
     /**
+     * Notify all subscribed clients of voting change
+     * @param voting The voting that has been changed
+     * @param thread The {@link CommunicationThread} that voted and has not to get notified
+     */
+    private void notifyClients(HostVoting voting, Thread thread) {
+        new Thread(() -> {
+            if(thread instanceof CommunicationThread) {
+                List<CommunicationThread> tempList = new ArrayList<>(subscribedClients);
+                tempList.remove((CommunicationThread) thread);
+                try {
+                    sendToClientList(tempList, Commands.VOTE_RESULT, voting.serializeResult());
+                } catch (IOException | JSONException e) {
+                    Log.e(TAG, e.getMessage(), e);
+                }
+            } else {
+                try {
+                    sendToClientList(subscribedClients, Commands.VOTE_RESULT, voting.serializeResult());
+                } catch (IOException | JSONException e) {
+                    Log.e(TAG, e.getMessage(), e);
+                }
+            }
+        }).start();
+    }
+
+    /**
      * Sending a command and a message to all clients
      * @param command Communication command for actions in the client
      * @param message Attributes for mapping the command successfully
@@ -1143,6 +1194,18 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
      * {@link CommunicationThread#sendMessage(Commands, String)} is not writing bytes.
      */
     public void sendToAll(Commands command, String message) throws IOException {
+        sendToClientList(clientThreads, command, message);
+    }
+
+    /**
+     * Sending a command and a message to a specific list of clients
+     * @param clientThreads A list of clients that should receive the message
+     * @param command Communication command for actions in the client
+     * @param message Attributes for mapping the command successfully
+     * @throws IOException when the Output-Stream in
+     * {@link CommunicationThread#sendMessage(Commands, String)} is not writing bytes.
+     */
+    public void sendToClientList(List<CommunicationThread> clientThreads, Commands command, String message) throws IOException {
         for(CommunicationThread client : clientThreads) {
             if (client.login)
                 client.sendMessage(command, message);
@@ -1220,6 +1283,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                             switch (command) {
                                 case QUIT:
                                     clientThreads.remove(this);
+                                    subscribedClients.remove(this);
                                     hostVotings.values().forEach(v->v.removeThread(this));
                                     if(hostServiceCallback != null) hostServiceCallback.setPeopleCount(clientThreads.size());
                                     Log.d(TAG, "User " + username + " has left the party");
@@ -1296,6 +1360,12 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                                     HostVoting voting = hostVotings.get(Integer.parseInt(attribute));
                                     if(voting != null)
                                         sendMessage(Commands.VOTE_RESULT, voting.serializeResult());
+                                    break;
+                                case SUBSCRIBE:
+                                    subscribedClients.add(this);
+                                    break;
+                                case UNSUBSCRIBE:
+                                    subscribedClients.remove(this);
                                     break;
                                 default:
                                     Log.d(TAG, "No such command: " + command);

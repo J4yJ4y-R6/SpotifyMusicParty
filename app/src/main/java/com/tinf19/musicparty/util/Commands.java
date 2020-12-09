@@ -10,5 +10,7 @@ public enum Commands {
     PLAYLIST,
     VOTING,
     VOTE,
-    VOTE_RESULT
+    VOTE_RESULT,
+    SUBSCRIBE,
+    UNSUBSCRIBE
 }

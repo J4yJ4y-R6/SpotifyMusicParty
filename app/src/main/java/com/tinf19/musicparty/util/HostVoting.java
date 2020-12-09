@@ -30,6 +30,7 @@ public class HostVoting implements Voting {
         void addAndClose(int id);
         int getClientCount();
         void close(int id);
+        void notifyClients(HostVoting voting, Thread thread);
     }
 
     public HostVoting(Type type, Track track, double threshold, int id, VotingCallback votingCallback) {
@@ -123,6 +124,7 @@ public class HostVoting implements Voting {
                     "accepted: " + accepted.size() + " \r\n" +
                     "denied: " + denied.size() + " \r\n" +
                     "ignored: " + ignored.size());
+        votingCallback.notifyClients(this, thread);
     }
 
     public void removeThread(Thread thread) {
