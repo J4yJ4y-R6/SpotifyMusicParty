@@ -630,6 +630,12 @@ public class HostActivity extends AppCompatActivity {
                 }
 
                 @Override
+                public void removeVoting(int id, Type type) {
+                    if(votingFragment.isVisible())
+                        votingFragment.removeSingleVote(id, type);
+                }
+
+                @Override
                 public void addToSharedPreferances(String name, String id) {
                     Log.d(TAG, "playlist " + name + " has been added to favorites");
                     SharedPreferences savePlaylistMemory = getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);

@@ -99,6 +99,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
         void acceptEndParty();
         void notifyFavPlaylistAdapter();
         void notifyVotingAdapter(int id, Type type);
+        void removeVoting(int id, Type type);
     }
 
     public interface AfterCallback {
@@ -142,142 +143,56 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                 mSpotifyAppRemote.getPlayerApi().pause();
             }
         });
+        HostVoting.VotingCallback votingCallback = new HostVoting.VotingCallback() {
+            @Override
+            public void skipAndClose(int id) {
+                que.next();
+                close(id);
+            }
+
+            @Override
+            public void addAndClose(int id) {
+                HostVoting voting = hostVotings.get(id);
+                if(voting != null)
+                    addItemToPlaylist(voting.getTrack());
+                close(id);
+            }
+
+            @Override
+            public int getClientCount() {
+                return getClientListSize();
+            }
+
+            @Override
+            public void close(int id) {
+                HostVoting voting = hostVotings.get(id);
+                if(voting != null) {
+                    voting.closeVoting();
+                    hostVotings.remove(id);
+                    HostService.this.notifyClients(voting, serverThread);
+                    if(hostServiceCallback != null) {
+                        hostServiceCallback.notifyVotingAdapter(id, voting.getType());
+                        hostServiceCallback.removeVoting(id, voting.getType());
+                    }
+                }
+            }
+
+            @Override
+            public void notifyClients(HostVoting voting, Thread thread) {
+                HostService.this.notifyClients(voting, thread);
+            }
+        };
         startServer();
-        HostVoting hostVoting = new HostVoting(Type.QUE, new Track("123", "Jannik", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 1, new HostVoting.VotingCallback() {
-            @Override
-            public void skipNext(int id) {
-                //Skip
-            }
-
-            @Override
-            public void addAndClose(int id) {
-                //addandclose
-            }
-
-            @Override
-            public int getClientCount() {
-                return getClientListSize();
-            }
-
-            @Override
-            public void close(int id) {
-                //close
-            }
-
-            @Override
-            public void notifyClients(HostVoting voting, Thread thread) {
-                HostService.this.notifyClients(voting, thread);
-            }
-        });
-        HostVoting hostVoting2 = new HostVoting(Type.QUE, new Track("123", "Silas", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 2, new HostVoting.VotingCallback() {
-            @Override
-            public void skipNext(int id) {
-                //Skip
-            }
-
-            @Override
-            public void addAndClose(int id) {
-                //addandclose
-            }
-
-            @Override
-            public int getClientCount() {
-                return getClientListSize();
-            }
-
-            @Override
-            public void close(int id) {
-                //close
-            }
-
-            @Override
-            public void notifyClients(HostVoting voting, Thread thread) {
-                HostService.this.notifyClients(voting, thread);
-            }
-        });
-        HostVoting hostVoting3 = new HostVoting(Type.QUE, new Track("123", "Tim", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 3, new HostVoting.VotingCallback() {
-            @Override
-            public void skipNext(int id) {
-                //Skip
-            }
-
-            @Override
-            public void addAndClose(int id) {
-                //addandclose
-            }
-
-            @Override
-            public int getClientCount() {
-                return getClientListSize();
-            }
-
-            @Override
-            public void close(int id) {
-                //close
-            }
-
-            @Override
-            public void notifyClients(HostVoting voting, Thread thread) {
-                HostService.this.notifyClients(voting, thread);
-            }
-        });
-        HostVoting hostVoting4 = new HostVoting(Type.SKIP, new Track("123", "Hung", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 4, new HostVoting.VotingCallback() {
-            @Override
-            public void skipNext(int id) {
-                //Skip
-            }
-
-            @Override
-            public void addAndClose(int id) {
-                //addandclose
-            }
-
-            @Override
-            public int getClientCount() {
-                return getClientListSize();
-            }
-
-            @Override
-            public void close(int id) {
-                //close
-            }
-
-            @Override
-            public void notifyClients(HostVoting voting, Thread thread) {
-                HostService.this.notifyClients(voting, thread);
-            }
-        });
-        HostVoting hostVoting5 = new HostVoting(Type.SKIP, new Track("123", "Olli", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 5, new HostVoting.VotingCallback() {
-            @Override
-            public void skipNext(int id) {
-                //Skip
-            }
-
-            @Override
-            public void addAndClose(int id) {
-                //addandclose
-            }
-
-            @Override
-            public int getClientCount() {
-                return getClientListSize();
-            }
-
-            @Override
-            public void close(int id) {
-                //close
-            }
-
-            @Override
-            public void notifyClients(HostVoting voting, Thread thread) {
-                HostService.this.notifyClients(voting, thread);
-            }
-        });
+        HostVoting hostVoting = new HostVoting(Type.QUE, new Track("3GpdNg7Krt9vjc6tgDoKe1", "Jannik", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 1, votingCallback);
+//        HostVoting hostVoting2 = new HostVoting(Type.QUE, new Track("123", "Silas", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 2, votingCallback);
+//        HostVoting hostVoting3 = new HostVoting(Type.QUE, new Track("123", "Tim", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 3, votingCallback);
+//        HostVoting hostVoting4 = new HostVoting(Type.SKIP, new Track("123", "Hung", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 4, votingCallback);
+//        HostVoting hostVoting5 = new HostVoting(Type.SKIP, new Track("123", "Olli", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 5, votingCallback);
         hostVotings.put(hostVoting.getId(), hostVoting);
-        hostVotings.put(hostVoting2.getId(), hostVoting2);
-        hostVotings.put(hostVoting3.getId(), hostVoting3);
-        hostVotings.put(hostVoting4.getId(), hostVoting4);
-        hostVotings.put(hostVoting5.getId(), hostVoting5);
+//        hostVotings.put(hostVoting2.getId(), hostVoting2);
+//        hostVotings.put(hostVoting3.getId(), hostVoting3);
+//        hostVotings.put(hostVoting4.getId(), hostVoting4);
+//        hostVotings.put(hostVoting5.getId(), hostVoting5);
     }
 
     @Override

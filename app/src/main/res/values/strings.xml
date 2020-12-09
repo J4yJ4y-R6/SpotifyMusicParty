@@ -121,6 +121,11 @@
     <string name="text_noCurrentSkipVotings">Du hast aktuell keine offenen Skip-Abstimmungen</string>
     <string name="text_currentQueVotings">Deine offenen Que-Abstimmungen</string>
     <string name="text_currentSkipVotings">Deine offenen Skip-Abstimmungen</string>
+    <string name="text_yes">Ja</string>
+    <string name="text_no">Nein</string>
+    <string name="text_ignored">Enthaltung</string>
+
+    <string name="snackbar_votingSubmitted">Du hast mit %1$s abgestimmt.</string>
 
 
 </resources>

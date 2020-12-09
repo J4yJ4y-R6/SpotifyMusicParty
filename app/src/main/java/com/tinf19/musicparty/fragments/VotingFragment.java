@@ -16,14 +16,17 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.ramotion.cardslider.CardSliderLayoutManager;
 import com.ramotion.cardslider.CardSnapHelper;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.adapter.VotingAdapter;
+import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -35,7 +38,7 @@ import java.util.stream.Collectors;
  * @author Silas Wessely
  * @since 1.1
  */
-public class VotingFragment extends Fragment {
+public class VotingFragment extends Fragment implements VotingAdapter.VotingAdapterToFragmentCallback {
 
     private VotingAdapter.VotingAdapterCallback votingAdapterCallback;
     private VotingCallback votingCallback;
@@ -93,7 +96,7 @@ public class VotingFragment extends Fragment {
         if(queueVotingRecyclerView != null) {
             votingQueAdapter = new VotingAdapter(votingCallback.getVotings().stream().filter(v->
                     v.getType().equals(Type.QUE)).collect(Collectors.toList()),
-                    votingAdapterCallback);
+                    votingAdapterCallback, this);
             queueVotingRecyclerView.setAdapter(votingQueAdapter);
             queueVotingRecyclerView.setHasFixedSize(true);
             queueVotingRecyclerView.setLayoutManager(cardSliderLayoutManager);
@@ -101,7 +104,7 @@ public class VotingFragment extends Fragment {
         }
         votingSkipAdapter = new VotingAdapter(votingCallback.getVotings().stream().filter(v ->
                 v.getType().equals(Type.SKIP)).collect(Collectors.toList()),
-                votingAdapterCallback);
+                votingAdapterCallback, this);
         if(skipVotingRecyclerView != null) {
             skipVotingRecyclerView.setAdapter(votingSkipAdapter);
             skipVotingRecyclerView.setHasFixedSize(true);
@@ -121,6 +124,17 @@ public class VotingFragment extends Fragment {
     }
 
 
+    @Override
+    public void showVotedSnackbar(int vote) {
+        String voteText = "";
+        if(vote == Constants.YES) voteText =  getString(R.string.text_yes);
+        else if(vote == Constants.NO) voteText = getString(R.string.text_no);
+        else voteText = getString(R.string.text_ignored);
+        String snackbarText = getString(R.string.snackbar_votingSubmitted, voteText);
+        Snackbar.make(this.requireView(), snackbarText, Snackbar.LENGTH_SHORT).show();
+    }
+
+
     /**
      * Reloading a single voting card after the current result has changed
      * @param id Voting-Id of the specific voting
@@ -133,6 +147,16 @@ public class VotingFragment extends Fragment {
         } else {
             int position = votingSkipAdapter.getVotingPosition(id);
             if (position >= 0) votingSkipAdapter.notifyItemChanged(position);
+        }
+    }
+
+    public void removeSingleVote(int id, Type type) {
+        if(type.equals(Type.QUE)) {
+            int position = votingQueAdapter.getVotingPosition(id);
+            if (position >= 0) votingQueAdapter.removeItemFromDataset(position);
+        } else {
+            int position = votingSkipAdapter.getVotingPosition(id);
+            if (position >= 0) votingSkipAdapter.removeItemFromDataset(position);
         }
     }
 

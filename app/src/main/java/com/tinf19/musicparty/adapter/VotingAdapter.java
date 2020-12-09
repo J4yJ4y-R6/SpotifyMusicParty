@@ -20,6 +20,7 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.ramotion.cardslider.CardSliderLayoutManager;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
@@ -44,12 +45,17 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
 
     private static final String TAG = VotingAdapter.class.getName();
     private final VotingAdapterCallback votingAdapterCallback;
+    private final VotingAdapterToFragmentCallback votingAdapterToFragmentCallback;
     private List<Voting> mDataset;
     private Context context;
     private Map<Integer, Integer> votingPositions = new HashMap<>();
 
     public interface VotingAdapterCallback {
         Thread getCurrentThread();
+    }
+
+    public interface VotingAdapterToFragmentCallback {
+        void showVotedSnackbar(int vote);
     }
 
 
@@ -100,9 +106,11 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
      * @param votingAdapterCallback Communication callback for
      *                              {@link com.tinf19.musicparty.fragments.VotingFragment}
      */
-    public VotingAdapter(List<Voting> mDataset, VotingAdapterCallback votingAdapterCallback) {
+    public VotingAdapter(List<Voting> mDataset, VotingAdapterCallback votingAdapterCallback,
+                         VotingAdapterToFragmentCallback votingAdapterToFragmentCallback) {
         this.mDataset = mDataset;
         this.votingAdapterCallback = votingAdapterCallback;
+        this.votingAdapterToFragmentCallback = votingAdapterToFragmentCallback;
     }
 
 
@@ -130,8 +138,11 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         votingPositions.put(mDataset.get(position).getId(), position);
         Log.d(TAG, "position: " + position + ", name: " + mDataset.get(position).getTrack().getName());
 
+        Log.d(TAG, "name: " + mDataset.get(position).getTrack().getName() + " voted: " + mDataset.get(position).isVoted(votingAdapterCallback.getCurrentThread()));
         if(mDataset.get(position).isVoted(votingAdapterCallback.getCurrentThread()))
             showVotingResult(holder, position);
+        else
+            hideVotingResult(holder, position);
         if(songtitleTV != null)
             songtitleTV.setText(mDataset.get(position).getTrack().getName());
         if(artistTV != null)
@@ -141,17 +152,20 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         if(yesButton != null)
             yesButton.setOnClickListener(v -> {
                 mDataset.get(position).addVoting(Constants.YES, votingAdapterCallback.getCurrentThread());
+                votingAdapterToFragmentCallback.showVotedSnackbar(Constants.YES);
                 showVotingResult(holder, position);
             });
         if(noButton != null)
             noButton.setOnClickListener(v -> {
                 mDataset.get(position).addVoting(Constants.NO, votingAdapterCallback.getCurrentThread());
+                votingAdapterToFragmentCallback.showVotedSnackbar(Constants.NO);
                 showVotingResult(holder, position);
             });
         if(ignoreVoteButton != null)
             ignoreVoteButton.setOnClickListener(v -> {
-                    mDataset.get(position).addVoting(Constants.IGNORED, votingAdapterCallback.getCurrentThread());
-                    setAnimation(holder, position);
+                mDataset.get(position).addVoting(Constants.IGNORED, votingAdapterCallback.getCurrentThread());
+                votingAdapterToFragmentCallback.showVotedSnackbar(Constants.IGNORED);
+                setAnimation(holder, position);
             });
     }
 
@@ -201,25 +215,36 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
      * @param holder Card of the item
      * @param position Position of the item
      */
-    public void showVotingResult( MyViewHolder holder, int position) {
-        LinearLayout votePercentageLL = holder.votePercentageLinearLayout;
-        LinearLayout yesVoteLL = holder.yesVotePercentage;
-        LinearLayout noVoteLL = holder.noVotePercentage;
-        LinearLayout ignoredVoteLL = holder.ignoredVotePercentage;
-        votePercentageLL.setVisibility(View.VISIBLE);
-        votePercentageLL.setClipToOutline(true);
-        yesVoteLL.setLayoutParams(new TableRow.LayoutParams(
-                TableRow.LayoutParams.WRAP_CONTENT,
-                (int) (35 * context.getResources().getDisplayMetrics().density),
-                mDataset.get(position).getVoteListSizes()[0]));
-        noVoteLL.setLayoutParams(new TableRow.LayoutParams(
-                TableRow.LayoutParams.WRAP_CONTENT,
-                (int) (35 * context.getResources().getDisplayMetrics().density),
-                mDataset.get(position).getVoteListSizes()[1]));
-        ignoredVoteLL.setLayoutParams(new TableRow.LayoutParams(
-                TableRow.LayoutParams.WRAP_CONTENT,
-                (int) (35 * context.getResources().getDisplayMetrics().density),
-                mDataset.get(position).getVoteListSizes()[2]));
+    private void showVotingResult( MyViewHolder holder, int position) {
+        if(mDataset.size() > position) {
+            Voting voting = mDataset.get(position);
+            LinearLayout votePercentageLL = holder.votePercentageLinearLayout;
+            LinearLayout yesVoteLL = holder.yesVotePercentage;
+            LinearLayout noVoteLL = holder.noVotePercentage;
+            LinearLayout ignoredVoteLL = holder.ignoredVotePercentage;
+            holder.voteYesButton.setVisibility(View.GONE);
+            holder.voteNoButton.setVisibility(View.GONE);
+            votePercentageLL.setVisibility(View.VISIBLE);
+            votePercentageLL.setClipToOutline(true);
+            yesVoteLL.setLayoutParams(new TableRow.LayoutParams(
+                    TableRow.LayoutParams.WRAP_CONTENT,
+                    (int) (35 * context.getResources().getDisplayMetrics().density),
+                    voting.getVoteListSizes()[0]));
+            noVoteLL.setLayoutParams(new TableRow.LayoutParams(
+                    TableRow.LayoutParams.WRAP_CONTENT,
+                    (int) (35 * context.getResources().getDisplayMetrics().density),
+                    voting.getVoteListSizes()[1]));
+            ignoredVoteLL.setLayoutParams(new TableRow.LayoutParams(
+                    TableRow.LayoutParams.WRAP_CONTENT,
+                    (int) (35 * context.getResources().getDisplayMetrics().density),
+                    voting.getVoteListSizes()[2]));
+        }
+    }
+
+    private void hideVotingResult(MyViewHolder holder, int position) {
+        holder.votePercentageLinearLayout.setVisibility(View.GONE);
+        holder.voteYesButton.setVisibility(View.VISIBLE);
+        holder.voteNoButton.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -229,5 +254,10 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
     public int getVotingPosition(int id) {
         Integer position = votingPositions.get(id);
         return position != null ? position : -1;
+    }
+
+    public void removeItemFromDataset(int position) {
+        mDataset.remove(position);
+        notifyDataSetChanged();
     }
 }

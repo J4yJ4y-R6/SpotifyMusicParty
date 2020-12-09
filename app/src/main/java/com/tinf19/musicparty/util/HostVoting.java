@@ -1,5 +1,6 @@
 package com.tinf19.musicparty.util;
 
+import android.os.CountDownTimer;
 import android.util.Log;
 
 import com.tinf19.musicparty.music.Track;
@@ -23,7 +24,6 @@ import java.util.List;
 public class HostVoting implements Voting {
 
     private static final String TAG = HostVoting.class.getName();
-    private final long created;
     private final Type type;
     private final Track track;
     private final double threshold;
@@ -32,9 +32,11 @@ public class HostVoting implements Voting {
     private List<Thread> accepted = new ArrayList<>();
     private List<Thread> denied = new ArrayList<>();
     private List<Thread> ignored = new ArrayList<>();
+    private final CountDownTimer closeTimer;
+    private int ignoredCount = 0;
 
     public interface VotingCallback {
-        void skipNext(int id);
+        void skipAndClose(int id);
         void addAndClose(int id);
         int getClientCount();
         void close(int id);
@@ -54,9 +56,20 @@ public class HostVoting implements Voting {
         this.type = type;
         this.threshold = threshold;
         this.id = id;
-        this.created = System.currentTimeMillis();
         this.track = track;
         this.votingCallback = votingCallback;
+        closeTimer = new CountDownTimer(60*1000, 1000) {
+            @Override
+            public void onTick(long millisUntilFinished) {}
+
+            @Override
+            public void onFinish() {
+                if(Math.ceil((accepted.size() + denied.size()) * threshold) <= accepted.size())
+                    votingCallback.addAndClose(id);
+                else
+                    votingCallback.close(id);
+            }
+        }.start();
     }
 
 
@@ -64,27 +77,23 @@ public class HostVoting implements Voting {
     //Getter
 
     /**
-     * @return Get the timestamp of the creating time
-     */
-    public long getCreated() {
-        return created;
-    }
-
-    /**
      * Evaluate the voting results regarding the threshold
      */
     private void makeCallback(){
+        int clientCount = (int) Math.ceil((votingCallback.getClientCount() + 1 - ignoredCount) * threshold);
         switch (type) {
             case QUE:
-                if(votingCallback.getClientCount()*threshold < accepted.size())
+                if(clientCount <= accepted.size())
                     votingCallback.addAndClose(id);
-                else if(votingCallback.getClientCount()*threshold < denied.size())
+                else if(clientCount < denied.size())
                     votingCallback.close(id);
                 break;
             case SKIP:
-                if(votingCallback.getClientCount()*threshold < accepted.size())
-                    votingCallback.addAndClose(id);
+                if(clientCount <= accepted.size())
+                    votingCallback.skipAndClose(id);
                 break;
+            default:
+                votingCallback.close(id);
         }
     }
 
@@ -106,6 +115,10 @@ public class HostVoting implements Voting {
         ignored.remove(thread);
     }
 
+    public void closeVoting() {
+        closeTimer.cancel();
+    }
+
     /**
      * Serializing the HostVoting to send it as a message to all clients with all information about
      * about the voting.
@@ -121,7 +134,6 @@ public class HostVoting implements Voting {
                 .put(Constants.TYPE, type)
                 .put(Constants.THRESHOLD, threshold)
                 .put(Constants.ID, id)
-                .put(Constants.CREATED, created)
                 .put(Constants.TRACK, new JSONObject(track.serialize()))
                 .put(Constants.YES_VOTE, yes)
                 .put(Constants.NO_VOTE, no)
@@ -167,6 +179,7 @@ public class HostVoting implements Voting {
                         " threads have voted no");
             } else {
                 ignored.add(thread);
+                ignoredCount++;
                 Log.d(TAG, thread.getName() + " ignored the vote. Currently " +
                         ignored.size() + " threads have ignored the vote");
             }
@@ -176,11 +189,7 @@ public class HostVoting implements Voting {
                 ignored.add(thread);
             return;
         }
-        if((accepted.size() + denied.size() + ignored.size()) >= (votingCallback.getClientCount() + 1))
-            Log.d(TAG, "all threads have voted with the result: \r\n" +
-                    "accepted: " + accepted.size() + " \r\n" +
-                    "denied: " + denied.size() + " \r\n" +
-                    "ignored: " + ignored.size());
+        makeCallback();
         votingCallback.notifyClients(this, thread);
     }
 
