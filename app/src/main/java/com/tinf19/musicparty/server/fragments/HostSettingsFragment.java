@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.provider.MediaStore;
+import android.provider.Telephony;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,20 +20,25 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.HostVoting;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static android.graphics.Color.WHITE;
 
@@ -69,6 +75,7 @@ public class HostSettingsFragment extends Fragment {
         String getIpAddress();
         String getPassword();
         void setNewPartyName(String newPartyName);
+        void changePartyType(HostService.PartyType partyType);
     }
 
     /**
@@ -209,10 +216,35 @@ public class HostSettingsFragment extends Fragment {
                     Log.d(TAG, "new Party Name set to: " + newPartyName);
                     partyName = newPartyName;
                     hostSettingsCallback.setNewPartyName(newPartyName);
-                    Toast.makeText(getContext(), "Der Partyname wurde auf " + newPartyName + " geändert.", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(this.requireView(),getString(R.string.snackbar_partyNameChanged,
+                            partyName), Snackbar.LENGTH_SHORT).show();
                 }
             });
         }
+
+        RadioButton allInSettingsRadioButton = view.findViewById(R.id.allInSettingsRadioButton);
+        if(allInSettingsRadioButton != null)
+            allInSettingsRadioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if(isChecked) {
+                    HostService.PartyType partyType = HostService.PartyType.AllInParty;
+                    if (hostSettingsCallback != null)
+                        hostSettingsCallback.changePartyType(partyType);
+                    Snackbar.make(this.requireView(), getString(R.string.snackbar_partyTypeChanged,
+                            partyType), Snackbar.LENGTH_LONG).show();
+                }
+            });
+
+        RadioButton votingSettingsRadioButton = view.findViewById(R.id.votingSettingsRadioButton);
+        if(votingSettingsRadioButton != null)
+            votingSettingsRadioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if(isChecked) {
+                    HostService.PartyType partyType = HostService.PartyType.VoteParty;
+                    if (hostSettingsCallback != null)
+                        hostSettingsCallback.changePartyType(HostService.PartyType.VoteParty);
+                    Snackbar.make(this.requireView(), getString(R.string.snackbar_partyTypeChanged,
+                            partyType), Snackbar.LENGTH_LONG).show();
+                }
+            });
         return view;
     }
 

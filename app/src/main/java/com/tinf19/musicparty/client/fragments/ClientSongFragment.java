@@ -7,6 +7,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import android.provider.Telephony;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
@@ -16,8 +17,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
@@ -39,11 +42,13 @@ public class ClientSongFragment extends Fragment {
     private TextView songArtist;
     private TextView songAlbum;
     private TextView connectedToParty;
+    private LinearLayout openVotingButtonLinearLayout;
 
     public interface ClientSongCallback {
         void exitConnection();
         void showPlaylist();
         void openVotingFragment();
+        HostService.PartyType getPartyType();
     }
 
     /**
@@ -70,6 +75,14 @@ public class ClientSongFragment extends Fragment {
         if(songTitle != null) songTitle.setSelected(true);
         if(songArtist != null) songArtist.setSelected(true);
         if(songAlbum != null) songAlbum.setSelected(true);
+        Log.d(TAG, clientSongCallback.getPartyType().toString());
+        if(openVotingButtonLinearLayout != null) {
+            Log.d(TAG, clientSongCallback.getPartyType().toString());
+            if (clientSongCallback.getPartyType().equals(HostService.PartyType.VoteParty))
+                openVotingButtonLinearLayout.setVisibility(View.VISIBLE);
+            else
+                openVotingButtonLinearLayout.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -96,6 +109,7 @@ public class ClientSongFragment extends Fragment {
         songArtist = rootView.findViewById(R.id.artistTextView);
         songAlbum = rootView.findViewById(R.id.albumTextView);
         connectedToParty = rootView.findViewById(R.id.connectedTo);
+        openVotingButtonLinearLayout = rootView.findViewById(R.id.openVotingButtonLinearLayout);
 
         ImageButton exitButton = rootView.findViewById(R.id.exitButton);
         if(exitButton != null) exitButton.setOnClickListener(v -> clientSongCallback.exitConnection());

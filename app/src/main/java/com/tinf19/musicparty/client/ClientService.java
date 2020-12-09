@@ -14,6 +14,7 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.tinf19.musicparty.adapter.VotingAdapter;
 import com.tinf19.musicparty.receiver.ActionReceiver;
+import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.ClientVoting;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
@@ -67,6 +68,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
     private Map<Integer, ClientVoting> clientVotings = new HashMap<>();
+    private HostService.PartyType partyType = HostService.PartyType.AllInParty;
 
 
 
@@ -80,6 +82,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
         void showFragments();
         void notifyVotingAdapter(int id, Type type);
         void removeVoting(int id, Type type);
+        void updateVotingButton(HostService.PartyType partyType);
     }
 
     /**
@@ -152,6 +155,12 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
 
     //Getter
 
+
+    /**
+     * @return Get the current partyType
+     */
+    public HostService.PartyType getPartyType() { return partyType; }
+
     /**
      * @return Get the current life state of the service
      */
@@ -175,6 +184,12 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
     public List<Voting> getClientVotings() { return new ArrayList<>(clientVotings.values()); }
 
     //Setter
+
+    /**
+     * Changing the current party name after the host changed it
+     * @param partyType New party type
+     */
+    public void setPartyType(HostService.PartyType partyType) { this.partyType = partyType; }
 
     /**
      * Set the {@link ClientServiceCallback}
@@ -353,8 +368,11 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                                 case LOGIN:
                                     Log.d(TAG, "logged in to: " + partyName);
                                     partyName = attribute;
-                                    if (parts.length > 3) {
-                                        nowPlaying = new Track(parts[3]);
+                                    setPartyType(parts[3].equals("AllInParty") ?
+                                            HostService.PartyType.AllInParty :
+                                            HostService.PartyType.VoteParty);
+                                    if (parts.length > 4) {
+                                        nowPlaying = new Track(parts[4]);
                                     }
                                     if(clientServiceCallback != null) {
                                         clientServiceCallback.setPartyName(partyName);
@@ -365,6 +383,14 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                                     Log.d(TAG, "Server has been closed");
                                     exit();
                                     return;
+                                case PARTYTYPE:
+                                    HostService.PartyType partyType = attribute.equals("AllInParty")
+                                            ? HostService.PartyType.AllInParty
+                                            : HostService.PartyType.VoteParty;
+                                    setPartyType(partyType);
+                                    if(clientServiceCallback != null)
+                                        clientServiceCallback.updateVotingButton(partyType);
+                                    break;
                                 case PLAYING:
                                     nowPlaying = new Track(attribute);
                                      Log.d(TAG, "new track has been started: " + nowPlaying.getName());

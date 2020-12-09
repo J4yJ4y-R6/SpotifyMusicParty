@@ -19,8 +19,8 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.spotify.android.appremote.api.error.CouldNotFindSpotifyApp;
 import com.spotify.android.appremote.api.error.SpotifyConnectionTerminatedException;
 import com.spotify.sdk.android.auth.AuthorizationClient;
@@ -257,6 +257,12 @@ public class HostActivity extends AppCompatActivity {
             }
 
             @Override
+            public HostService.PartyType getPartyType() {
+                return mBoundService != null ? mBoundService.getPartyType() :
+                        HostService.PartyType.AllInParty;
+            }
+
+            @Override
             public boolean getPauseState() {
                 return mBoundService != null && mBoundService.getPause();
             }
@@ -268,7 +274,9 @@ public class HostActivity extends AppCompatActivity {
             }
         });
         searchSongsOutputFragment = new SearchSongsOutputFragment(track -> {
-            HostActivity.this.runOnUiThread(() -> Toast.makeText(HostActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
+            HostActivity.this.runOnUiThread(() -> Snackbar.make(findViewById(
+                    R.id.showSongHostFragmentFrame), track.getName() + " " + getText(R.string.text_queAdded),
+                    Snackbar.LENGTH_SHORT).show());
             new Thread(() -> {
                 if (mBoundService != null) {
                     mBoundService.addItemToPlaylist(track);
@@ -315,6 +323,17 @@ public class HostActivity extends AppCompatActivity {
                             Log.e(TAG, e.getMessage(), e);
                         }
                     }).start();
+                }
+            }
+
+            @Override
+            public void changePartyType(HostService.PartyType partyType) {
+                if(mBoundService != null) {
+                    try {
+                        mBoundService.setPartyType(partyType);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         });
@@ -590,7 +609,10 @@ public class HostActivity extends AppCompatActivity {
                                         Log.d(TAG, "connected to spotify remote control");
                                         hostActivityCallback.afterConnection(spotifyAppRemote);
                                         if(mBoundService != null && mBoundService.isFirst()) {
-                                            HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.service_serverMsg, getString(R.string.text_partyName)), Toast.LENGTH_SHORT).show());
+                                            HostActivity.this.runOnUiThread(()-> Snackbar.make(
+                                                    findViewById(R.id.showSongFragmentFrame),
+                                                    getString(R.string.service_serverMsg, getString(R.string.text_partyName)),
+                                                    Snackbar.LENGTH_SHORT).show());
                                         }
                                     }
 
@@ -602,7 +624,10 @@ public class HostActivity extends AppCompatActivity {
                                         } else if(throwable instanceof CouldNotFindSpotifyApp) {
                                             final String appPackageName = "com.spotify.music";
                                             stopped = true;
-                                            HostActivity.this.runOnUiThread(()-> Toast.makeText(HostActivity.this, getString(R.string.text_noSpotifyFound), Toast.LENGTH_SHORT).show());
+                                            HostActivity.this.runOnUiThread(()-> Snackbar.make(
+                                                    findViewById(R.id.showSongFragmentFrame),
+                                                    getString(R.string.text_noSpotifyFound),
+                                                    Snackbar.LENGTH_SHORT).show());
                                             try {
                                                 startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
                                             } catch (android.content.ActivityNotFoundException anfe) {
@@ -640,7 +665,9 @@ public class HostActivity extends AppCompatActivity {
                     Log.d(TAG, "playlist " + name + " has been added to favorites");
                     SharedPreferences savePlaylistMemory = getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
                     if(!savePlaylistMemory.getString("29", "").equals(""))
-                        Toast.makeText(HostActivity.this, getString(R.string.text_toastPlaylistNotSaved), Toast.LENGTH_LONG).show();
+                        Snackbar.make(findViewById(R.id.showSongFragmentFrame),
+                                getString(R.string.text_toastPlaylistNotSaved),
+                                Snackbar.LENGTH_LONG).show();
                     SharedPreferences.Editor editor = savePlaylistMemory.edit();
                     JSONObject playlist = new JSONObject();
                     try {
@@ -694,9 +721,10 @@ public class HostActivity extends AppCompatActivity {
          */
         public void onServiceDisconnected(ComponentName className) {
             Log.d(TAG, "Service has been disconnected");
+            String partyName = mBoundService != null ? mBoundService.getPartyName() : "MusicParty";
+            Snackbar.make(findViewById(R.id.showSongFragmentFrame), getString(
+                    R.string.service_serverDisconnected, partyName), Snackbar.LENGTH_SHORT).show();
             mBoundService = null;
-            Toast.makeText(HostActivity.this, getString(R.string.service_serverDisconnected),
-                    Toast.LENGTH_SHORT).show();
         }
     };
 

@@ -126,6 +126,11 @@
     <string name="text_ignored">Enthaltung</string>
 
     <string name="snackbar_votingSubmitted">Du hast mit %1$s abgestimmt.</string>
+    <string name="snackbar_partyTypeChanged">Party-Typ wurde zu einer %1$s-Party geändert.</string>
+    <string name="snackbar_coverToBig"> Dein Bild ist zu groß. Die Maximalgröße für Playlist-Cover ist 250KB</string>
+    <string name="snackbar_somethingWentWrong">Etwas lief falsch.</string>
+    <string name="snackbar_pickedImage">Du hast ein Bild ausgewählt"</string>
+    <string name="snackbar_partyNameChanged"> "Der Partyname wurde auf %1$s geändert.</string>
 
 
 </resources>

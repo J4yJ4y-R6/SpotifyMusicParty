@@ -135,17 +135,11 @@
                     android:id="@+id/allInSettingsRadioButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:checked="true"
                     android:gravity="center"
                     android:text="@string/text_allInType"
                     android:textColor="#FFF"
-                    app:useMaterialThemeColors="false" />
-
-                <RadioButton
-                    android:id="@+id/vetoSettingRadioButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/text_vetoType"
-                    android:textColor="#FFFFFF" />
+                    app:useMaterialThemeColors="true" />
 
                 <RadioButton
                     android:id="@+id/votingSettingsRadioButton"

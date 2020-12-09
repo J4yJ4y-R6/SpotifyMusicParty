@@ -92,6 +92,8 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
     private boolean stopped;
     private boolean previous;
 
+    private PartyType partyType = PartyType.AllInParty;
+
 
     public interface HostServiceCallback {
         void setNowPlaying(Track nowPlaying);
@@ -105,6 +107,11 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
         void notifyFavPlaylistAdapter();
         void notifyVotingAdapter(int id, Type type);
         void removeVoting(int id, Type type);
+    }
+
+    public enum PartyType {
+        VoteParty,
+        AllInParty
     }
 
     public interface AfterCallback {
@@ -488,7 +495,11 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
 
     // Getter
 
-
+    /**
+     * @return Get the current partyType which decides how songs will be added or skipped in the
+     * queue.
+     */
+    public PartyType getPartyType() { return partyType; }
 
     /**
      * @return Get true if the queue is at the end or false if there is a next song
@@ -580,6 +591,15 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
     public List<Voting> getHostVotings() { return hostVotings.values().stream().filter(v -> !v.containsIgnored(serverThread)).collect(Collectors.toList()); }
 
     // Setter
+
+    /**
+     * Change the current party type
+     * @param partyType New party type
+     */
+    public void setPartyType(PartyType partyType) throws IOException {
+        this.partyType = partyType;
+        sendToAll(Commands.PARTYTYPE, partyType.toString());
+    }
 
     /**
      * Set the playlist id when a external playlist has been started from Spotify or the
@@ -1244,9 +1264,13 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                                         if (login(password)) {
                                             username = attribute;
                                             if (getNowPlaying() == null)
-                                                sendMessage(Commands.LOGIN, partyName);
+                                                sendMessage(Commands.LOGIN, partyName
+                                                        + Constants.DELIMITER + getPartyType());
                                             else
-                                                sendMessage(Commands.LOGIN, partyName + Constants.DELIMITER + getNowPlaying().serialize());
+                                                sendMessage(Commands.LOGIN, partyName +
+                                                        Constants.DELIMITER + getPartyType() +
+                                                        Constants.DELIMITER +
+                                                        getNowPlaying().serialize());
                                             if(hostServiceCallback != null) hostServiceCallback.setPeopleCount(clientThreads.size());
                                         } else {
                                             sendMessage(Commands.QUIT, "Login Failed");

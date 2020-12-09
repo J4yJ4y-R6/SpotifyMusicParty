@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.DownloadImageTask;
 
 /**
@@ -42,8 +43,9 @@ public class HostSongFragment extends Fragment {
     private TextView currentPlayingArtistTextView;
     private ImageView currentPlayingCoverTextView;
     private TextView partyNameTextView;
+    private ImageButton openVotingButton;
     private LinearLayout playBarLinearLayout;
-    private ImageView newVotingsIndicator;
+    private LinearLayout openVotingButtonLinearLayout;
 
 
     public interface HostSongCallback {
@@ -59,6 +61,7 @@ public class HostSongFragment extends Fragment {
         Track setShowNowPlaying();
         int getPartyPeopleSize();
         String getPartyPeoplePartyName();
+        HostService.PartyType getPartyType();
     }
 
 
@@ -88,6 +91,12 @@ public class HostSongFragment extends Fragment {
             setPlayTrackButtonImage(hostSongCallback.getPauseState());
             Track track = hostSongCallback.setShowNowPlaying();
             if(track != null) setNowPlaying(track);
+            if(openVotingButtonLinearLayout != null) {
+                if (hostSongCallback.getPartyType().equals(HostService.PartyType.VoteParty))
+                    openVotingButtonLinearLayout.setVisibility(View.VISIBLE);
+                else
+                    openVotingButtonLinearLayout.setVisibility(View.GONE);
+            }
         }
         if(currentPlayingTitleTextView != null) currentPlayingTitleTextView.setSelected(true);
         if(currentPlayingAlbumTextView != null) currentPlayingAlbumTextView.setSelected(true);
@@ -114,6 +123,7 @@ public class HostSongFragment extends Fragment {
         currentPlayingAlbumTextView = view.findViewById(R.id.albumHostTextView);
         currentPlayingCoverTextView = view.findViewById(R.id.songCoverHostImageView);
         playBarLinearLayout = view.findViewById(R.id.hostPlayBarLinearLayout);
+        openVotingButtonLinearLayout = view.findViewById(R.id.openVotingButtonLinearLayout);
 
         ImageButton openPlaylistButton = view.findViewById(R.id.playlistButtonHostImageButton);
         if(openPlaylistButton != null) {
@@ -125,7 +135,7 @@ public class HostSongFragment extends Fragment {
             openSettingsButton.setOnClickListener(v -> hostSongCallback.openSettingsFragment());
         }
 
-        ImageButton openVotingButton = view.findViewById(R.id.votingButtonHostImageButton);
+        openVotingButton = view.findViewById(R.id.votingButtonHostImageButton);
         if(openVotingButton != null) {
             openVotingButton.setOnClickListener(v -> hostSongCallback.openVotingFragment());
         }

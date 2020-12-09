@@ -17,9 +17,8 @@ import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
 
-import android.widget.Toast;
 
-
+import com.google.android.material.snackbar.Snackbar;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
@@ -28,6 +27,7 @@ import com.tinf19.musicparty.client.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.databinding.ActivityClientBinding;
 import com.tinf19.musicparty.fragments.LoadingFragment;
 import com.tinf19.musicparty.fragments.VotingFragment;
+import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.ClientVoting;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
@@ -310,7 +310,7 @@ public class ClientActivity extends AppCompatActivity {
         mBoundService.getClientThread().interrupt();
         doUnbindService();
         stopService(new Intent(ClientActivity.this, ClientService.class));
-        ClientActivity.this.runOnUiThread(() -> Toast.makeText(ClientActivity.this, text, Toast.LENGTH_SHORT).show());
+        ClientActivity.this.runOnUiThread(() -> Snackbar.make(findViewById(R.id.showSongFragmentFrame), text, Snackbar.LENGTH_SHORT).show());
         startActivity((new Intent(ClientActivity.this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
     }
 
@@ -393,7 +393,10 @@ public class ClientActivity extends AppCompatActivity {
                 public void showFragments() {
                     Log.d(TAG, "initializing global fragments with callbacks");
                     searchSongsOutputFragment = new SearchSongsOutputFragment(track -> {
-                        ClientActivity.this.runOnUiThread(() -> Toast.makeText(ClientActivity.this, track.getName() + " " + getText(R.string.text_queAdded), Toast.LENGTH_SHORT).show());
+                        ClientActivity.this.runOnUiThread(() -> Snackbar.
+                                make(findViewById(R.id.showSongFragmentFrame), track.getName() +
+                                        " " + getText(R.string.text_queAdded),
+                                        Snackbar.LENGTH_SHORT).show());
                         new Thread(() -> {
                             try {
                                 if (mBoundService != null)
@@ -440,6 +443,12 @@ public class ClientActivity extends AppCompatActivity {
                                     }
                                 }).start();
                             }
+                        }
+
+                        @Override
+                        public HostService.PartyType getPartyType() {
+                            return mBoundService != null ? mBoundService.getPartyType() :
+                                    HostService.PartyType.AllInParty;
                         }
                     });
                     clientPlaylistFragment = new ClientPlaylistFragment();
@@ -515,6 +524,18 @@ public class ClientActivity extends AppCompatActivity {
                 public void removeVoting(int id, Type type) {
                     if(votingFragment.isVisible())
                        runOnUiThread(() ->  votingFragment.removeSingleVote(id, type));
+                }
+
+                @Override
+                public void updateVotingButton(HostService.PartyType partyType) {
+                    Snackbar.make(findViewById(R.id.showSongFragmentFrame),
+                            getString(R.string.snackbar_partyTypeChanged), Snackbar.LENGTH_LONG);
+                    Fragment frg = null;
+                    frg = getSupportFragmentManager().findFragmentByTag("ShowSongFragment");
+                    final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                    ft.detach(frg);
+                    ft.attach(frg);
+                    ft.commit();
                 }
             });
     }

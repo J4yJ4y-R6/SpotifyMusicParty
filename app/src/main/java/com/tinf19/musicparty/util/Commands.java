@@ -12,5 +12,6 @@ public enum Commands {
     VOTE,
     VOTERESULT,
     SUBSCRIBE,
-    UNSUBSCRIBE
+    UNSUBSCRIBE,
+    PARTYTYPE
 }
