@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#00000000"
+    tools:context=".client.fragments.ClientSongFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageButton
+            android:id="@+id/playlistButtonHostImageButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/background_transparent"
+            android:src="@drawable/icon_queue"
+            android:contentDescription="@string/text_openPlaylistFragment_ContentD"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/votingButtonHostImageButton" />
+
+        <ImageButton
+            android:id="@+id/votingButtonHostImageButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="16dp"
+            android:contentDescription="@string/text_openVotingFragment_ContentD"
+            android:background="@drawable/background_transparent"
+            android:src="@drawable/icon_thumb_up"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/optionsButton"/>
+
+
+        <ImageButton
+            android:id="@+id/optionsButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/background_transparent"
+            android:src="@drawable/icon_settings"
+            android:contentDescription="@string/text_openSettingsFragment_ContentD"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/partyPeopleButton" />
+
+        <ImageButton
+            android:id="@+id/partyPeopleButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/background_transparent"
+            android:src="@drawable/icon_people_group"
+            android:contentDescription="@string/text_openPeopleFragment_ContentD"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/endPartyButton" />
+
+        <ImageButton
+            android:id="@+id/endPartyButton"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="30dp"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/background_transparent"
+            android:contentDescription="@string/text_openExitFragment_ContentD"
+            android:src="@drawable/icon_exit_room"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+
+        <TextView
+            android:id="@+id/songtitleHostTextView"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_marginStart="30dp"
+            android:layout_marginTop="60dp"
+            android:layout_marginEnd="20dp"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:text="@string/text_songtitel"
+            android:textAlignment="center"
+            android:textColor="#FFFFFF"
+            android:textSize="30sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/hostPlayBarLinearLayout"
+            app:layout_constraintTop_toBottomOf="@+id/partyOverviewTextView" />
+
+        <TextView
+            android:id="@+id/albumHostTextView"
+            android:layout_width="0dp"
+            android:layout_height="25dip"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="20dp"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:text="@string/text_albumname"
+            android:textAlignment="center"
+            android:textColor="#FFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.495"
+            app:layout_constraintStart_toEndOf="@+id/hostPlayBarLinearLayout"
+            app:layout_constraintTop_toBottomOf="@+id/songtitleHostTextView" />
+
+        <TextView
+            android:id="@+id/artistHostTextView"
+            android:layout_width="0dp"
+            android:layout_height="25dip"
+            android:layout_marginStart="30dp"
+            android:layout_marginEnd="20dp"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:scrollHorizontally="true"
+            android:singleLine="true"
+            android:text="@string/text_kuenstler"
+            android:textAlignment="center"
+            android:textColor="#FFFFFF"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.495"
+            app:layout_constraintStart_toEndOf="@+id/hostPlayBarLinearLayout"
+            app:layout_constraintTop_toBottomOf="@+id/albumHostTextView" />
+
+        <View
+            android:id="@+id/divider4"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="@color/divider"
+            app:layout_constraintBottom_toTopOf="@+id/partyOverviewTextView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
+
+        <TextView
+            android:id="@+id/partyOverviewTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_marginTop="2dp"
+            android:paddingTop="7dip"
+            android:text="@string/text_partyNameCountPeople"
+            android:textAlignment="center"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/hostPlayBarLinearLayout"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/songCoverHostImageView"
+            android:layout_width="280dip"
+            android:layout_height="280dip"
+            android:layout_marginStart="10dp"
+            android:src="@android:color/darker_gray"
+            android:contentDescription="@string/text_songcover"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <LinearLayout
+            android:id="@+id/hostPlayBarLinearLayout"
+            android:layout_width="70dip"
+            android:layout_height="280dip"
+            android:background="@drawable/host_song_remote_bar_land"
+            android:baselineAligned="false"
+            android:orientation="vertical"
+            android:paddingTop="30dp"
+            android:paddingBottom="30dp"
+            app:layout_constraintStart_toEndOf="@+id/songCoverHostImageView"
+            app:layout_constraintTop_toTopOf="@+id/songCoverHostImageView">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:paddingTop="10dp">
+
+                <ImageButton
+                    android:id="@+id/lastTrackImageButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/background_transparent"
+                    android:contentDescription="@string/text_lastSong"
+                    android:src="@drawable/icon_last_cycle" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:paddingTop="10dp">
+
+                <ImageButton
+                    android:id="@+id/playTrackImageButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/background_transparent"
+                    android:contentDescription="@string/text_playbutton"
+                    android:src="@drawable/icon_play_cycle" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:gravity="center_horizontal"
+                android:orientation="horizontal"
+                android:paddingTop="10dp">
+
+                <ImageButton
+                    android:id="@+id/nextTrackImageButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/background_transparent"
+                    android:contentDescription="@string/text_next"
+                    android:paddingTop="10dp"
+                    android:src="@drawable/icon_next_cycle" />
+            </LinearLayout>
+
+        </LinearLayout>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>

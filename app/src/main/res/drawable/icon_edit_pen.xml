@@ -1,0 +1,4 @@
+<vector android:height="35dp" android:viewportHeight="24"
+    android:viewportWidth="24" android:width="35dp" xmlns:android="http://schemas.android.com/apk/res/android">
+    <path android:fillColor="#FFF" android:name="edit-11" android:pathData="m18 9.2 -5.84 5.921 -3.202 -3.202 5.841 -5.919 3.201 3.2zm-9.994 3.764 3.106 3.105 -4.112 0.931 1.006 -4.036zm3.994 -12.964c-6.627 0 -12 5.373 -12 12c0 6.627 5.373 12 12 12c6.627 0 12 -5.373 12 -12c0 -6.627 -5.373 -12 -12 -12zm0 2c5.514 0 10 4.486 10 10c0 5.514 -4.486 10 -10 10c-5.514 0 -10 -4.486 -10 -10c0 -5.514 4.486 -10 10 -10z"/>
+</vector>

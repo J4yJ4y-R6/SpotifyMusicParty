@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".client.fragments.ClientSearchBarFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#00000000">
+
+        <ImageButton
+            android:id="@+id/hostSavedPlaylistsImageButton"
+            android:layout_width="60dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/background_green_round"
+            android:contentDescription="@string/text_searchButton_ContentD"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/hostSearchImageButton"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/icon_heart_red" />
+
+        <ImageButton
+            android:id="@+id/hostSearchImageButton"
+            android:layout_width="60dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/background_green_round"
+            android:contentDescription="@string/text_searchButton_ContentD"
+            android:saveEnabled="false"
+            app:layout_constraintEnd_toStartOf="@+id/hostSavedPlaylistsImageButton"
+            app:layout_constraintStart_toEndOf="@+id/hostSearchEditText"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@drawable/icon_search" />
+
+        <AutoCompleteTextView
+            android:id="@+id/hostSearchEditText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginEnd="5dp"
+            android:autofillHints="songtitles"
+            android:ems="10"
+            android:hint="@string/text_songTitle"
+            android:inputType="textAutoComplete"
+            android:outlineProvider="none"
+            android:textColor="#FFFFFF"
+            android:textColorHint="#FFFFFF"
+            app:layout_constraintEnd_toStartOf="@+id/hostSearchImageButton"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</FrameLayout>

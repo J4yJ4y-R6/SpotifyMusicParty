@@ -1,3 +1,4 @@
+include ':spotify-auth-release-1.2.3'
 include ':spotify-app-remote-release-0.7.1'
 include ':app'
 rootProject.name = "MusicParty"

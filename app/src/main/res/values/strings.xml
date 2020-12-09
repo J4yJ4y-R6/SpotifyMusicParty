@@ -1,3 +1,131 @@
 <resources>
     <string name="app_name">MusicParty</string>
+    <string name="text_ip_address">IP Addresse</string>
+    <string name="app_password">Passwort</string>
+    <string name="text_connect">Verbinden</string>
+    <string name="app_username">Benutzername</string>
+    <string name="text_playbutton">Lied stoppen/spielen</string>
+    <string name="text_partyName">Music Party</string>
+    <string name="text_next">Nächstes Lied spielen</string>
+    <string name="text_stopServer">Server stoppen</string>
+    <string name="text_server">Server</string>
+    <string name="text_client">Client</string>
+    <string name="text_leaveParty">Möchtest du die Party: %1$s verlassen</string>
+    <string name="text_hintPartyName">Party Name</string>
+    <string name="text_leave">Verlassen</string>
+    <string name="text_stay">Bleiben</string>
+    <string name="text_songtitel">Songtitel</string>
+    <string name="text_albumname">Albumname</string>
+    <string name="text_kuenstler">Künstler*in</string>
+    <string name="text_connectedTo">Verbunden mit</string>
+    <string name="text_songcover">SongCover</string>
+    <string name="text_queAdded"> wurde zur Warteschlange hinzugefügt</string>
+    <string name="text_partyNameCountPeople">Party Name    0</string>
+    <string name="text_changePartyName">Neuer Party Name</string>
+    <string name="text_partyType">Party-Typ einstellen</string>
+    <string name="text_allInType">All-In</string>
+    <string name="text_vetoType">Veto</string>
+    <string name="text_votingType">Voting</string>
+    <string name="text_save">Sichern</string>
+    <string name="text_loadingClient">Verbindung zum Server wird hergestellt</string>
+    <string name="text_loadingServer">Verbindung zu Spotify wird hergestellt</string>
+    <string name="text_qrCodeNoResult">Kein Ergebnis gefunden</string>
+    <string name="text_qrCodeNotMusicParty">Scanne einen validen QR-Code</string>
+    <string name="text_minutes"> Minuten</string>
+    <string name="text_hostsongfragment_header">%1$s mit %2$d  Menschen"</string>
+
+    <string name="heading_settings">Einstellungen</string>
+    <string name="service_channelName">Music Party Service Channel</string>
+    <string name="service_name">MusicParty</string>
+    <string name="service_clientMsg">Du bist Teil einer %1$s</string>
+    <string name="service_clientConnectionError">Die Verbindung zum Host ist fehlgeschlagen</string>
+    <string name="service_serverMsg">Du hostest die Party: %1$s</string>
+    <string name="service_serverPeople">Aktuell sind %1$d Menschen Teil deiner Party.</string>
+    <string name="service_serverClosed">Der Host hat die Party beendet</string>
+    <string name="service_serverConnected">Du bist Teil der %1$s</string>
+    <string name="service_serverDisconnected">Du hast die %1$s verlassen</string>
+    <string name="service_playlistDescription">Deine Playlist aus der %1$s.</string>
+    <string name="title_activity_host_party">HostPartyActivity</string>
+    <string name="text_search">Suchen</string>
+    <string name="text_songTitle">Song Titel eingeben</string>
+    <string name="heading_partyPeople">Folgende Personen sind gerade bei deiner Party</string>
+    <string name="text_endParty">Möchtest du deine Party wirklich beenden</string>
+    <string name="text_end">Beenden</string>
+    <string name="text_cancel">Abbrechen</string>
+    <string name="text_infobox_username">Gib hier deinen Benutzernamen ein. Wenn du das Feld frei lässt, wird ein zufälliger Name gesetzt angezeigt.</string>
+    <string name="header_activity_client">Party beitreten</string>
+    <string name="text_infobox_connecttion">Du kannst hier die IP-Adresse und das Passwort eingeben oder den QR-Code der Party scannen.</string>
+    <string name="text_qrButtonHint">QR Code scannen</string>
+    <string name="text_infobox">Infobox</string>
+    <string name="text_searchButton_ContentD">Spotify Songs durchsuchen</string>
+    <string name="text_qrSettings_ContentD">QR-Code zur Verbidndung mit dem Server</string>
+    <string name="text_linkSettings_ContentD">Buttom zum teilen des Beitrittslinks</string>
+    <string name="text_shareQR_ContentD">Teile deinen QR-Code</string>
+    <string name="text_shareAddress_ContentD">Teile deine IP-Addresse und dein Passwort</string>
+    <string name="text_shareIP_Descrition">IP Addresse und Passwort teilen</string>
+    <string name="text_shareQR_Description">QR-Code teilen</string>
+    <string name="text_shareLink_Description">Link zum beitreten teilen</string>
+    <string name="text_songsOutputSwipeForQue">Wischen um das Lied der Warteschlange hinzuzufügen</string>
+    <string name="text_animatedLogo_ContentD">animiertes App-Logo</string>
+    <string name="text_showInfoCard_ContentD">Info Karte öffnen</string>
+    <string name="text_closeInfoCard_ContentD">Info Karte schließen</string>
+    <string name="text_openPlaylistFragment_ContentD">Playlist öffnen</string>
+    <string name="text_openExitFragment_ContentD">Party verlassen</string>
+    <string name="text_openSettingsFragment_ContentD">Einstellungen öffnen</string>
+    <string name="text_openPeopleFragment_ContentD">Anwesende Personen anzeigen</string>
+    <string name="text_openVotingFragment_ContentD">Abstimmungen abrufen</string>
+
+    <string name="text_toastPlaylistNotSaved">Playlist konnte nicht gespeichert werden. Prüfe ob du schon 30 Playlisten gespeichert hast.</string>
+    <string name="text_toastPlaylistNameNeeded">Playlist konnte nicht gespeichert werden. Du musst einen Namen Hinzufügen</string>
+    <string name="text_favoritePlaylistsDialogWindow">Möchtest du die Playlist löschen, abspielen oder bearbeiten?</string>
+    <string name="text_toastPlaylistDeleted"> wurde erfolgreich aus deinen Favoriten gelöscht</string>
+    <string name="text_closePartySavePlaylist">Möchtest du die Playlist speichern?</string>
+    <string name="text_editName">Neuer Name</string>
+    <string name="text_playlistCover">playlistCover</string>
+    <string name="text_favoritePlaylistsHeader">Deine gespeicherten Playlisten:</string>
+    <string name="text_showSavedPlaylists_description">Drücke zum abspielen, bearbeiten und löschen</string>
+    <string name="text_editPlaylist_dialog">Playlist beartbeiten</string>
+    <string name="text_chooseEditOption_dialog">Möchtest du ein neues Cover hochladen oder den Namen der Playlist ändern</string>
+    <string name="text_savePlaylist_dialog">Playlist speichern</string>
+    <string name="text_savePlaylistMsg_dialog">Falls du die Playlist mit aktuellem Stand kopieren. Falls du Lieder hinzufügst wird sie sonst überschrieben.</string>
+    <string name="text_acceptEditOption_dialog">Bestätige das verändern des Playlistnamens</string>
+    <string name="text_delete">Löschen</string>
+    <string name="text_chooseDeleteOption_dialog">Möchtest du die Playlist wirklich aus deinen Favoriten löschen?</string>
+    <!-- Preference Titles -->
+    <string name="messages_header">Messages</string>
+    <string name="sync_header">Sync</string>
+
+    <!-- Messages Preferences -->
+    <string name="signature_title">Your signature</string>
+    <string name="reply_title">Default reply action</string>
+
+    <!-- Sync Preferences -->
+    <string name="sync_title">Sync email periodically</string>
+    <string name="attachment_title">Download incoming attachments</string>
+    <string name="attachment_summary_on">Automatically download attachments for incoming emails
+    </string>
+    <string name="attachment_summary_off">Only download attachments when manually requested</string>
+    <string name="text_songtitle_placeholder">Willkommen zu deiner Music Party</string>
+    <string name="text_noSpotifyFound">Spotify wurde auf ihrem Gerät nicht gefunden. Bitte installieren sie sich die app.</string>
+    <string name="text_currentSongPlaylistFragment_placeholder">Hier wird das aktuelle Lied angezeigt</string>
+    <string name="text_appInfoMain">Party-Erweiterung für Spotify</string>
+    <string name="text_createParty">Party erstellen</string>
+    <string name="text_joinParty">Party beitreten</string>
+
+    <string name="notification_clientServiceTitle">Verbindung wird hergestellt</string>
+    <string name="text_enterNewPartyName">Gibt hier den Playlistnamen ein</string>
+    <string name="text_lastSong">letzten Song abspielen</string>
+    <string name="text_zeroMinutes">0 Minuten</string>
+    <string name="text_currentVotings">Aktuelle Abstimmungen</string>
+    <string name="text_noCurrentQueVotings">Du hast aktuell keine offenen Que-Abstimmungen</string>
+    <string name="text_noCurrentSkipVotings">Du hast aktuell keine offenen Skip-Abstimmungen</string>
+    <string name="text_currentQueVotings">Deine offenen Que-Abstimmungen</string>
+    <string name="text_currentSkipVotings">Deine offenen Skip-Abstimmungen</string>
+    <string name="text_yes">Ja</string>
+    <string name="text_no">Nein</string>
+    <string name="text_ignored">Enthaltung</string>
+
+    <string name="snackbar_votingSubmitted">Du hast mit %1$s abgestimmt.</string>
+
+
 </resources>

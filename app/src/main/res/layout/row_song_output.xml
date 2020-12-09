@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="?attr/listPreferredItemHeight"
+    android:padding="6dip" >
+
+    <ImageView
+        android:id="@+id/songCover"
+        android:layout_width="50dip"
+        android:layout_height="fill_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginEnd="6dip"
+        android:contentDescription="@string/text_songcover"
+        android:src="@color/transparent" />
+
+
+    <TextView
+        android:id="@+id/searchArtistNameTextView"
+        android:layout_width="fill_parent"
+        android:layout_height="26dip"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:ellipsize="marquee"
+        android:layout_toEndOf="@id/songCover"
+        android:textSize="12sp"
+        android:singleLine="true" />
+
+    <TextView
+        android:id="@+id/searchSongTitleTextView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/searchArtistNameTextView"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true"
+        android:layout_alignWithParentIfMissing="true"
+        android:layout_toEndOf="@id/songCover"
+        android:gravity="center_vertical"
+        android:textSize="16sp" />
+
+</RelativeLayout>

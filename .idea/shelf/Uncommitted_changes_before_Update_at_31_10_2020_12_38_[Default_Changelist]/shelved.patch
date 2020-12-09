@@ -1,0 +1,84 @@
+Index: app/src/main/res/layout/activity_party.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"utf-8\"?>\r\n<androidx.constraintlayout.widget.ConstraintLayout xmlns:android=\"http://schemas.android.com/apk/res/android\"\r\n    xmlns:app=\"http://schemas.android.com/apk/res-auto\"\r\n    xmlns:tools=\"http://schemas.android.com/tools\"\r\n    android:layout_width=\"match_parent\"\r\n    android:layout_height=\"match_parent\"\r\n    tools:context=\".PartyActivity\">\r\n\r\n    <LinearLayout\r\n        android:layout_width=\"match_parent\"\r\n        android:layout_height=\"match_parent\"\r\n        android:orientation=\"vertical\">\r\n\r\n        <androidx.constraintlayout.widget.ConstraintLayout\r\n            android:layout_width=\"match_parent\"\r\n            android:layout_height=\"match_parent\"\r\n            android:background=\"#17671A\">\r\n\r\n            <androidx.recyclerview.widget.RecyclerView\r\n                android:id=\"@+id/testrecycler\"\r\n                android:layout_width=\"0dp\"\r\n                android:layout_height=\"0dp\"\r\n                android:layout_marginStart=\"20dp\"\r\n                android:layout_marginTop=\"20dp\"\r\n                android:layout_marginEnd=\"20dp\"\r\n                android:layout_marginBottom=\"20dp\"\r\n                android:background=\"#4A40D648\"\r\n                android:padding=\"20dp\"\r\n                android:scrollbars=\"horizontal|vertical\"\r\n                app:layout_constraintBottom_toBottomOf=\"parent\"\r\n                app:layout_constraintEnd_toEndOf=\"parent\"\r\n                app:layout_constraintStart_toStartOf=\"parent\"\r\n                app:layout_constraintTop_toBottomOf=\"@+id/et_search\" />\r\n\r\n            <EditText\r\n                android:id=\"@+id/et_search\"\r\n                android:layout_width=\"wrap_content\"\r\n                android:layout_height=\"wrap_content\"\r\n                android:layout_marginStart=\"30dp\"\r\n                android:layout_marginTop=\"32dp\"\r\n                android:ems=\"10\"\r\n                android:hint=\"Song name\"\r\n                android:inputType=\"textPersonName\"\r\n                app:layout_constraintEnd_toStartOf=\"@+id/bt_search\"\r\n                app:layout_constraintStart_toStartOf=\"parent\"\r\n                app:layout_constraintTop_toTopOf=\"parent\" />\r\n\r\n            <Button\r\n                android:id=\"@+id/bt_search\"\r\n                android:layout_width=\"wrap_content\"\r\n                android:layout_height=\"wrap_content\"\r\n                android:layout_marginStart=\"38dp\"\r\n                android:layout_marginTop=\"32dp\"\r\n                android:layout_marginEnd=\"32dp\"\r\n                android:background=\"#FFFFFF\"\r\n                android:onClick=\"search\"\r\n                android:text=\"Search\"\r\n                app:layout_constraintEnd_toEndOf=\"parent\"\r\n                app:layout_constraintStart_toEndOf=\"@+id/et_search\"\r\n                app:layout_constraintTop_toTopOf=\"parent\" />\r\n\r\n        </androidx.constraintlayout.widget.ConstraintLayout>\r\n\r\n    </LinearLayout>\r\n</androidx.constraintlayout.widget.ConstraintLayout>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- app/src/main/res/layout/activity_party.xml	(revision e4e62decbac5d5b8f6fa611d95f1478e4306e265)
++++ app/src/main/res/layout/activity_party.xml	(date 1604143642716)
+@@ -4,6 +4,7 @@
+     xmlns:tools="http://schemas.android.com/tools"
+     android:layout_width="match_parent"
+     android:layout_height="match_parent"
++    android:backgroundTint="#00FFFFFF"
+     tools:context=".PartyActivity">
+ 
+     <LinearLayout
+@@ -11,55 +12,21 @@
+         android:layout_height="match_parent"
+         android:orientation="vertical">
+ 
+-        <androidx.constraintlayout.widget.ConstraintLayout
++        <FrameLayout
++            android:id="@+id/searchBarFragmentFrame"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+-            android:background="#17671A">
++            android:layout_weight="8">
+ 
+-            <androidx.recyclerview.widget.RecyclerView
+-                android:id="@+id/testrecycler"
+-                android:layout_width="0dp"
+-                android:layout_height="0dp"
+-                android:layout_marginStart="20dp"
+-                android:layout_marginTop="20dp"
+-                android:layout_marginEnd="20dp"
+-                android:layout_marginBottom="20dp"
+-                android:background="#4A40D648"
+-                android:padding="20dp"
+-                android:scrollbars="horizontal|vertical"
+-                app:layout_constraintBottom_toBottomOf="parent"
+-                app:layout_constraintEnd_toEndOf="parent"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintTop_toBottomOf="@+id/et_search" />
++        </FrameLayout>
+ 
+-            <EditText
+-                android:id="@+id/et_search"
+-                android:layout_width="wrap_content"
+-                android:layout_height="wrap_content"
+-                android:layout_marginStart="30dp"
+-                android:layout_marginTop="32dp"
+-                android:ems="10"
+-                android:hint="Song name"
+-                android:inputType="textPersonName"
+-                app:layout_constraintEnd_toStartOf="@+id/bt_search"
+-                app:layout_constraintStart_toStartOf="parent"
+-                app:layout_constraintTop_toTopOf="parent" />
++        <FrameLayout
++            android:layout_weight="1"
++            android:id="@+id/showSongFragmentFrame"
++            android:layout_width="match_parent"
++            android:layout_height="match_parent">
+ 
+-            <Button
+-                android:id="@+id/bt_search"
+-                android:layout_width="wrap_content"
+-                android:layout_height="wrap_content"
+-                android:layout_marginStart="38dp"
+-                android:layout_marginTop="32dp"
+-                android:layout_marginEnd="32dp"
+-                android:background="#FFFFFF"
+-                android:onClick="search"
+-                android:text="Search"
+-                app:layout_constraintEnd_toEndOf="parent"
+-                app:layout_constraintStart_toEndOf="@+id/et_search"
+-                app:layout_constraintTop_toTopOf="parent" />
+-
+-        </androidx.constraintlayout.widget.ConstraintLayout>
++        </FrameLayout>
+ 
+     </LinearLayout>
+ </androidx.constraintlayout.widget.ConstraintLayout>
+\ No newline at end of file
