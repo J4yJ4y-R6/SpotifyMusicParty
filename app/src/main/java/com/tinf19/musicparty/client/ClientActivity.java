@@ -507,7 +507,14 @@ public class ClientActivity extends AppCompatActivity {
                 @Override
                 public void notifyVotingAdapter(int id, Type type) {
                     Log.d(TAG, "Voting with id: " + id + "has changed");
-                    votingFragment.notifySingleVote(id, type);
+                    if(votingFragment.isVisible())
+                        votingFragment.notifySingleVote(id, type);
+                }
+
+                @Override
+                public void removeVoting(int id, Type type) {
+                    if(votingFragment.isVisible())
+                       runOnUiThread(() ->  votingFragment.removeSingleVote(id, type));
                 }
             });
     }

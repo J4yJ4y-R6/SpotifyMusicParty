@@ -34,6 +34,9 @@ public class Constants {
     public static final String NO_VOTE = "no";
     public static final String GREY_VOTE = "grey";
     public static final String HAS_VOTED = "has_voted";
+    public static final String FINISHED_VOTE = "finishedVote";
+    public static final String COMMAND = "command";
+    public static final String MESSAGE = "message";
 
     public static final String TYPE = "type";
     public static final String THRESHOLD = "threshold";

@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -19,7 +20,6 @@ import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.TokenRefresh;
-import com.tinf19.musicparty.util.HostVoting;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
 
@@ -49,6 +49,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
     private final IBinder mBinder = new LocalBinder();
     private ClientServiceCallback clientServiceCallback;
     private ClientThread clientThread;
+    private Thread sendMessageThread;
     private Socket clientSocket;
     private Track nowPlaying;
     private boolean stopped;
@@ -78,6 +79,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
         void setVotings(List<Voting> ClientVotings);
         void showFragments();
         void notifyVotingAdapter(int id, Type type);
+        void removeVoting(int id, Type type);
     }
 
     /**
@@ -249,12 +251,13 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
     public void fetchVotingResult() {
         clientVotings.keySet().forEach(v-> {
             try {
-                clientThread.sendMessage(Commands.VOTE_RESULT, String.valueOf(v));
+                clientThread.sendMessage(Commands.VOTERESULT, String.valueOf(v));
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
         });
     }
+
 
 
     /**
@@ -338,7 +341,8 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                 Log.d(TAG, "Connect successful");
                 while (!this.isInterrupted() && !clientSocket.isClosed())  {
                     String line = input.readLine();
-                    if (line != null) {
+                    if (line != null && !line.equals("")) {
+                        Log.d(TAG, "run: " + line);
                         String [] parts = line.split(Constants.DELIMITER);
                         String attribute = "";
                         if (parts.length > 2)
@@ -398,18 +402,24 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                                     clientServiceCallback.setVotings(getClientVotings());
                                     setClientVotings(clientVotings);
                                     break;
-                                case VOTE_RESULT:
+                                case VOTERESULT:
                                     JSONObject tempObject = new JSONObject(attribute);
                                     int votingID = tempObject.getInt(Constants.ID);
                                     ClientVoting voting = clientVotings.get(votingID);
-                                    if(voting != null) {
-                                        voting.updateVotingResult(
-                                                tempObject.getInt(Constants.YES_VOTE),
-                                                tempObject.getInt(Constants.NO_VOTE),
-                                                tempObject.getInt(Constants.GREY_VOTE));
-                                        if(clientServiceCallback != null)
-                                            clientServiceCallback.notifyVotingAdapter(votingID
-                                                    , voting.getType());
+                                    if (voting != null) {
+                                        if(tempObject.getBoolean(Constants.FINISHED_VOTE)) {
+                                            if (clientServiceCallback != null)
+                                                clientServiceCallback.removeVoting(voting.getId(), voting.getType());
+                                            clientVotings.remove(votingID);
+                                        } else {
+                                            voting.updateVotingResult(
+                                                    tempObject.getInt(Constants.YES_VOTE),
+                                                    tempObject.getInt(Constants.NO_VOTE),
+                                                    tempObject.getInt(Constants.GREY_VOTE));
+                                            if (clientServiceCallback != null)
+                                                clientServiceCallback.notifyVotingAdapter(votingID
+                                                        , voting.getType());
+                                        }
                                     }
                             }
                         }

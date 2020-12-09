@@ -24,6 +24,7 @@ import com.google.android.material.snackbar.Snackbar;
 import com.ramotion.cardslider.CardSliderLayoutManager;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.util.HostVoting;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
@@ -148,7 +149,7 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         if(artistTV != null)
             artistTV.setText(mDataset.get(position).getTrack().getArtist(0).getName());
         if(coverTV != null)
-            coverTV.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.icon_cover_placeholder));
+            new DownloadImageTask(coverTV).execute("https://i.scdn.co/image/" + mDataset.get(position).getTrack().getCoverFull());
         if(yesButton != null)
             yesButton.setOnClickListener(v -> {
                 mDataset.get(position).addVoting(Constants.YES, votingAdapterCallback.getCurrentThread());

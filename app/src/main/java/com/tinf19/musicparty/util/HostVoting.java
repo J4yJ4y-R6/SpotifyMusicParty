@@ -34,6 +34,7 @@ public class HostVoting implements Voting {
     private List<Thread> ignored = new ArrayList<>();
     private final CountDownTimer closeTimer;
     private int ignoredCount = 0;
+    private boolean finished = false;
 
     public interface VotingCallback {
         void skipAndClose(int id);
@@ -64,6 +65,7 @@ public class HostVoting implements Voting {
 
             @Override
             public void onFinish() {
+                finished = true;
                 if(Math.ceil((accepted.size() + denied.size()) * threshold) <= accepted.size())
                     votingCallback.addAndClose(id);
                 else
@@ -79,18 +81,25 @@ public class HostVoting implements Voting {
     /**
      * Evaluate the voting results regarding the threshold
      */
-    private void makeCallback(){
+    private void makeCallback(Thread thread){
         int clientCount = (int) Math.ceil((votingCallback.getClientCount() + 1 - ignoredCount) * threshold);
         switch (type) {
             case QUE:
-                if(clientCount <= accepted.size())
+                if(clientCount <= accepted.size()) {
+                    finished = true;
                     votingCallback.addAndClose(id);
-                else if(clientCount < denied.size())
+                } else if(clientCount < denied.size() || clientCount == (denied.size() + ignoredCount + accepted.size())) {
+                    finished = true;
                     votingCallback.close(id);
+                } else
+                    votingCallback.notifyClients(this, thread);
                 break;
             case SKIP:
-                if(clientCount <= accepted.size())
+                if(clientCount <= accepted.size()) {
+                    finished = true;
                     votingCallback.skipAndClose(id);
+                } else
+                    votingCallback.notifyClients(this, thread);
                 break;
             default:
                 votingCallback.close(id);
@@ -152,6 +161,7 @@ public class HostVoting implements Voting {
         int yes = accepted.size();
         int no = denied.size();
         tempObject = tempObject
+                .put(Constants.FINISHED_VOTE, finished)
                 .put(Constants.ID, id)
                 .put(Constants.YES_VOTE, yes)
                 .put(Constants.NO_VOTE, no)
@@ -189,8 +199,7 @@ public class HostVoting implements Voting {
                 ignored.add(thread);
             return;
         }
-        makeCallback();
-        votingCallback.notifyClients(this, thread);
+        makeCallback(thread);
     }
 
     @Override

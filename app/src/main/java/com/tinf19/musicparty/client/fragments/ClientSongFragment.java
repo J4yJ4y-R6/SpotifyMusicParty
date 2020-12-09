@@ -141,7 +141,7 @@ public class ClientSongFragment extends Fragment {
      * @param name
      */
     public void setPartyName(String name) {
-        String conTo = getString(R.string.text_connectedTo);
+        String conTo = getString(R.string.text_connectedTo) + " ";
         String partyName = conTo + name;
         if(connectedToParty != null && !name.equals("")) {
             connectedToParty.setText(partyName, TextView.BufferType.SPANNABLE);

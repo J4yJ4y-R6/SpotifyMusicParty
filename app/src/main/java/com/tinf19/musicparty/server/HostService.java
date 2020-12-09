@@ -6,6 +6,10 @@ import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Binder;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Base64;
@@ -40,6 +44,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -183,13 +188,14 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             }
         };
         startServer();
-        HostVoting hostVoting = new HostVoting(Type.QUE, new Track("3GpdNg7Krt9vjc6tgDoKe1", "Jannik", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 1, votingCallback);
+        HostVoting hostVoting = new HostVoting(Type.QUE, new Track("33aYqVQ4EviRTd0BmHFxpF", "Sterben kannst du überall", new Artist[]{new Artist("1eeWVOCazGzGQXOGhnDHTB", "Trailerpark")}, "ab67616d0000485123cdc9ebcbc5511e112ad651", "ab67616d00001e0223cdc9ebcbc5511e112ad651", 247266, "TP4L"), 0.5, 1, votingCallback);
+        HostVoting hostVoting2 = new HostVoting(Type.QUE, new Track("33aYqVQ4EviRTd0BmHFxpF", "Sterben kannst du überall", new Artist[]{new Artist("1eeWVOCazGzGQXOGhnDHTB", "Trailerpark")}, "ab67616d0000485123cdc9ebcbc5511e112ad651", "ab67616d00001e0223cdc9ebcbc5511e112ad651", 247266, "TP4L"), 0.5, 2, votingCallback);
 //        HostVoting hostVoting2 = new HostVoting(Type.QUE, new Track("123", "Silas", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 2, votingCallback);
 //        HostVoting hostVoting3 = new HostVoting(Type.QUE, new Track("123", "Tim", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 3, votingCallback);
 //        HostVoting hostVoting4 = new HostVoting(Type.SKIP, new Track("123", "Hung", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 4, votingCallback);
 //        HostVoting hostVoting5 = new HostVoting(Type.SKIP, new Track("123", "Olli", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 5, votingCallback);
         hostVotings.put(hostVoting.getId(), hostVoting);
-//        hostVotings.put(hostVoting2.getId(), hostVoting2);
+        hostVotings.put(hostVoting2.getId(), hostVoting2);
 //        hostVotings.put(hostVoting3.getId(), hostVoting3);
 //        hostVotings.put(hostVoting4.getId(), hostVoting4);
 //        hostVotings.put(hostVoting5.getId(), hostVoting5);
@@ -1090,13 +1096,13 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                 List<CommunicationThread> tempList = new ArrayList<>(subscribedClients);
                 tempList.remove((CommunicationThread) thread);
                 try {
-                    sendToClientList(tempList, Commands.VOTE_RESULT, voting.serializeResult());
+                    sendToClientList(tempList, Commands.VOTERESULT, voting.serializeResult());
                 } catch (IOException | JSONException e) {
                     Log.e(TAG, e.getMessage(), e);
                 }
             } else {
                 try {
-                    sendToClientList(subscribedClients, Commands.VOTE_RESULT, voting.serializeResult());
+                    sendToClientList(subscribedClients, Commands.VOTERESULT, voting.serializeResult());
                 } catch (IOException | JSONException e) {
                     Log.e(TAG, e.getMessage(), e);
                 }
@@ -1130,6 +1136,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
         }
     }
 
+
     /**
      * Each CommunicationThread represents a client connection and is managing the communication
      * between client and host.
@@ -1141,6 +1148,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
         private DataOutputStream out;
         private boolean login = false;
         private String username;
+        private SendMessageLooper sendMessageLooper;
 
         /**
          * Constructor to set the client-attributes
@@ -1155,13 +1163,30 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
          * Sending a command and a message to a client
          * @param command Communication command for actions in the client
          * @param message Attributes for mapping the command successfully
+         */
+        public void sendMessage(Commands command, String message) {
+            if(sendMessageLooper != null) {
+                Message msg = new Message();
+                Bundle bundle = new Bundle();
+                bundle.putString(Constants.COMMAND, command.toString());
+                bundle.putString(Constants.MESSAGE, message);
+                msg.setData(bundle);
+                sendMessageLooper.mHandler.sendMessage(msg);
+            }
+        }
+
+        /**
+         * Sending a command and a message to a client
+         * @param command Communication command for actions in the client
+         * @param message Attributes for mapping the command successfully
          * @throws IOException when the Output-Stream is not writing bytes.
          */
-        public void sendMessage(Commands command, String message) throws IOException {
+        private void sendMessageLooper(Commands command, String message) throws IOException {
             Log.d(TAG, "Send Message to User: " + username + ", Command: " + command.toString() + ", Message: " + message);
             out.writeBytes(Constants.DELIMITER + command.toString() + Constants.DELIMITER + message + "\n\r");
             out.flush();
         }
+
 
         /**
          * Splitting the client message to communicate with the client by different commands:
@@ -1185,6 +1210,8 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             try {
                 input = new BufferedReader(new InputStreamReader(clientSocket.getInputStream(), StandardCharsets.ISO_8859_1));
                 out = new DataOutputStream(clientSocket.getOutputStream());
+                sendMessageLooper = new SendMessageLooper();
+                sendMessageLooper.start();
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
                 return;
@@ -1276,10 +1303,10 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                                         break;
                                     }
                                     break;
-                                case VOTE_RESULT:
+                                case VOTERESULT:
                                     HostVoting voting = hostVotings.get(Integer.parseInt(attribute));
                                     if(voting != null)
-                                        sendMessage(Commands.VOTE_RESULT, voting.serializeResult());
+                                        sendMessage(Commands.VOTERESULT, voting.serializeResult());
                                     break;
                                 case SUBSCRIBE:
                                     subscribedClients.add(this);
@@ -1318,6 +1345,30 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             if(input.equals(password))
                 login = true;
             return login;
+        }
+
+        class SendMessageLooper extends Thread {
+            public Handler mHandler;
+
+            @Override
+            public void run() {
+                Looper.prepare();
+
+                mHandler = new Handler(Looper.myLooper()) {
+                    @Override
+                    public void handleMessage(Message msg) {
+                        String command = msg.getData().getString(Constants.COMMAND);
+                        String message = msg.getData().getString(Constants.MESSAGE);
+                        try {
+                            CommunicationThread.this.sendMessageLooper(Commands.valueOf(command), (String) message);
+                        } catch (IOException e) {
+                            Log.e(TAG, e.getMessage(), e);
+                        }
+                    }
+                };
+
+                Looper.loop();
+            }
         }
     }
 }
