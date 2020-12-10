@@ -212,6 +212,12 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
     }
 
     /**
+     * Add a Voting at the end of the dataset
+     * @param voting New voting
+     */
+    public void addToDataset(Voting voting) { mDataset.add(voting); }
+
+    /**
      * Display the voting result in the percentage bar.
      * @param holder Card of the item
      * @param position Position of the item

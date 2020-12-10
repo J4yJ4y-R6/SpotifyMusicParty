@@ -160,6 +160,26 @@ public class VotingFragment extends Fragment implements VotingAdapter.VotingAdap
         }
     }
 
+    public void notifyAllVotes(Type type) {
+        if(type == Type.QUE) {
+            if(votingQueAdapter != null)
+                votingQueAdapter.notifyDataSetChanged();
+        } else {
+            if(votingSkipAdapter != null)
+                votingSkipAdapter.notifyDataSetChanged();
+        }
+    }
+
+    public void addItemToDataset(Voting voting) {
+        if(voting.getType() == Type.QUE) {
+            if(votingQueAdapter != null)
+                votingQueAdapter.addToDataset(voting);
+        } else {
+            if(votingSkipAdapter != null)
+                votingSkipAdapter.addToDataset(voting);
+        }
+    }
+
 
     /**
      * Display the result bar with the current result of all votings where the client or the host

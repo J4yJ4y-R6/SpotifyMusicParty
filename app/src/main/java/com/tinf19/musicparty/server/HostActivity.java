@@ -279,7 +279,7 @@ public class HostActivity extends AppCompatActivity {
                     Snackbar.LENGTH_SHORT).show());
             new Thread(() -> {
                 if (mBoundService != null) {
-                    mBoundService.addItemToPlaylist(track);
+                    mBoundService.queueItem(track);
                 }
             }).start();
         });
@@ -364,7 +364,8 @@ public class HostActivity extends AppCompatActivity {
                 if (mBoundService != null) return mBoundService.getNowPlaying();
                 else return null;
             }
-        }, new HostPlaylistAdapter.HostPlaylistAdapterCallback() {
+        },
+                new HostPlaylistAdapter.HostPlaylistAdapterCallback() {
 
             @Override
             public void swapPlaylistItems(int from, int to) {
@@ -458,11 +459,12 @@ public class HostActivity extends AppCompatActivity {
             String currentFragmentTag = savedInstanceState.getString(Constants.TAG, "ShowSongHostFragment");
             if(!currentFragmentTag.equals("")) {
                 Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
-                getSupportFragmentManager().beginTransaction().
-                        replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
+                if(currentFragment != null)
+                    getSupportFragmentManager().beginTransaction().
+                            replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
             }
         } else {
-            if(!getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false))
+            if(!getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false) && loadingFragment != null)
                 getSupportFragmentManager().beginTransaction().
                     replace(R.id.showSongHostFragmentFrame, loadingFragment, "LoadingFragment").commitAllowingStateLoss();
             else
@@ -534,11 +536,11 @@ public class HostActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if(showSongFragment.isVisible()) {
+        if(showSongFragment != null && showSongFragment.isVisible()) {
             animateFragmentChange(true, hostClosePartyFragment, "ExitConnectionFragment");
-        } else if(loadingFragment.isVisible()){
+        } else if(loadingFragment != null && loadingFragment.isVisible()){
           stopService();
-        } else {
+        } else if(hostSearchBarFragment != null && showSongFragment != null){
             hostSearchBarFragment.clearSearch();
             animateFragmentChange(false, showSongFragment, "ShowSongHostFragment");
         }
@@ -591,19 +593,19 @@ public class HostActivity extends AppCompatActivity {
 
                 @Override
                 public void setNowPlaying(Track nowPlaying) {
-                    if(showSongFragment.isVisible())
+                    if(showSongFragment != null && showSongFragment.isVisible())
                         runOnUiThread(() ->showSongFragment.setNowPlaying(nowPlaying));
                 }
 
                 @Override
                 public void setPeopleCount(int count) {
-                    if(showSongFragment.isVisible())
+                    if(showSongFragment != null && showSongFragment.isVisible())
                         runOnUiThread(() -> showSongFragment.setPartyNameCount(count));
                 }
 
                 @Override
                 public void setPlayImage(boolean pause) {
-                    if(showSongFragment.isVisible())
+                    if(showSongFragment != null && showSongFragment.isVisible())
                         showSongFragment.setPlayTrackButtonImage(pause);
                 }
 
@@ -663,14 +665,23 @@ public class HostActivity extends AppCompatActivity {
                 @Override
                 public void notifyVotingAdapter(int id, Type type) {
                     Log.d(TAG, "voting submitted has been changed");
-                    if(votingFragment.isVisible())
+                    if(votingFragment != null && votingFragment.isVisible())
                         votingFragment.notifySingleVote(id, type);
                 }
 
                 @Override
                 public void removeVoting(int id, Type type) {
-                    if(votingFragment.isVisible())
+                    if(votingFragment != null && votingFragment.isVisible())
                         votingFragment.removeSingleVote(id, type);
+                }
+
+                @Override
+                public void notifyVotingAdapter(Voting voting) {
+                    Log.d(TAG, "voting has been added");
+                    if(votingFragment != null && votingFragment.isVisible()) {
+                        votingFragment.addItemToDataset(voting);
+                        runOnUiThread( () -> votingFragment.notifyAllVotes(voting.getType()));
+                    }
                 }
 
                 @Override
@@ -705,8 +716,16 @@ public class HostActivity extends AppCompatActivity {
 
                 @Override
                 public void reloadPlaylistFragment() {
-                    if(hostPlaylistFragment.isVisible()) runOnUiThread( () ->
-                            hostPlaylistFragment.updateRecyclerView());
+                    if(hostPlaylistFragment != null && hostPlaylistFragment.isVisible())
+                        runOnUiThread( () -> {
+                            Fragment frg = null;
+                            frg = getSupportFragmentManager().findFragmentByTag("HostPlaylistFragment");
+                            final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                            ft.detach(frg);
+                            ft.attach(frg);
+                            ft.commit();
+                        }
+                    );
                 }
 
                 @Override
@@ -718,11 +737,18 @@ public class HostActivity extends AppCompatActivity {
                 public void acceptEndParty() {
                     stopService();
                 }
+
+                @Override
+                public void notifyPlaylistAdapter() {
+                    if(hostPlaylistFragment != null && hostPlaylistFragment.isAdded())
+                        runOnUiThread( () -> hostPlaylistFragment.updateRecyclerView());
+                }
             });
             if(mBoundService.isFirst())
                 loginToSpotify();
             else {
-                if(getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false) && showSongFragment != null && showSongFragment.isVisible()) {
+                if(getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false) &&
+                        showSongFragment != null && showSongFragment.isVisible()) {
                     showSongFragment.setNowPlaying(mBoundService.getNowPlaying());
                     showSongFragment.setPartyNameCount(mBoundService.getClientListSize());
                 }
@@ -817,8 +843,10 @@ public class HostActivity extends AppCompatActivity {
             fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_up, R.anim.fragment_slide_out_up);
         else
             fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_out_down, R.anim.fragment_slide_in_down);
-        fragmentTransaction.replace(R.id.showSongHostFragmentFrame, fragment, tag);
-        fragmentTransaction.commitAllowingStateLoss();
+        if(fragment != null){
+            fragmentTransaction.replace(R.id.showSongHostFragmentFrame, fragment, tag);
+            fragmentTransaction.commitAllowingStateLoss();
+        }
     }
 
     /**
@@ -828,11 +856,13 @@ public class HostActivity extends AppCompatActivity {
      */
     private void showDefaultFragments() {
         Log.d(TAG, "Fragment has been changed to: HostSongFragment");
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
+        if(showSongFragment != null)
+            getSupportFragmentManager().beginTransaction().
+                    replace(R.id.showSongHostFragmentFrame, showSongFragment, "ShowSongHostFragment").commitAllowingStateLoss();
         Log.d(TAG, "TopFragment has been changed to: HostSearchBarFragment");
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.searchBarHostFragmentFrame, hostSearchBarFragment, "HostSearchBarFragment").commitAllowingStateLoss();
+        if(hostSearchBarFragment != null)
+            getSupportFragmentManager().beginTransaction().
+                    replace(R.id.searchBarHostFragmentFrame, hostSearchBarFragment, "HostSearchBarFragment").commitAllowingStateLoss();
     }
 
     /**

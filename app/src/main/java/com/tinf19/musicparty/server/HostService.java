@@ -44,13 +44,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -106,9 +104,11 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
         void reloadPlaylistFragment();
         void addToSharedPreferances(String name, String id);
         void acceptEndParty();
+        void notifyPlaylistAdapter();
         void notifyFavPlaylistAdapter();
         void notifyVotingAdapter(int id, Type type);
         void removeVoting(int id, Type type);
+        void notifyVotingAdapter(Voting voting);
     }
 
     public enum PartyType {
@@ -144,6 +144,10 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                             Log.e(TAG, e.getMessage(), e);
                         }
                     }).start();
+                    if(hostServiceCallback != null)
+                        hostServiceCallback.reloadPlaylistFragment();
+                    if (partyType == PartyType.VoteParty)
+                        createVoting(track, Type.SKIP);
                 }
             }
 
@@ -170,6 +174,8 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                 if(voting != null)
                     addItemToPlaylist(voting.getTrack());
                 close(id);
+                if(hostServiceCallback != null)
+                    hostServiceCallback.notifyPlaylistAdapter();
             }
 
             @Override
@@ -183,7 +189,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                 if(voting != null) {
                     voting.closeVoting();
                     hostVotings.remove(id);
-                    HostService.this.notifyClients(voting, serverThread);
+                    HostService.this.notifyClientsResult(voting, serverThread);
                     if(hostServiceCallback != null) {
                         hostServiceCallback.notifyVotingAdapter(id, voting.getType());
                         hostServiceCallback.removeVoting(id, voting.getType());
@@ -193,16 +199,10 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
 
             @Override
             public void notifyClients(HostVoting voting, Thread thread) {
-                HostService.this.notifyClients(voting, thread);
+                HostService.this.notifyClientsResult(voting, thread);
             }
         };
         startServer();
-        HostVoting hostVoting = new HostVoting(Type.QUE, new Track("33aYqVQ4EviRTd0BmHFxpF", "Sterben kannst du überall", new Artist[]{new Artist("1eeWVOCazGzGQXOGhnDHTB", "Trailerpark")}, "ab67616d0000485123cdc9ebcbc5511e112ad651", "ab67616d00001e0223cdc9ebcbc5511e112ad651", 247266, "TP4L"), 0.5, votingCallback);
-        HostVoting hostVoting2 = new HostVoting(Type.QUE, new Track("33aYqVQ4EviRTd0BmHFxpF", "Sterben kannst du überall", new Artist[]{new Artist("1eeWVOCazGzGQXOGhnDHTB", "Trailerpark")}, "ab67616d0000485123cdc9ebcbc5511e112ad651", "ab67616d00001e0223cdc9ebcbc5511e112ad651", 247266, "TP4L"), 0.5, votingCallback);
-        HostVoting hostVoting3 = new HostVoting(Type.QUE, new Track("33aYqVQ4EviRTd0BmHFxpF", "Sterben kannst du überall", new Artist[]{new Artist("1eeWVOCazGzGQXOGhnDHTB", "Trailerpark")}, "ab67616d0000485123cdc9ebcbc5511e112ad651", "ab67616d00001e0223cdc9ebcbc5511e112ad651", 247266, "TP4L"), 0.5,  votingCallback);
-        hostVotings.put(hostVoting.getId(), hostVoting);
-        hostVotings.put(hostVoting2.getId(), hostVoting2);
-        hostVotings.put(hostVoting3.getId(), hostVoting3);
     }
 
     @Override
@@ -363,6 +363,17 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
     }
 
     public void addItemToTrackList(Track track) { que.addItem(track); }
+
+    public void queueItem(Track track) {
+        if(partyType == PartyType.VoteParty) {
+            createVoting(track, Type.QUE);
+        }
+        else {
+            addItemToPlaylist(track);
+            if(hostServiceCallback != null)
+                hostServiceCallback.reloadPlaylistFragment();
+        }
+    }
 
     /**
      * This method is the local control for the play button. If the current song is paused, it is
@@ -1047,6 +1058,13 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
         Log.d(TAG, "New " + type.toString() + "-Voting created for: " + newVoting.getTrack()
                 .getName());
         hostVotings.put(newVoting.getId(), newVoting);
+        if(hostServiceCallback != null)
+            hostServiceCallback.notifyVotingAdapter(newVoting);
+        try {
+            notifyClientsNewVoting(newVoting);
+        } catch (JSONException | IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+        }
     }
 
 
@@ -1128,28 +1146,36 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
     }
 
     /**
-     * Notify all subscribed clients of voting change
+     * Notify all subscribed clients when a voting result change
      * @param voting The voting that has been changed
      * @param thread The {@link CommunicationThread} that voted and has not to get notified
      */
-    private void notifyClients(HostVoting voting, Thread thread) {
-        new Thread(() -> {
-            if(thread instanceof CommunicationThread) {
-                List<CommunicationThread> tempList = new ArrayList<>(subscribedClients);
-                tempList.remove((CommunicationThread) thread);
-                try {
-                    sendToClientList(tempList, Commands.VOTERESULT, voting.serializeResult());
-                } catch (IOException | JSONException e) {
-                    Log.e(TAG, e.getMessage(), e);
-                }
-            } else {
-                try {
-                    sendToClientList(subscribedClients, Commands.VOTERESULT, voting.serializeResult());
-                } catch (IOException | JSONException e) {
-                    Log.e(TAG, e.getMessage(), e);
-                }
+    private void notifyClientsResult(HostVoting voting, Thread thread) {
+        if(thread instanceof CommunicationThread) {
+            List<CommunicationThread> tempList = new ArrayList<>(subscribedClients);
+            tempList.remove((CommunicationThread) thread);
+            try {
+                sendToClientList(tempList, Commands.VOTE_RESULT, voting.serializeResult());
+            } catch (IOException | JSONException e) {
+                Log.e(TAG, e.getMessage(), e);
             }
-        }).start();
+        } else {
+            try {
+                sendToClientList(subscribedClients, Commands.VOTE_RESULT, voting.serializeResult());
+            } catch (IOException | JSONException e) {
+                Log.e(TAG, e.getMessage(), e);
+            }
+        }
+    }
+
+    /**
+     * Notify all subscribed clients when a new voting has been added
+     * @param voting New Voting
+     * @throws JSONException when the serializing failed
+     * @throws IOException when the message could not be send to all subscribed clients
+     */
+    private void notifyClientsNewVoting(HostVoting voting) throws JSONException, IOException {
+        sendToClientList(subscribedClients, Commands.VOTE_ADDED, voting.serialize(serverThread));
     }
 
     /**
@@ -1305,9 +1331,8 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                                     Log.d(TAG, "Added " + attribute + " to the queue");
                                     if(this.login) {
                                         Track track = new Track(attribute);
-                                        addItemToPlaylist(track);
+                                        queueItem(track);
                                         //addItem(track.getURI(), track.getName());
-                                        hostServiceCallback.reloadPlaylistFragment();
                                     }
                                     break;
                                 case PLAYING:
@@ -1349,10 +1374,10 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                                         break;
                                     }
                                     break;
-                                case VOTERESULT:
+                                case VOTE_RESULT:
                                     HostVoting voting = hostVotings.get(Integer.parseInt(attribute));
                                     if(voting != null)
-                                        sendMessage(Commands.VOTERESULT, voting.serializeResult());
+                                        sendMessage(Commands.VOTE_RESULT, voting.serializeResult());
                                     break;
                                 case SUBSCRIBE:
                                     subscribedClients.add(this);

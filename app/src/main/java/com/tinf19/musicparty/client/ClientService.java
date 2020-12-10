@@ -6,7 +6,6 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -79,6 +78,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
         void setPlaylist(List<Track> trackList);
         void setCurrentTrack(Track track);
         void setVotings(List<Voting> ClientVotings);
+        void addVoting(ClientVoting voting);
         void showFragments();
         void notifyVotingAdapter(int id, Type type);
         void removeVoting(int id, Type type);
@@ -271,7 +271,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
     public void fetchVotingResult() {
         clientVotings.keySet().forEach(v-> {
             try {
-                clientThread.sendMessage(Commands.VOTERESULT, String.valueOf(v));
+                clientThread.sendMessage(Commands.VOTE_RESULT, String.valueOf(v));
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
@@ -433,7 +433,7 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                                     clientServiceCallback.setVotings(getClientVotings());
                                     setClientVotings(clientVotings);
                                     break;
-                                case VOTERESULT:
+                                case VOTE_RESULT:
                                     JSONObject tempObject = new JSONObject(attribute);
                                     int votingID = tempObject.getInt(Constants.ID);
                                     ClientVoting voting = clientVotings.get(votingID);
@@ -452,6 +452,20 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                                                         , voting.getType());
                                         }
                                     }
+                                    break;
+                                case VOTE_ADDED:
+                                    ClientVoting newVoting = new ClientVoting(attribute, (vote, id) -> {
+                                        new Thread(() -> {
+                                            try {
+                                                sendMessage(Commands.VOTE, id + Constants.DELIMITER + vote);
+                                            } catch (IOException e) {
+                                                Log.e(TAG, e.getMessage(), e);
+                                            }
+                                        }).start();
+                                    });
+                                    clientVotings.put(newVoting.getId(), newVoting);
+                                    if(clientServiceCallback != null)
+                                        clientServiceCallback.addVoting(newVoting);
                             }
                         }
                     }

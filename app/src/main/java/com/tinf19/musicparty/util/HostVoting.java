@@ -169,11 +169,9 @@ public class HostVoting implements Voting {
      */
     public void evaluateVoting() {
         finished = true;
-        if(Math.ceil((accepted.size() + denied.size()) * threshold) <= accepted.size())
-            if(type.equals(Type.QUE))
-                votingCallback.addAndClose(id);
-            else
-                votingCallback.skipAndClose(id);
+        if(Math.ceil((accepted.size() + denied.size()) * threshold) <= accepted.size() &&
+            type.equals(Type.QUE))
+            votingCallback.addAndClose(id);
         else
             votingCallback.close(id);
     }

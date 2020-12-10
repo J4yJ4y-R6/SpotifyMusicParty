@@ -146,8 +146,9 @@ public class ClientActivity extends AppCompatActivity {
             String currentFragmentTag = savedInstanceState.getString(Constants.TAG, "ShowSongFragment");
             if (!currentFragmentTag.equals("")) {
                 Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
-                getSupportFragmentManager().beginTransaction().
-                        replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
+                if(currentFragment != null)
+                    getSupportFragmentManager().beginTransaction().
+                            replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
             }
         } else {
             if (!getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false)) {
@@ -196,10 +197,11 @@ public class ClientActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (clientSongFragment.isVisible()) {
+        if (clientExitConnectionFragment != null && clientSongFragment.isVisible()) {
             animateFragmentChange(true, clientExitConnectionFragment, "ExitConnectionFragment");
         } else {
-            clientSearchBarFragment.clearSearch();
+            if(clientSearchBarFragment != null)
+                clientSearchBarFragment.clearSearch();
             showShowSongFragment();
         }
     }
@@ -225,7 +227,7 @@ public class ClientActivity extends AppCompatActivity {
      */
     private void setPartyName(String partyName) {
         Log.d(TAG, "party name got changed to: " + partyName);
-        if (clientSongFragment.isVisible())
+        if (clientSongFragment != null && clientSongFragment.isVisible())
             runOnUiThread(() -> clientSongFragment.setPartyName(partyName));
     }
 
@@ -239,10 +241,10 @@ public class ClientActivity extends AppCompatActivity {
      * with a party name
      */
     private void showShowSongFragment() {
-        animateFragmentChange(false, clientSongFragment, "ShowSongFragment");
+        if(clientSongFragment != null)
+            animateFragmentChange(false, clientSongFragment, "ShowSongFragment");
         new Thread(() -> {
-            while (!clientSongFragment.getStarted() || mBoundService == null || mBoundService.getClientThread().getPartyName() == null)
-                ;
+            while (!clientSongFragment.getStarted() || mBoundService == null || mBoundService.getClientThread().getPartyName() == null);
             if (mBoundService != null) {
                 mBoundService.setTrack();
                 setPartyName(mBoundService.getClientThread().getPartyName());
@@ -265,8 +267,9 @@ public class ClientActivity extends AppCompatActivity {
             fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_in_up, R.anim.fragment_slide_out_up);
         else
             fragmentTransaction.setCustomAnimations(R.anim.fragment_slide_out_down, R.anim.fragment_slide_in_down);
-        fragmentTransaction.replace(R.id.showSongFragmentFrame, fragment, tag);
-        fragmentTransaction.commitAllowingStateLoss();
+        if(fragment != null) {
+            fragmentTransaction.replace(R.id.showSongFragmentFrame, fragment, tag);
+        }fragmentTransaction.commitAllowingStateLoss();
     }
 
 
@@ -335,7 +338,8 @@ public class ClientActivity extends AppCompatActivity {
             mBoundService.setClientServiceCallback(new ClientService.ClientServiceCallback() {
                 @Override
                 public void setTrack(Track track) {
-                    runOnUiThread(() -> clientSongFragment.showSongs(track));
+                    if(clientSongFragment != null && clientSongFragment.isVisible())
+                        runOnUiThread(() -> clientSongFragment.showSongs(track));
                 }
 
                 @Override
@@ -350,17 +354,28 @@ public class ClientActivity extends AppCompatActivity {
 
                 @Override
                 public void setPlaylist(List<Track> trackList) {
-                    ClientActivity.this.runOnUiThread(() -> clientPlaylistFragment.showResult(trackList));
+                    if(clientPlaylistFragment != null && clientPlaylistFragment.isVisible())
+                        ClientActivity.this.runOnUiThread(() -> clientPlaylistFragment.showResult(trackList));
                 }
 
                 @Override
                 public void setCurrentTrack(Track track) {
-                    ClientActivity.this.runOnUiThread(() -> clientPlaylistFragment.setCurrentPlaying(track));
+                    if(clientPlaylistFragment != null && clientPlaylistFragment.isVisible())
+                        ClientActivity.this.runOnUiThread(() -> clientPlaylistFragment.setCurrentPlaying(track));
                 }
 
                 @Override
                 public void setVotings(List<Voting> clientVotings) {
-                    ClientActivity.this.runOnUiThread(() -> votingFragment.showVotings(clientVotings));
+                    if(votingFragment != null && votingFragment.isVisible())
+                        ClientActivity.this.runOnUiThread(() -> votingFragment.showVotings(clientVotings));
+                }
+
+                @Override
+                public void addVoting(ClientVoting voting) {
+                    if(votingFragment != null && votingFragment.isVisible()) {
+                        votingFragment.addItemToDataset(voting);
+                        runOnUiThread( () -> votingFragment.notifyAllVotes(voting.getType()));
+                    }
                 }
 
                 /**
@@ -521,22 +536,24 @@ public class ClientActivity extends AppCompatActivity {
                 @Override
                 public void notifyVotingAdapter(int id, Type type) {
                     Log.d(TAG, "Voting with id: " + id + "has changed");
-                    if(votingFragment.isVisible())
+                    if(votingFragment != null && votingFragment.isVisible())
                         votingFragment.notifySingleVote(id, type);
                 }
 
                 @Override
                 public void removeVoting(int id, Type type) {
-                    if(votingFragment.isVisible())
+                    if(votingFragment != null && votingFragment.isVisible())
                        runOnUiThread(() ->  votingFragment.removeSingleVote(id, type));
                 }
 
                 @Override
                 public void updateVotingButton(HostService.PartyType partyType) {
-                    Snackbar.make(clientSongFragment.requireView(), getString(
-                            R.string.snackbar_partyTypeChanged, partyType), Snackbar.LENGTH_LONG)
-                            .show();
-                    runOnUiThread( () -> clientSongFragment.toggleVotingButton(partyType));
+                    if(clientSongFragment != null && clientSongFragment.isVisible()) {
+                        Snackbar.make(clientSongFragment.requireView(), getString(
+                                R.string.snackbar_partyTypeChanged, partyType), Snackbar.LENGTH_LONG)
+                                .show();
+                        runOnUiThread(() -> clientSongFragment.toggleVotingButton(partyType));
+                    }
                 }
             });
     }
@@ -546,8 +563,9 @@ public class ClientActivity extends AppCompatActivity {
      */
     private void showDefaultFragments() {
         Log.d(TAG, "Fragment has been changed to SearchBarFragment");
-        getSupportFragmentManager().beginTransaction().
-                replace(R.id.searchBarFragmentFrame, clientSearchBarFragment, "SearchBarFragment").commitAllowingStateLoss();
+        if(clientSearchBarFragment != null)
+            getSupportFragmentManager().beginTransaction().
+                    replace(R.id.searchBarFragmentFrame, clientSearchBarFragment, "SearchBarFragment").commitAllowingStateLoss();
         showShowSongFragment();
     }
 }
