@@ -76,6 +76,8 @@ public class HostSettingsFragment extends Fragment {
         String getPassword();
         void setNewPartyName(String newPartyName);
         void changePartyType(HostService.PartyType partyType);
+        void closeAllVotings();
+        void createSkipVoting();
     }
 
     /**
@@ -225,10 +227,12 @@ public class HostSettingsFragment extends Fragment {
         RadioButton allInSettingsRadioButton = view.findViewById(R.id.allInSettingsRadioButton);
         if(allInSettingsRadioButton != null)
             allInSettingsRadioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if(isChecked) {
+                if(isChecked && buttonView.isPressed()) {
                     HostService.PartyType partyType = HostService.PartyType.AllInParty;
-                    if (hostSettingsCallback != null)
+                    if (hostSettingsCallback != null){
                         hostSettingsCallback.changePartyType(partyType);
+                        hostSettingsCallback.closeAllVotings();
+                    }
                     Snackbar.make(this.requireView(), getString(R.string.snackbar_partyTypeChanged,
                             partyType), Snackbar.LENGTH_LONG).show();
                 }
@@ -237,12 +241,15 @@ public class HostSettingsFragment extends Fragment {
         RadioButton votingSettingsRadioButton = view.findViewById(R.id.votingSettingsRadioButton);
         if(votingSettingsRadioButton != null)
             votingSettingsRadioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                if(isChecked) {
+                if(isChecked && buttonView.isPressed()) {
                     HostService.PartyType partyType = HostService.PartyType.VoteParty;
-                    if (hostSettingsCallback != null)
+                    if (hostSettingsCallback != null) {
                         hostSettingsCallback.changePartyType(HostService.PartyType.VoteParty);
+                        hostSettingsCallback.createSkipVoting();
+                    }
                     Snackbar.make(this.requireView(), getString(R.string.snackbar_partyTypeChanged,
                             partyType), Snackbar.LENGTH_LONG).show();
+
                 }
             });
         return view;

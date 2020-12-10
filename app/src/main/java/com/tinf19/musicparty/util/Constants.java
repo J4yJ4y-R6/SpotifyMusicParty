@@ -37,6 +37,7 @@ public class Constants {
     public static final String FINISHED_VOTE = "finishedVote";
     public static final String COMMAND = "command";
     public static final String MESSAGE = "message";
+    public static final double THRESHOLD_VALUE = 0.5;
 
     public static final String TYPE = "type";
     public static final String THRESHOLD = "threshold";

@@ -336,6 +336,19 @@ public class HostActivity extends AppCompatActivity {
                     }
                 }
             }
+
+            @Override
+            public void closeAllVotings() {
+                if(mBoundService != null) { mBoundService.evaluateAllVotings(); }
+            }
+
+            @Override
+            public void createSkipVoting() {
+                if(mBoundService != null) {
+                    Track nowPlaying = mBoundService.getNowPlaying();
+                    if(nowPlaying != null) mBoundService.createVoting(nowPlaying, Type.SKIP);
+                }
+            }
         });
         hostPlaylistFragment = new HostPlaylistFragment(new HostPlaylistFragment.HostPlaylistCallback() {
             @Override
@@ -692,7 +705,8 @@ public class HostActivity extends AppCompatActivity {
 
                 @Override
                 public void reloadPlaylistFragment() {
-                    if(hostPlaylistFragment.isVisible()) hostPlaylistFragment.updateRecyclerView();
+                    if(hostPlaylistFragment.isVisible()) runOnUiThread( () ->
+                            hostPlaylistFragment.updateRecyclerView());
                 }
 
                 @Override

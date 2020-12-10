@@ -183,6 +183,11 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
      */
     public List<Voting> getClientVotings() { return new ArrayList<>(clientVotings.values()); }
 
+    /**
+     * @return Get the currently playing song
+     */
+    public Track getNowPlaying() { return nowPlaying; }
+
     //Setter
 
     /**

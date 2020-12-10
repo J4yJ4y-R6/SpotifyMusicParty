@@ -19,7 +19,9 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
 import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.R;
@@ -49,6 +51,7 @@ public class ClientSongFragment extends Fragment {
         void showPlaylist();
         void openVotingFragment();
         HostService.PartyType getPartyType();
+        Track getNowPlaying();
     }
 
     /**
@@ -75,7 +78,6 @@ public class ClientSongFragment extends Fragment {
         if(songTitle != null) songTitle.setSelected(true);
         if(songArtist != null) songArtist.setSelected(true);
         if(songAlbum != null) songAlbum.setSelected(true);
-        Log.d(TAG, clientSongCallback.getPartyType().toString());
         if(openVotingButtonLinearLayout != null) {
             Log.d(TAG, clientSongCallback.getPartyType().toString());
             if (clientSongCallback.getPartyType().equals(HostService.PartyType.VoteParty))
@@ -83,6 +85,9 @@ public class ClientSongFragment extends Fragment {
             else
                 openVotingButtonLinearLayout.setVisibility(View.GONE);
         }
+        Track track = clientSongCallback.getNowPlaying();
+        if(track != null)
+            showSongs(track);
     }
 
     @Override
@@ -163,6 +168,20 @@ public class ClientSongFragment extends Fragment {
             int start = conTo.length();
             int end = start + name.length();
             spannable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+
+    /**
+     * Show the button to open the {@link com.tinf19.musicparty.fragments.VotingFragment} if the
+     * party type was changed to Voting-Party. Otherwise the button gets hidden.
+     * @param partyType Current party type
+     */
+    public void toggleVotingButton(HostService.PartyType partyType) {
+        if(openVotingButtonLinearLayout != null) {
+            if (partyType.equals(HostService.PartyType.VoteParty))
+                openVotingButtonLinearLayout.setVisibility(View.VISIBLE);
+            else
+                openVotingButtonLinearLayout.setVisibility(View.GONE);
         }
     }
 }

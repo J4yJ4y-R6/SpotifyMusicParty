@@ -450,6 +450,11 @@ public class ClientActivity extends AppCompatActivity {
                             return mBoundService != null ? mBoundService.getPartyType() :
                                     HostService.PartyType.AllInParty;
                         }
+
+                        @Override
+                        public Track getNowPlaying() {
+                            return mBoundService != null ? mBoundService.getNowPlaying() : null;
+                        }
                     });
                     clientPlaylistFragment = new ClientPlaylistFragment();
                     clientSearchBarFragment = new ClientSearchBarFragment(new ClientSearchBarFragment.ClientSearchBarCallback() {
@@ -528,14 +533,10 @@ public class ClientActivity extends AppCompatActivity {
 
                 @Override
                 public void updateVotingButton(HostService.PartyType partyType) {
-                    Snackbar.make(findViewById(R.id.showSongFragmentFrame),
-                            getString(R.string.snackbar_partyTypeChanged), Snackbar.LENGTH_LONG);
-                    Fragment frg = null;
-                    frg = getSupportFragmentManager().findFragmentByTag("ShowSongFragment");
-                    final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-                    ft.detach(frg);
-                    ft.attach(frg);
-                    ft.commit();
+                    Snackbar.make(clientSongFragment.requireView(), getString(
+                            R.string.snackbar_partyTypeChanged, partyType), Snackbar.LENGTH_LONG)
+                            .show();
+                    runOnUiThread( () -> clientSongFragment.toggleVotingButton(partyType));
                 }
             });
     }

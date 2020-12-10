@@ -50,6 +50,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -79,6 +80,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
     private com.spotify.protocol.types.Track lastSongTitle;
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
+    public HostVoting.VotingCallback votingCallback;
 
     private String password;
     private String userID;
@@ -155,7 +157,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                 mSpotifyAppRemote.getPlayerApi().pause();
             }
         });
-        HostVoting.VotingCallback votingCallback = new HostVoting.VotingCallback() {
+        votingCallback = new HostVoting.VotingCallback() {
             @Override
             public void skipAndClose(int id) {
                 que.next();
@@ -195,17 +197,12 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             }
         };
         startServer();
-        HostVoting hostVoting = new HostVoting(Type.QUE, new Track("33aYqVQ4EviRTd0BmHFxpF", "Sterben kannst du überall", new Artist[]{new Artist("1eeWVOCazGzGQXOGhnDHTB", "Trailerpark")}, "ab67616d0000485123cdc9ebcbc5511e112ad651", "ab67616d00001e0223cdc9ebcbc5511e112ad651", 247266, "TP4L"), 0.5, 1, votingCallback);
-        HostVoting hostVoting2 = new HostVoting(Type.QUE, new Track("33aYqVQ4EviRTd0BmHFxpF", "Sterben kannst du überall", new Artist[]{new Artist("1eeWVOCazGzGQXOGhnDHTB", "Trailerpark")}, "ab67616d0000485123cdc9ebcbc5511e112ad651", "ab67616d00001e0223cdc9ebcbc5511e112ad651", 247266, "TP4L"), 0.5, 2, votingCallback);
-//        HostVoting hostVoting2 = new HostVoting(Type.QUE, new Track("123", "Silas", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 2, votingCallback);
-//        HostVoting hostVoting3 = new HostVoting(Type.QUE, new Track("123", "Tim", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 3, votingCallback);
-//        HostVoting hostVoting4 = new HostVoting(Type.SKIP, new Track("123", "Hung", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 4, votingCallback);
-//        HostVoting hostVoting5 = new HostVoting(Type.SKIP, new Track("123", "Olli", new Artist[]{new Artist("id", "dieter")}, "cover", "coverFull", 123456, "album"), 0.5, 5, votingCallback);
+        HostVoting hostVoting = new HostVoting(Type.QUE, new Track("33aYqVQ4EviRTd0BmHFxpF", "Sterben kannst du überall", new Artist[]{new Artist("1eeWVOCazGzGQXOGhnDHTB", "Trailerpark")}, "ab67616d0000485123cdc9ebcbc5511e112ad651", "ab67616d00001e0223cdc9ebcbc5511e112ad651", 247266, "TP4L"), 0.5, votingCallback);
+        HostVoting hostVoting2 = new HostVoting(Type.QUE, new Track("33aYqVQ4EviRTd0BmHFxpF", "Sterben kannst du überall", new Artist[]{new Artist("1eeWVOCazGzGQXOGhnDHTB", "Trailerpark")}, "ab67616d0000485123cdc9ebcbc5511e112ad651", "ab67616d00001e0223cdc9ebcbc5511e112ad651", 247266, "TP4L"), 0.5, votingCallback);
+        HostVoting hostVoting3 = new HostVoting(Type.QUE, new Track("33aYqVQ4EviRTd0BmHFxpF", "Sterben kannst du überall", new Artist[]{new Artist("1eeWVOCazGzGQXOGhnDHTB", "Trailerpark")}, "ab67616d0000485123cdc9ebcbc5511e112ad651", "ab67616d00001e0223cdc9ebcbc5511e112ad651", 247266, "TP4L"), 0.5,  votingCallback);
         hostVotings.put(hostVoting.getId(), hostVoting);
         hostVotings.put(hostVoting2.getId(), hostVoting2);
-//        hostVotings.put(hostVoting3.getId(), hostVoting3);
-//        hostVotings.put(hostVoting4.getId(), hostVoting4);
-//        hostVotings.put(hostVoting5.getId(), hostVoting5);
+        hostVotings.put(hostVoting3.getId(), hostVoting3);
     }
 
     @Override
@@ -1025,6 +1022,31 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                 response.close();
             }
         });
+    }
+
+
+    /**
+     * Evaluating all votings after the PartyType was changed to a All-In-Party.
+     */
+    public void evaluateAllVotings() {
+        ArrayList<HostVoting> tempVotings = new ArrayList<>(hostVotings.values());
+        for(HostVoting voting: tempVotings){
+            voting.evaluateVoting();
+            voting.closeVoting();
+        }
+    }
+
+    /**
+     * Create a new Voting
+     * @param track Track which is voted about
+     * @param type Type of the voting
+     */
+    public void createVoting(Track track, Type type){
+        HostVoting newVoting = new HostVoting(type, track, Constants.THRESHOLD_VALUE,
+                votingCallback);
+        Log.d(TAG, "New " + type.toString() + "-Voting created for: " + newVoting.getTrack()
+                .getName());
+        hostVotings.put(newVoting.getId(), newVoting);
     }
 
 
