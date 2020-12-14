@@ -47,9 +47,14 @@ public class Constants {
 
 
     /**
-     * Channel-Id used for creating or updating a notification
+     * Channel-Id used for creating or updating a service notification
      */
     public static final String CHANNEL_ID = "musicPartyChannel";
+
+    /**
+     * Channel-Id used for creating or updating a voting notification
+     */
+    public static final String VOTING_CHANNEL_ID = "votingNotificationChannel";
 
     /**
      * Used to authenticate the app with Spotify
@@ -92,6 +97,16 @@ public class Constants {
      * Notification-Id of the service notification for the server and the client
      */
     public static final int NOTIFY_ID = 1;
+
+    /**
+     * Notification-ID of the voting notification for the server and the client
+     */
+    public static final int VOTING_NOTIFY_ID = 2;
+
+    /**
+     * Group up all notifications by this app
+     */
+    public static final String CATEGORY_SERVICE = "MusicParty";
 
     /**
      * Spotify users can set a time between songs while they are overlap. This constant is used to
