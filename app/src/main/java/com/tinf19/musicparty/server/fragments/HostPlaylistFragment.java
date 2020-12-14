@@ -1,6 +1,7 @@
 package com.tinf19.musicparty.server.fragments;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -18,9 +19,9 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.server.adapter.HostPlaylistItemMoveHelper;
 import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.server.adapter.HostPlaylistAdapter;
-import com.tinf19.musicparty.server.adapter.HostPlaylistItemMoveHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,8 @@ public class HostPlaylistFragment extends Fragment {
     private HostPlaylistAdapter hostPlaylistAdapter;
     private HostPlaylistCallback hostPlaylistCallback;
     private HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
+    private View view;
+    private HostPlaylistItemMoveHelper hostPlaylistItemMoveHelper;
 
     public interface HostPlaylistCallback {
         void showPlaylist();
@@ -105,12 +108,19 @@ public class HostPlaylistFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view =  inflater.inflate(R.layout.fragment_host_playlist, container, false);
+        view =  inflater.inflate(R.layout.fragment_host_playlist, container, false);
         recyclerView = view.findViewById(R.id.hostPlaylistRecyclerView);
         if(recyclerView != null) {
             hostPlaylistAdapter = new HostPlaylistAdapter(new ArrayList<Track>(), hostPlaylistAdapterCallback);
-            ItemTouchHelper touchHelper = new ItemTouchHelper(new HostPlaylistItemMoveHelper(hostPlaylistAdapter));
+            hostPlaylistItemMoveHelper = new HostPlaylistItemMoveHelper(hostPlaylistAdapter, getContext());
+            ItemTouchHelper touchHelper = new ItemTouchHelper(hostPlaylistItemMoveHelper);
             touchHelper.attachToRecyclerView(recyclerView);
+            recyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
+                @Override
+                public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
+                    hostPlaylistItemMoveHelper.onDraw(c);
+                }
+            });
             recyclerView.setAdapter(hostPlaylistAdapter);
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(view.getContext());
             recyclerView.setLayoutManager(layoutManager);

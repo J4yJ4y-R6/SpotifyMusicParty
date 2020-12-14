@@ -33,7 +33,7 @@ public class HostVoting implements Voting {
     private List<Thread> accepted = new ArrayList<>();
     private List<Thread> denied = new ArrayList<>();
     private List<Thread> ignored = new ArrayList<>();
-    private final CountDownTimer closeTimer;
+    private CountDownTimer closeTimer;
     private int ignoredCount = 0;
     private boolean finished = false;
 
@@ -41,6 +41,7 @@ public class HostVoting implements Voting {
         void skipAndClose(int id);
         void addAndClose(int id);
         int getClientCount();
+        int getVotingTime();
         void close(int id);
         void notifyClients(HostVoting voting, Thread thread);
     }
@@ -59,13 +60,17 @@ public class HostVoting implements Voting {
         this.id = counter++;
         this.track = track;
         this.votingCallback = votingCallback;
-        closeTimer = new CountDownTimer(60*1000, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {}
+        if(type == Type.QUE)
+            closeTimer = new CountDownTimer(votingCallback.getVotingTime()*60*1000,
+                    1000) {
+                @Override
+                public void onTick(long millisUntilFinished) {
+                    Log.d(TAG, "onTick: ");
+                }
 
-            @Override
-            public void onFinish() { evaluateVoting(); }
-        }.start();
+                @Override
+                public void onFinish() { evaluateVoting(); }
+            }.start();
     }
 
 
@@ -119,7 +124,8 @@ public class HostVoting implements Voting {
     }
 
     public void closeVoting() {
-        closeTimer.cancel();
+        if(type == Type.QUE)
+            closeTimer.cancel();
     }
 
     /**

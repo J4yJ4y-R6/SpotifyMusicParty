@@ -130,7 +130,9 @@
     <string name="snackbar_coverToBig"> Dein Bild ist zu groß. Die Maximalgröße für Playlist-Cover ist 250KB</string>
     <string name="snackbar_somethingWentWrong">Etwas lief falsch.</string>
     <string name="snackbar_pickedImage">Du hast ein Bild ausgewählt"</string>
-    <string name="snackbar_partyNameChanged"> "Der Partyname wurde auf %1$s geändert.</string>
+    <string name="snackbar_partyNameChanged"> Der Partyname wurde auf %1$s geändert.</string>
+    <string name="snackbar_votingTimeToShort"> Die Votingzeit muss mindestens eine Minute betragen</string>
+    <string name="snackbar_votingTimeChanged"> Die Votingzeit wurde auf %1$d geändert</string>
 
 
 </resources>

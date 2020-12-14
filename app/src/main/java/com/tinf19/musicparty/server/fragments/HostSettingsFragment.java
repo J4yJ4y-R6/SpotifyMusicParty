@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.NumberPicker;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
@@ -33,6 +34,7 @@ import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.HostVoting;
+import com.tinf19.musicparty.util.Type;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,6 +66,8 @@ public class HostSettingsFragment extends Fragment {
     private EditText changePartyName;
     private TextView ipAddressTextView;
     private TextView passwordTextView;
+    private EditText votingTimeEditText;
+    private Button saveVotingTimeButton;
     private HostSettingsCallback hostSettingsCallback;
     private String partyName = "Music Party";
     /**
@@ -74,8 +78,11 @@ public class HostSettingsFragment extends Fragment {
     public interface HostSettingsCallback {
         String getIpAddress();
         String getPassword();
+        int getVotingTime();
+        HostService.PartyType getPartyType();
         void setNewPartyName(String newPartyName);
         void changePartyType(HostService.PartyType partyType);
+        void changeVotingTime(int votingTime);
         void closeAllVotings();
         void createSkipVoting();
     }
@@ -106,13 +113,21 @@ public class HostSettingsFragment extends Fragment {
     public void onStart() {
         super.onStart();
         Log.d(TAG, "set connection information");
-        if(ipAddressTextView != null) {
+        if(ipAddressTextView != null && hostSettingsCallback != null) {
             String text = getString(R.string.text_ip_address) + ": " + hostSettingsCallback.getIpAddress();
             ipAddressTextView.setText(text);
         }
-        if(passwordTextView != null) {
+        if(passwordTextView != null && hostSettingsCallback != null) {
             String text = getString(R.string.app_password) + ": " + hostSettingsCallback.getPassword();
             passwordTextView.setText(text);
+        }
+
+        if(votingTimeEditText != null && saveVotingTimeButton != null && hostSettingsCallback != null) {
+            if(hostSettingsCallback.getPartyType() == HostService.PartyType.VoteParty) {
+                votingTimeEditText.setText(String.valueOf(hostSettingsCallback.getVotingTime()));
+                votingTimeEditText.setVisibility(View.VISIBLE);
+                saveVotingTimeButton.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -166,6 +181,8 @@ public class HostSettingsFragment extends Fragment {
 
         ipAddressTextView = view.findViewById(R.id.ipAddressSettingsTextView);
         passwordTextView = view.findViewById(R.id.passwordSettingsTextView);
+        votingTimeEditText = view.findViewById(R.id.votingTimeEditNumber);
+        saveVotingTimeButton = view.findViewById(R.id.saveVotingTimeButton);
 
         ImageButton shareAddressButton = view.findViewById(R.id.shareButtonSettingsImageButton);
         if(shareAddressButton != null) {
@@ -232,6 +249,8 @@ public class HostSettingsFragment extends Fragment {
                     if (hostSettingsCallback != null){
                         hostSettingsCallback.changePartyType(partyType);
                         hostSettingsCallback.closeAllVotings();
+                        votingTimeEditText.setVisibility(View.INVISIBLE);
+                        saveVotingTimeButton.setVisibility(View.GONE);
                     }
                     Snackbar.make(this.requireView(), getString(R.string.snackbar_partyTypeChanged,
                             partyType), Snackbar.LENGTH_LONG).show();
@@ -246,12 +265,33 @@ public class HostSettingsFragment extends Fragment {
                     if (hostSettingsCallback != null) {
                         hostSettingsCallback.changePartyType(HostService.PartyType.VoteParty);
                         hostSettingsCallback.createSkipVoting();
+                        if(votingTimeEditText != null && saveVotingTimeButton != null) {
+                            votingTimeEditText.setText(String.valueOf(hostSettingsCallback.getVotingTime()));
+                            votingTimeEditText.setVisibility(View.VISIBLE);
+                            saveVotingTimeButton.setVisibility(View.VISIBLE);
+                        }
                     }
                     Snackbar.make(this.requireView(), getString(R.string.snackbar_partyTypeChanged,
                             partyType), Snackbar.LENGTH_LONG).show();
 
                 }
             });
+
+        if(saveVotingTimeButton != null) {
+            saveVotingTimeButton.setOnClickListener(v -> {
+                if(hostSettingsCallback != null && votingTimeEditText != null) {
+                    int votingTime = Integer.parseInt(votingTimeEditText.getText().toString());
+                    if(votingTime >= 1) {
+                        hostSettingsCallback.changeVotingTime(votingTime);
+                        Snackbar.make(this.requireView(), getString(R.string
+                                .snackbar_votingTimeChanged, votingTime), Snackbar.LENGTH_SHORT).show();
+                    }
+                    else
+                        Snackbar.make(this.requireView(), getString(R.string
+                                .snackbar_votingTimeToShort), Snackbar.LENGTH_SHORT).show();
+                }
+            });
+        }
         return view;
     }
 

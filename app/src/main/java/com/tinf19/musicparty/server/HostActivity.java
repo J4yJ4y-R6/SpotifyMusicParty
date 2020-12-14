@@ -17,6 +17,7 @@ import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -279,7 +280,7 @@ public class HostActivity extends AppCompatActivity {
                     Snackbar.LENGTH_SHORT).show());
             new Thread(() -> {
                 if (mBoundService != null) {
-                    mBoundService.queueItem(track);
+                    runOnUiThread( () -> mBoundService.queueItem(track));
                 }
             }).start();
         });
@@ -311,6 +312,17 @@ public class HostActivity extends AppCompatActivity {
             }
 
             @Override
+            public int getVotingTime() {
+                return mBoundService != null ? mBoundService.getVotingTime() : 2;
+            }
+
+            @Override
+            public HostService.PartyType getPartyType() {
+                return mBoundService != null ? mBoundService.getPartyType() :
+                        HostService.PartyType.AllInParty;
+            }
+
+            @Override
             public void setNewPartyName(String newPartyName) {
                 if (mBoundService != null) {
                     Log.d(TAG, "party name has changed to: " + newPartyName);
@@ -338,6 +350,12 @@ public class HostActivity extends AppCompatActivity {
             }
 
             @Override
+            public void changeVotingTime(int votingTime) {
+                if(mBoundService != null)
+                    mBoundService.setVotingTime(votingTime);
+            }
+
+            @Override
             public void closeAllVotings() {
                 if(mBoundService != null) { mBoundService.evaluateAllVotings(); }
             }
@@ -346,7 +364,7 @@ public class HostActivity extends AppCompatActivity {
             public void createSkipVoting() {
                 if(mBoundService != null) {
                     Track nowPlaying = mBoundService.getNowPlaying();
-                    if(nowPlaying != null) mBoundService.createVoting(nowPlaying, Type.SKIP);
+                    if(nowPlaying != null) runOnUiThread( () -> mBoundService.createVoting(nowPlaying, Type.SKIP));
                 }
             }
         });
@@ -688,10 +706,12 @@ public class HostActivity extends AppCompatActivity {
                 public void addToSharedPreferances(String name, String id) {
                     Log.d(TAG, "playlist " + name + " has been added to favorites");
                     SharedPreferences savePlaylistMemory = getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
-                    if(!savePlaylistMemory.getString("29", "").equals(""))
+                    if(!savePlaylistMemory.getString("29", "").equals("")) {
                         Snackbar.make(findViewById(R.id.showSongFragmentFrame),
                                 getString(R.string.text_toastPlaylistNotSaved),
                                 Snackbar.LENGTH_LONG).show();
+                        return;
+                    }
                     SharedPreferences.Editor editor = savePlaylistMemory.edit();
                     JSONObject playlist = new JSONObject();
                     try {

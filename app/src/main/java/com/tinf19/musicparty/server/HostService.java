@@ -86,6 +86,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
     private String playlistID;
     private String partyName;
     private int size = 0;
+    private int votingTime = 2;
     private boolean first = true;
     private boolean pause = true;
     private boolean newSong;
@@ -182,6 +183,9 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             public int getClientCount() {
                 return getClientListSize();
             }
+
+            @Override
+            public int getVotingTime() { return votingTime; }
 
             @Override
             public void close(int id) {
@@ -598,6 +602,13 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
      */
     public List<Voting> getHostVotings() { return hostVotings.values().stream().filter(v -> !v.containsIgnored(serverThread)).collect(Collectors.toList()); }
 
+    /**
+     * @return Get the current voting time
+     */
+    public int getVotingTime() { return votingTime; }
+
+
+
     // Setter
 
     /**
@@ -631,6 +642,15 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
      */
     public void setHostServiceCallback(HostServiceCallback hostServiceCallback) {
         this.hostServiceCallback = hostServiceCallback;
+    }
+
+    /**
+     * Set the voting time
+     * @param votingTime New voting time
+     */
+    public void setVotingTime(int votingTime) {
+        Log.d(TAG, "new VotingTime: " + votingTime);
+        this.votingTime = votingTime;
     }
 
 
