@@ -63,9 +63,7 @@ public class HostVoting implements Voting {
             closeTimer = new CustomCountDownTimer(votingCallback.getVotingTime()*60*1000,
                     1000) {
                 @Override
-                public void onTick(long millisUntilFinished) {
-                    Log.d(TAG, "onTick: ");
-                }
+                public void onTick(long millisUntilFinished) { }
 
                 @Override
                 public void onFinish() { evaluateVoting(); }
