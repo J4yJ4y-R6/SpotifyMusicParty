@@ -28,6 +28,7 @@ import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.tinf19.musicparty.BuildConfig;
+import com.tinf19.musicparty.adapter.VotingAdapter;
 import com.tinf19.musicparty.fragments.LoadingFragment;
 import com.tinf19.musicparty.server.fragments.HostClosePartyFragment;
 import com.tinf19.musicparty.server.fragments.HostPlaylistFragment;
@@ -280,7 +281,9 @@ public class HostActivity extends AppCompatActivity {
                     Snackbar.LENGTH_SHORT).show());
             new Thread(() -> {
                 if (mBoundService != null) {
-                    runOnUiThread( () -> mBoundService.queueItem(track));
+                    runOnUiThread( () -> {
+                        mBoundService.queueItem(track);
+                    });
                 }
             }).start();
         });
@@ -456,7 +459,18 @@ public class HostActivity extends AppCompatActivity {
             }
         });
         votingFragment = new VotingFragment(
-                () -> mBoundService != null ? mBoundService.getCurrentThread() : null,
+                new VotingAdapter.VotingAdapterCallback() {
+                    @Override
+                    public Thread getCurrentThread() {
+                        return mBoundService != null ? mBoundService.getCurrentThread() : null;
+                    }
+
+                    @Override
+                    public void updateCurrentVoting(int id) {
+                        if(mBoundService != null)
+                            mBoundService.notificationAfterVote(id);
+                    }
+                },
                 new VotingFragment.VotingCallback() {
                     @Override
                     public List<Voting> getVotings() {
@@ -484,7 +498,7 @@ public class HostActivity extends AppCompatActivity {
         } else {
             if(!getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false) && loadingFragment != null)
                 getSupportFragmentManager().beginTransaction().
-                    replace(R.id.showSongHostFragmentFrame, loadingFragment, "LoadingFragment").commitAllowingStateLoss();
+                        replace(R.id.showSongHostFragmentFrame, loadingFragment, "LoadingFragment").commitAllowingStateLoss();
             else
                 showDefaultFragments();
 

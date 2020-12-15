@@ -134,8 +134,8 @@
     <string name="snackbar_votingTimeToShort"> Die Votingzeit muss mindestens eine Minute betragen</string>
     <string name="snackbar_votingTimeChanged"> Die Votingzeit wurde auf %1$d geändert</string>
 
-    <string name="notification_votingTitle">%1$s - Votings</string>
-    <string name="notification_votingMessage">Offenes Voting zum Hinzufügen des folgenden Lieds: %1$s. Vote jetzt!</string>
+    <string name="notification_votingTitle">Voting zum Lied: %1$s</string>
+    <string name="notification_votingMessageSecondLine">Vote jetzt zum Hinzufügen des Liedes zu der aktuellen Queue.</string>
 
 
 

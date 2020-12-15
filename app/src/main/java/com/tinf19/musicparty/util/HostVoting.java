@@ -1,9 +1,12 @@
 package com.tinf19.musicparty.util;
 
 import android.os.CountDownTimer;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.server.HostService;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,9 +67,7 @@ public class HostVoting implements Voting {
             closeTimer = new CountDownTimer(votingCallback.getVotingTime()*60*1000,
                     1000) {
                 @Override
-                public void onTick(long millisUntilFinished) {
-                    Log.d(TAG, "onTick: ");
-                }
+                public void onTick(long millisUntilFinished) { }
 
                 @Override
                 public void onFinish() { evaluateVoting(); }

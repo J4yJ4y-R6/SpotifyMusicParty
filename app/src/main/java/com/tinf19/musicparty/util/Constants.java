@@ -34,6 +34,7 @@ public class Constants {
     public static final String NO_VOTE = "no";
     public static final String GREY_VOTE = "grey";
     public static final String HAS_VOTED = "has_voted";
+    public static final String VOTE = "vote";
     public static final String FINISHED_VOTE = "finishedVote";
     public static final String COMMAND = "command";
     public static final String MESSAGE = "message";
@@ -55,6 +56,11 @@ public class Constants {
      * Channel-Id used for creating or updating a voting notification
      */
     public static final String VOTING_CHANNEL_ID = "votingNotificationChannel";
+
+    /**
+     * Group up all notification into one group
+     */
+    public static final String NOTIFICATION_GROUP = "musicPartyGroup";
 
     /**
      * Used to authenticate the app with Spotify
@@ -135,4 +141,11 @@ public class Constants {
      * Delimiter for splitting the message send by clients or servers.
      */
     public static final String DELIMITER = "~";
+
+    /**
+     * Identifier for notification intent
+     */
+    public static final String FRAGMENT = "fragment";
+
+    public static final String VOTE_FRAGMENT = "voteFragment";
 }

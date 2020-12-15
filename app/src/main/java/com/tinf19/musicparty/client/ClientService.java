@@ -43,7 +43,7 @@ import java.util.Map;
  * @author Silas Wessely
  * @since 1.1
  */
-public class ClientService extends Service implements VotingAdapter.VotingAdapterCallback {
+public class ClientService extends Service {
 
     private static final String TAG = ClientService.class.getName();
     private final IBinder mBinder = new LocalBinder();
@@ -175,8 +175,8 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
         return token;
     }
 
-    @Override
-    public Thread getCurrentThread() { return clientThread; }
+
+//    public Thread getCurrentThread() { return clientThread; }
 
     /**
      * @return Get all currently opened votings

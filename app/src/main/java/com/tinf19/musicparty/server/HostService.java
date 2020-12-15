@@ -1,10 +1,12 @@
 package com.tinf19.musicparty.server;
 
+import android.accessibilityservice.AccessibilityService;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -16,6 +18,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.service.notification.StatusBarNotification;
 import android.util.Base64;
 import android.os.IBinder;
 import android.util.Log;
@@ -28,6 +31,9 @@ import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPerson;
 import com.tinf19.musicparty.music.Que;
 import com.tinf19.musicparty.receiver.ActionReceiver;
+import com.tinf19.musicparty.receiver.VotedIgnoredReceiver;
+import com.tinf19.musicparty.receiver.VotedNoReceiver;
+import com.tinf19.musicparty.receiver.VotedYesReceiver;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
@@ -52,6 +58,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +66,7 @@ import java.util.stream.Collectors;
 
 import okhttp3.Response;
 
-public class HostService extends Service implements Parcelable, VotingAdapter.VotingAdapterCallback {
+public class HostService extends Service implements Parcelable {
 
     private static final String TAG = HostService.class.getName();
     private final IBinder mBinder = new LocalBinder();
@@ -71,9 +78,11 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
      */
     private final List<CommunicationThread> clientThreads = new ArrayList<>();
     private final List<CommunicationThread> subscribedClients = new ArrayList<>();
-    private final Map<Integer, HostVoting> hostVotings = new HashMap<>();
+    private final ArrayList<Voting> currentVoting = new ArrayList<>();
+    private static final Map<Integer, HostVoting> hostVotings = new HashMap<>();
 
     private Thread serverThread = null;
+    private NotificationManager votingManager;
     private ServerSocket serverSocket;
     private Que que;
     private SpotifyAppRemote mSpotifyAppRemote;
@@ -96,7 +105,6 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
     private boolean newSong;
     private boolean stopped;
     private boolean previous;
-
     private PartyType partyType = PartyType.AllInParty;
 
 
@@ -211,7 +219,6 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             }
         };
         startServer();
-//        createVotingNotification("TestTitle");
     }
 
     @Override
@@ -266,9 +273,25 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
             }));
             tokenRefresh.start();
             first = false;
+            VotedYesReceiver.registerCallback(id -> {
+                HostVoting voting = hostVotings.get(id);
+                if(voting != null) voting.addVoting(Constants.YES, serverThread);
+                updateVotingNotification();
+            });
+            VotedNoReceiver.registerCallback(id -> {
+                HostVoting voting = hostVotings.get(id);
+                if(voting != null) voting.addVoting(Constants.NO, serverThread);
+                updateVotingNotification();
+            });
+            VotedIgnoredReceiver.registerCallback(id -> {
+                HostVoting voting = hostVotings.get(id);
+                if(voting != null) voting.addVoting(Constants.IGNORED, serverThread);
+                updateVotingNotification();
+            });
         }
 
-        Intent notificationIntent = new Intent(this, HostActivity.class).putExtra(Constants.FROM_NOTIFICATION, true);
+        Intent notificationIntent = new Intent(this, HostActivity.class)
+                .putExtra(Constants.FROM_NOTIFICATION, true);
         pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
         Intent intentAction = new Intent(this, ActionReceiver.class);
@@ -283,6 +306,14 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                 .build();
         Log.d(TAG, "service notification started");
         startForeground(Constants.NOTIFY_ID, notification);
+
+        NotificationChannel votingChannel = new NotificationChannel(Constants.VOTING_CHANNEL_ID,
+                "Voting notification channel", NotificationManager.IMPORTANCE_HIGH);
+        votingChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        votingManager = (NotificationManager) getSystemService(
+                Context.NOTIFICATION_SERVICE);
+        votingManager.createNotificationChannel(votingChannel);
+
         return START_NOT_STICKY;
     }
 
@@ -375,7 +406,10 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
 
     public void queueItem(Track track) {
         if(partyType == PartyType.VoteParty) {
-            createVoting(track, Type.QUE);
+            int votingID = createVoting(track, Type.QUE);
+            Log.d(TAG, "queueItem: " + votingID);
+            HostVoting hostVoting = hostVotings.get(votingID);
+            createVotingNotification(hostVoting);
         }
         else {
             addItemToPlaylist(track);
@@ -502,10 +536,102 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
                 .setContentText(peopleCount)
                 .setSmallIcon(R.drawable.logo_service_notification)
                 .setContentIntent(pendingIntent)
+                .setCategory(Constants.CATEGORY_SERVICE)
+                .setGroup(Constants.NOTIFICATION_GROUP)
                 .addAction(R.drawable.icon_exit_room, getString(R.string.text_end), pendingIntentButton)
                 .build();
         Log.d(TAG, "service notification updated");
         mNotificationManager.notify(Constants.NOTIFY_ID, notificationUpdate);
+    }
+
+    /**
+     * When a Que-Voting gets startet this method will create a notification, so the user does not
+     * have to vote from the fragment. Instead he can use the notification buttons. If already one
+     * voting notification is displayed, the notification gets queued in
+     * {@link HostService#currentVoting}. Otherwise it will be displayed.
+     * @param voting New voting to create the notification about this voting
+     */
+    private void createVotingNotification(Voting voting) {
+        Arrays.stream(votingManager.getActiveNotifications()).forEach(n -> {
+            if(votingManager.getActiveNotifications().length == 1  &&
+                    n.getId() == Constants.NOTIFY_ID) {
+                Log.d(TAG, "voting notification started for: " + voting.getId());
+                showVotingNotification(voting);
+                currentVoting.add(voting);
+            } else {
+                if(n.getId() == Constants.VOTING_NOTIFY_ID) {
+                    currentVoting.add(voting);
+                    Log.d(TAG, "currently voting notification visible. In Queue: " +
+                            currentVoting.size());
+                }
+            }
+        });
+    }
+
+    private void showVotingNotification(Voting voting) {
+        Intent votingNotificationIntent = new Intent(this, HostActivity.class)
+                .putExtra(Constants.FROM_NOTIFICATION, true);
+        PendingIntent votingPendingIntent = PendingIntent.getActivity(this,
+                0, votingNotificationIntent, 0);
+        Intent votedYesIntent = new Intent(this, VotedYesReceiver.class);
+        votedYesIntent.putExtra(Constants.ID, voting.getId());
+        Intent votedNoIntent = new Intent(this, VotedNoReceiver.class);
+        votedNoIntent.putExtra(Constants.ID, voting.getId());
+        Intent votedIgnoredIntent = new Intent(this, VotedIgnoredReceiver.class);
+        votedIgnoredIntent.putExtra(Constants.ID, voting.getId());
+        PendingIntent votingYesIntentButton = PendingIntent.getBroadcast(this,1,
+                votedYesIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent votingNoIntentButton = PendingIntent.getBroadcast(this,2,
+                votedNoIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent votingIgnoreIntentButton = PendingIntent.getBroadcast(this,3,
+                votedIgnoredIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Notification notification = new NotificationCompat.Builder(this,
+                Constants.VOTING_CHANNEL_ID)
+                .setContentTitle(getString(R.string.notification_votingTitle,
+                        voting.getTrack().getName()))
+                .setSmallIcon(R.drawable.logo_service_notification)
+                .setContentIntent(votingPendingIntent)
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText(getString(R.string.notification_votingMessageSecondLine)))
+                .addAction(R.drawable.icon_thumb_up_nocirce, getString(R.string.text_yes),votingYesIntentButton)
+                .addAction(R.drawable.icon_thumb_down_nocircle, getString(R.string.text_no), votingNoIntentButton)
+                .addAction(R.drawable.icon_x, getString(R.string.text_ignored), votingIgnoreIntentButton)
+                .build();
+        votingManager.notify(Constants.VOTING_NOTIFY_ID, notification);
+    }
+
+    /**
+     * Update the current voting notification when the user voted for the previous one. If the
+     * ArrayList {@link HostService#currentVoting} is empty the notification will be
+     * dismissed.
+     */
+    public void updateVotingNotification(){
+        if(currentVoting.size() > 1) {
+            currentVoting.remove(0);
+            showVotingNotification(currentVoting.get(0));
+        } else {
+            currentVoting.remove(0);
+            votingManager.cancel(Constants.VOTING_NOTIFY_ID);
+        }
+    }
+
+    public void notificationAfterVote(int id) {
+        Log.d(TAG, "Current Voting: " + currentVoting.get(0).getId());
+        if(currentVoting != null)
+            if(id == currentVoting.get(0).getId())
+                updateVotingNotification();
+            else{
+                int toRemove = 0;
+                for(int i = 0; i < currentVoting.size(); i++) {
+                    if(id == currentVoting.get(i).getId()) {
+                        toRemove = i;
+                        break;
+                    }
+                }
+                if(toRemove > 0)
+                    currentVoting.remove(toRemove);
+            }
     }
 
 
@@ -600,7 +726,6 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
         return pause;
     }
 
-    @Override
     public Thread getCurrentThread() { return serverThread; }
 
     /**
@@ -1077,8 +1202,9 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
      * Create a new Voting
      * @param track Track which is voted about
      * @param type Type of the voting
+     * @return Get the new voting
      */
-    public void createVoting(Track track, Type type){
+    public int createVoting(Track track, Type type){
         HostVoting newVoting = new HostVoting(type, track, Constants.THRESHOLD_VALUE,
                 votingCallback);
         Log.d(TAG, "New " + type.toString() + "-Voting created for: " + newVoting.getTrack()
@@ -1091,6 +1217,7 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
         } catch (JSONException | IOException e) {
             Log.e(TAG, e.getMessage(), e);
         }
+        return newVoting.getId();
     }
 
 
@@ -1118,15 +1245,14 @@ public class HostService extends Service implements Parcelable, VotingAdapter.Vo
     };
 
 
-
     // Interaction with Server
 
     /**
      * Opening a server where all clients can connect with.
      */
     private void startServer(){
-        this.serverThread = new Thread(new ServerThread());
-        this.serverThread.start();
+        serverThread = new Thread(new ServerThread());
+        serverThread.start();
     }
 
     /**

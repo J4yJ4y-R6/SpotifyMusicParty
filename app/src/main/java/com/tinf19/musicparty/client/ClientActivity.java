@@ -23,6 +23,7 @@ import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.tinf19.musicparty.BuildConfig;
+import com.tinf19.musicparty.adapter.VotingAdapter;
 import com.tinf19.musicparty.client.fragments.ClientPlaylistFragment;
 import com.tinf19.musicparty.databinding.ActivityClientBinding;
 import com.tinf19.musicparty.fragments.LoadingFragment;
@@ -509,7 +510,18 @@ public class ClientActivity extends AppCompatActivity {
                         }
                     });
                     votingFragment = new VotingFragment(
-                            () -> mBoundService != null ? mBoundService.getClientThread() : null,
+                            new VotingAdapter.VotingAdapterCallback() {
+                                @Override
+                                public Thread getCurrentThread() {
+                                    return mBoundService != null ? mBoundService.getClientThread() : null;
+                                }
+
+                                @Override
+                                public void updateCurrentVoting(int id) {
+                                    if(mBoundService != null)
+                                        return;
+                                }
+                            },
                             new VotingFragment.VotingCallback() {
                                 @Override
                                 public List<Voting> getVotings() {
@@ -519,7 +531,7 @@ public class ClientActivity extends AppCompatActivity {
 
                                 @Override
                                 public void stopTimer() {
-                                    if(mBoundService != null) {
+                                    if (mBoundService != null) {
                                         new Thread(() -> {
                                             try {
                                                 mBoundService.getClientThread().sendMessage(Commands.UNSUBSCRIBE, "Unsubscribed the update event");

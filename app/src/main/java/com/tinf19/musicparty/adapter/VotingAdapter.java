@@ -53,6 +53,7 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
 
     public interface VotingAdapterCallback {
         Thread getCurrentThread();
+        void updateCurrentVoting(int id);
     }
 
     public interface VotingAdapterToFragmentCallback {
@@ -152,21 +153,30 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
             new DownloadImageTask(coverTV).execute("https://i.scdn.co/image/" + mDataset.get(position).getTrack().getCoverFull());
         if(yesButton != null)
             yesButton.setOnClickListener(v -> {
-                mDataset.get(position).addVoting(Constants.YES, votingAdapterCallback.getCurrentThread());
+                Voting voting = mDataset.get(position);
+                voting.addVoting(Constants.YES, votingAdapterCallback.getCurrentThread());
                 votingAdapterToFragmentCallback.showVotedSnackbar(Constants.YES);
                 showVotingResult(holder, position);
+                if(voting.getType() == Type.QUE)
+                    votingAdapterCallback.updateCurrentVoting(voting.getId());
             });
         if(noButton != null)
             noButton.setOnClickListener(v -> {
-                mDataset.get(position).addVoting(Constants.NO, votingAdapterCallback.getCurrentThread());
+                Voting voting = mDataset.get(position);
+                voting.addVoting(Constants.NO, votingAdapterCallback.getCurrentThread());
                 votingAdapterToFragmentCallback.showVotedSnackbar(Constants.NO);
                 showVotingResult(holder, position);
+                if(voting.getType() == Type.QUE)
+                    votingAdapterCallback.updateCurrentVoting(voting.getId());
             });
         if(ignoreVoteButton != null)
             ignoreVoteButton.setOnClickListener(v -> {
-                mDataset.get(position).addVoting(Constants.IGNORED, votingAdapterCallback.getCurrentThread());
+                Voting voting = mDataset.get(position);
+                voting.addVoting(Constants.IGNORED, votingAdapterCallback.getCurrentThread());
                 votingAdapterToFragmentCallback.showVotedSnackbar(Constants.IGNORED);
                 setAnimation(holder, position);
+                if(voting.getType() == Type.QUE)
+                    votingAdapterCallback.updateCurrentVoting(voting.getId());
             });
     }
 
