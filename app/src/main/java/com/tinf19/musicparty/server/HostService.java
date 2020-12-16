@@ -1,16 +1,13 @@
 package com.tinf19.musicparty.server;
 
-import android.accessibilityservice.AccessibilityService;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,7 +15,6 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.service.notification.StatusBarNotification;
 import android.util.Base64;
 import android.os.IBinder;
 import android.util.Log;
@@ -26,14 +22,11 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.tinf19.musicparty.adapter.VotingAdapter;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPerson;
 import com.tinf19.musicparty.music.Que;
 import com.tinf19.musicparty.receiver.ActionReceiver;
-import com.tinf19.musicparty.receiver.VotedIgnoredReceiver;
-import com.tinf19.musicparty.receiver.VotedNoReceiver;
-import com.tinf19.musicparty.receiver.VotedYesReceiver;
+import com.tinf19.musicparty.receiver.VotedReceiver;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
@@ -273,20 +266,27 @@ public class HostService extends Service implements Parcelable {
             }));
             tokenRefresh.start();
             first = false;
-            VotedYesReceiver.registerCallback(id -> {
-                HostVoting voting = hostVotings.get(id);
-                if(voting != null) voting.addVoting(Constants.YES, serverThread);
-                updateVotingNotification();
-            });
-            VotedNoReceiver.registerCallback(id -> {
-                HostVoting voting = hostVotings.get(id);
-                if(voting != null) voting.addVoting(Constants.NO, serverThread);
-                updateVotingNotification();
-            });
-            VotedIgnoredReceiver.registerCallback(id -> {
-                HostVoting voting = hostVotings.get(id);
-                if(voting != null) voting.addVoting(Constants.IGNORED, serverThread);
-                updateVotingNotification();
+            VotedReceiver.registerCallback(new VotedReceiver.VotedCallback() {
+                @Override
+                public void notificationVotedYes(int id) {
+                    HostVoting voting = hostVotings.get(id);
+                    if(voting != null) voting.addVoting(Constants.YES, serverThread);
+                    updateVotingNotification();
+                }
+
+                @Override
+                public void notificationVotedIgnored(int id) {
+                    HostVoting voting = hostVotings.get(id);
+                    if(voting != null) voting.addVoting(Constants.IGNORED, serverThread);
+                    updateVotingNotification();
+                }
+
+                @Override
+                public void notificationVotedNo(int id) {
+                    HostVoting voting = hostVotings.get(id);
+                    if(voting != null) voting.addVoting(Constants.NO, serverThread);
+                    updateVotingNotification();
+                }
             });
         }
 
@@ -573,12 +573,15 @@ public class HostService extends Service implements Parcelable {
                 .putExtra(Constants.FROM_NOTIFICATION, true);
         PendingIntent votingPendingIntent = PendingIntent.getActivity(this,
                 0, votingNotificationIntent, 0);
-        Intent votedYesIntent = new Intent(this, VotedYesReceiver.class);
+        Intent votedYesIntent = new Intent(this, VotedReceiver.class);
         votedYesIntent.putExtra(Constants.ID, voting.getId());
-        Intent votedNoIntent = new Intent(this, VotedNoReceiver.class);
+        votedYesIntent.putExtra(Constants.VOTE, Constants.YES_VOTE);
+        Intent votedNoIntent = new Intent(this, VotedReceiver.class);
         votedNoIntent.putExtra(Constants.ID, voting.getId());
-        Intent votedIgnoredIntent = new Intent(this, VotedIgnoredReceiver.class);
+        votedNoIntent.putExtra(Constants.VOTE, Constants.NO_VOTE);
+        Intent votedIgnoredIntent = new Intent(this, VotedReceiver.class);
         votedIgnoredIntent.putExtra(Constants.ID, voting.getId());
+        votedIgnoredIntent.putExtra(Constants.VOTE, Constants.GREY_VOTE);
         PendingIntent votingYesIntentButton = PendingIntent.getBroadcast(this,1,
                 votedYesIntent,PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent votingNoIntentButton = PendingIntent.getBroadcast(this,2,
