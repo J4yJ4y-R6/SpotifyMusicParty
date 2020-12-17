@@ -211,6 +211,7 @@ public class HostService extends Service implements Parcelable {
             @Override
             public void notifyClients(HostVoting voting, Thread thread) {
                 HostService.this.notifyClientsResult(voting, thread);
+
             }
         };
         startServer();
@@ -752,7 +753,7 @@ public class HostService extends Service implements Parcelable {
      */
     public void setPartyType(PartyType partyType) throws IOException {
         this.partyType = partyType;
-        sendToAll(Commands.PARTYTYPE, partyType.toString());
+        sendToAll(Commands.PARTY_TYPE, partyType.toString());
     }
 
     /**
@@ -1308,7 +1309,7 @@ public class HostService extends Service implements Parcelable {
      */
     private void notifyClientsResult(HostVoting voting, Thread thread) {
         if(thread instanceof CommunicationThread) {
-            List<CommunicationThread> tempList = new ArrayList<>(clientThreads);
+            List<CommunicationThread> tempList = new ArrayList<>(subscribedClients);
             tempList.remove((CommunicationThread) thread);
             try {
                 sendToClientList(tempList, Commands.VOTE_RESULT, voting.serializeResult());
@@ -1317,10 +1318,15 @@ public class HostService extends Service implements Parcelable {
             }
         } else {
             try {
-                sendToClientList(clientThreads, Commands.VOTE_RESULT, voting.serializeResult());
+                sendToClientList(subscribedClients, Commands.VOTE_RESULT, voting.serializeResult());
             } catch (IOException | JSONException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
+        }
+        try {
+            HostService.this.notifyClientsClosedVoting(voting.getId());
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
         }
     }
 
@@ -1332,6 +1338,10 @@ public class HostService extends Service implements Parcelable {
      */
     private void notifyClientsNewVoting(HostVoting voting) throws JSONException, IOException {
         sendToClientList(clientThreads, Commands.VOTE_ADDED, voting.serialize(serverThread));
+    }
+
+    private void notifyClientsClosedVoting(int id) throws IOException {
+        sendToClientList(clientThreads, Commands.VOTE_CLOSED, String.valueOf(id));
     }
 
     /**

@@ -15,9 +15,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.tinf19.musicparty.receiver.ActionReceiver;
-import com.tinf19.musicparty.receiver.VotedIgnoredReceiver;
-import com.tinf19.musicparty.receiver.VotedNoReceiver;
-import com.tinf19.musicparty.receiver.VotedYesReceiver;
+import com.tinf19.musicparty.receiver.VotedReceiver;
 import com.tinf19.musicparty.server.HostActivity;
 import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.ClientVoting;
@@ -152,20 +150,27 @@ public class ClientService extends Service {
             }));
             tokenRefresh.start();
             first = false;
-            VotedYesReceiver.registerCallback(id -> {
-                ClientVoting voting = clientVotings.get(id);
-                if(voting != null) voting.addVoting(Constants.YES, clientThread);
-                updateVotingNotification();
-            });
-            VotedNoReceiver.registerCallback(id -> {
-                ClientVoting voting = clientVotings.get(id);
-                if(voting != null) voting.addVoting(Constants.NO, clientThread);
-                updateVotingNotification();
-            });
-            VotedIgnoredReceiver.registerCallback(id -> {
-                ClientVoting voting = clientVotings.get(id);
-                if(voting != null) voting.addVoting(Constants.IGNORED, clientThread);
-                updateVotingNotification();
+            VotedReceiver.registerCallback(new VotedReceiver.VotedCallback() {
+                @Override
+                public void notificationVotedYes(int id) {
+                    ClientVoting voting = clientVotings.get(id);
+                    if(voting != null) voting.addVoting(Constants.YES, clientThread);
+                    updateVotingNotification();
+                }
+
+                @Override
+                public void notificationVotedIgnored(int id) {
+                    ClientVoting voting = clientVotings.get(id);
+                    if(voting != null) voting.addVoting(Constants.IGNORED, clientThread);
+                    updateVotingNotification();
+                }
+
+                @Override
+                public void notificationVotedNo(int id) {
+                    ClientVoting voting = clientVotings.get(id);
+                    if(voting != null) voting.addVoting(Constants.NO, clientThread);
+                    updateVotingNotification();
+                }
             });
 
             NotificationChannel votingChannel = new NotificationChannel(Constants.VOTING_CHANNEL_ID,
@@ -212,12 +217,15 @@ public class ClientService extends Service {
                 .putExtra(Constants.FROM_NOTIFICATION, true);
         PendingIntent votingPendingIntent = PendingIntent.getActivity(this,
                 0, votingNotificationIntent, 0);
-        Intent votedYesIntent = new Intent(this, VotedYesReceiver.class);
+        Intent votedYesIntent = new Intent(this, VotedReceiver.class);
         votedYesIntent.putExtra(Constants.ID, voting.getId());
-        Intent votedNoIntent = new Intent(this, VotedNoReceiver.class);
+        votedYesIntent.putExtra(Constants.VOTE, Constants.YES_VOTE);
+        Intent votedNoIntent = new Intent(this, VotedReceiver.class);
         votedNoIntent.putExtra(Constants.ID, voting.getId());
-        Intent votedIgnoredIntent = new Intent(this, VotedIgnoredReceiver.class);
+        votedNoIntent.putExtra(Constants.VOTE, Constants.NO_VOTE);
+        Intent votedIgnoredIntent = new Intent(this, VotedReceiver.class);
         votedIgnoredIntent.putExtra(Constants.ID, voting.getId());
+        votedIgnoredIntent.putExtra(Constants.VOTE, Constants.GREY_VOTE);
         PendingIntent votingYesIntentButton = PendingIntent.getBroadcast(this,1,
                 votedYesIntent,PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent votingNoIntentButton = PendingIntent.getBroadcast(this,2,
@@ -256,7 +264,6 @@ public class ClientService extends Service {
     }
 
     public void notificationAfterVote(int id) {
-        Log.d(TAG, "Current Voting: " + currentVoting.get(0).getId());
         if(currentVoting != null)
             if(id == currentVoting.get(0).getId())
                 updateVotingNotification();
@@ -393,17 +400,6 @@ public class ClientService extends Service {
             clientServiceCallback.setTrack(nowPlaying);
     }
 
-    public void fetchVotingResult() {
-        clientVotings.keySet().forEach(v-> {
-            try {
-                clientThread.sendMessage(Commands.VOTE_RESULT, String.valueOf(v));
-            } catch (IOException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
-        });
-    }
-
-
 
     /**
      * Subclass for managing the communication with the server
@@ -513,7 +509,7 @@ public class ClientService extends Service {
                                     Log.d(TAG, "Server has been closed");
                                     exit();
                                     return;
-                                case PARTYTYPE:
+                                case PARTY_TYPE:
                                     HostService.PartyType partyType = attribute.equals("AllInParty")
                                             ? HostService.PartyType.AllInParty
                                             : HostService.PartyType.VoteParty;
@@ -563,22 +559,13 @@ public class ClientService extends Service {
                                     int votingID = tempObject.getInt(Constants.ID);
                                     ClientVoting voting = clientVotings.get(votingID);
                                     if (voting != null) {
-                                        if(tempObject.getBoolean(Constants.FINISHED_VOTE)) {
-                                            if (clientServiceCallback != null && subscirbedVoting)
-                                                clientServiceCallback.removeVoting(voting.getId(),
-                                                        voting.getType());
-                                            clientVotings.remove(votingID);
-                                            if(voting.getType() == Type.QUE)
-                                                notificationAfterVote(voting.getId());
-                                        } else {
-                                            voting.updateVotingResult(
-                                                    tempObject.getInt(Constants.YES_VOTE),
-                                                    tempObject.getInt(Constants.NO_VOTE),
-                                                    tempObject.getInt(Constants.GREY_VOTE));
-                                            if (clientServiceCallback != null)
-                                                clientServiceCallback.notifyVotingAdapter(votingID,
-                                                        voting.getType());
-                                        }
+                                        voting.updateVotingResult(
+                                                tempObject.getInt(Constants.YES_VOTE),
+                                                tempObject.getInt(Constants.NO_VOTE),
+                                                tempObject.getInt(Constants.GREY_VOTE));
+                                        if (clientServiceCallback != null)
+                                            clientServiceCallback.notifyVotingAdapter(votingID,
+                                                    voting.getType());
                                     }
                                     break;
                                 case VOTE_ADDED:
@@ -596,6 +583,18 @@ public class ClientService extends Service {
                                         clientServiceCallback.addVoting(newVoting);
                                     if(newVoting.getType() == Type.QUE)
                                         createVotingNotification(newVoting);
+                                    break;
+                                case VOTE_CLOSED:
+                                    int votingClosedId = Integer.parseInt(attribute);
+                                    Voting votingClosed = clientVotings.get(0);
+                                    if(votingClosed != null) {
+                                        if (clientServiceCallback != null && subscirbedVoting)
+                                            clientServiceCallback.removeVoting(votingClosedId,
+                                                    votingClosed.getType());
+                                        clientVotings.remove(votingClosedId);
+                                        if (votingClosed.getType() == Type.QUE)
+                                            notificationAfterVote(votingClosedId);
+                                    }
                             }
                         }
                     }
