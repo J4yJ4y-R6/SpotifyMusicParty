@@ -176,17 +176,17 @@ public class HostService extends Service implements Parcelable {
         });
         votingCallback = new HostVoting.VotingCallback() {
             @Override
-            public void skipAndClose(int id) {
+            public void skipAndClose(int id, Thread thread) {
                 que.next();
-                close(id);
+                close(id, thread);
             }
 
             @Override
-            public void addAndClose(int id) {
+            public void addAndClose(int id, Thread thread) {
                 HostVoting voting = hostVotings.get(id);
                 if(voting != null)
                     addItemToPlaylist(voting.getTrack());
-                close(id);
+                close(id, thread);
                 if(hostServiceCallback != null)
                     hostServiceCallback.notifyPlaylistAdapter();
             }
@@ -200,7 +200,7 @@ public class HostService extends Service implements Parcelable {
             public int getVotingTime() { return votingTime; }
 
             @Override
-            public void close(int id) {
+            public void close(int id, Thread thread) {
                 HostVoting voting = hostVotings.get(id);
                 if(voting != null) {
                     voting.closeVoting();
@@ -210,6 +210,8 @@ public class HostService extends Service implements Parcelable {
                         hostServiceCallback.notifyVotingAdapter(id, voting.getType());
                         hostServiceCallback.removeVoting(id, voting.getType());
                     }
+                    if(thread != serverThread)
+                        notificationAfterVote(id);
                 }
             }
 
@@ -407,7 +409,6 @@ public class HostService extends Service implements Parcelable {
     public void queueItem(Track track) {
         if(partyType == PartyType.VoteParty) {
             int votingID = createVoting(track, Type.QUE);
-            Log.d(TAG, "queueItem: " + votingID);
             HostVoting hostVoting = hostVotings.get(votingID);
             createVotingNotification(hostVoting);
         }
@@ -558,6 +559,7 @@ public class HostService extends Service implements Parcelable {
                 Log.d(TAG, "voting notification started for: " + voting.getId());
                 showVotingNotification(voting);
                 currentVoting.add(voting);
+                Log.d(TAG, "Current Voting added: " + currentVoting.get(0).getId());
             } else {
                 if(n.getId() == Constants.VOTING_NOTIFY_ID) {
                     currentVoting.add(voting);
@@ -617,7 +619,6 @@ public class HostService extends Service implements Parcelable {
     }
 
     public void notificationAfterVote(int id) {
-        Log.d(TAG, "Current Voting: " + currentVoting.get(0).getId());
         if(currentVoting != null)
             if(id == currentVoting.get(0).getId())
                 updateVotingNotification();
@@ -1304,7 +1305,7 @@ public class HostService extends Service implements Parcelable {
      */
     private void notifyClientsResult(HostVoting voting, Thread thread) {
         if(thread instanceof CommunicationThread) {
-            List<CommunicationThread> tempList = new ArrayList<>(subscribedClients);
+            List<CommunicationThread> tempList = new ArrayList<>(clientThreads);
             tempList.remove((CommunicationThread) thread);
             try {
                 sendToClientList(tempList, Commands.VOTE_RESULT, voting.serializeResult());
@@ -1313,7 +1314,7 @@ public class HostService extends Service implements Parcelable {
             }
         } else {
             try {
-                sendToClientList(subscribedClients, Commands.VOTE_RESULT, voting.serializeResult());
+                sendToClientList(clientThreads, Commands.VOTE_RESULT, voting.serializeResult());
             } catch (IOException | JSONException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
@@ -1327,7 +1328,7 @@ public class HostService extends Service implements Parcelable {
      * @throws IOException when the message could not be send to all subscribed clients
      */
     private void notifyClientsNewVoting(HostVoting voting) throws JSONException, IOException {
-        sendToClientList(subscribedClients, Commands.VOTE_ADDED, voting.serialize(serverThread));
+        sendToClientList(clientThreads, Commands.VOTE_ADDED, voting.serialize(serverThread));
     }
 
     /**
@@ -1530,6 +1531,7 @@ public class HostService extends Service implements Parcelable {
                                     HostVoting voting = hostVotings.get(Integer.parseInt(attribute));
                                     if(voting != null)
                                         sendMessage(Commands.VOTE_RESULT, voting.serializeResult());
+
                                     break;
                                 case SUBSCRIBE:
                                     subscribedClients.add(this);

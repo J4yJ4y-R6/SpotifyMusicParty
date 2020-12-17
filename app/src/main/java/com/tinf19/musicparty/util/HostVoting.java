@@ -37,11 +37,11 @@ public class HostVoting implements Voting {
     private boolean finished = false;
 
     public interface VotingCallback {
-        void skipAndClose(int id);
-        void addAndClose(int id);
+        void skipAndClose(int id, Thread thread);
+        void addAndClose(int id, Thread thread);
         int getClientCount();
         int getVotingTime();
-        void close(int id);
+        void close(int id, Thread thread);
         void notifyClients(HostVoting voting, Thread thread);
     }
 
@@ -83,22 +83,22 @@ public class HostVoting implements Voting {
             case QUE:
                 if(clientCount <= accepted.size()) {
                     finished = true;
-                    votingCallback.addAndClose(id);
+                    votingCallback.addAndClose(id, thread);
                 } else if(clientCount < denied.size() || clientCount == (denied.size() + ignoredCount + accepted.size())) {
                     finished = true;
-                    votingCallback.close(id);
+                    votingCallback.close(id, thread);
                 } else
                     votingCallback.notifyClients(this, thread);
                 break;
             case SKIP:
                 if(clientCount <= accepted.size()) {
                     finished = true;
-                    votingCallback.skipAndClose(id);
+                    votingCallback.skipAndClose(id, thread);
                 } else
                     votingCallback.notifyClients(this, thread);
                 break;
             default:
-                votingCallback.close(id);
+                votingCallback.close(id, thread);
         }
     }
 
@@ -174,9 +174,9 @@ public class HostVoting implements Voting {
         finished = true;
         if(Math.ceil((accepted.size() + denied.size()) * threshold) <= accepted.size() &&
             type.equals(Type.QUE))
-            votingCallback.addAndClose(id);
+            votingCallback.addAndClose(id, new Thread());
         else
-            votingCallback.close(id);
+            votingCallback.close(id, new Thread());
     }
 
     /**

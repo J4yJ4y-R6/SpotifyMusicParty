@@ -1,8 +1,11 @@
 package com.tinf19.musicparty.client;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
@@ -11,8 +14,11 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.tinf19.musicparty.adapter.VotingAdapter;
 import com.tinf19.musicparty.receiver.ActionReceiver;
+import com.tinf19.musicparty.receiver.VotedIgnoredReceiver;
+import com.tinf19.musicparty.receiver.VotedNoReceiver;
+import com.tinf19.musicparty.receiver.VotedYesReceiver;
+import com.tinf19.musicparty.server.HostActivity;
 import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.ClientVoting;
 import com.tinf19.musicparty.util.Commands;
@@ -33,6 +39,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +55,7 @@ public class ClientService extends Service {
     private static final String TAG = ClientService.class.getName();
     private final IBinder mBinder = new LocalBinder();
     private ClientServiceCallback clientServiceCallback;
+    private NotificationManager votingManager;
     private ClientThread clientThread;
     private Thread sendMessageThread;
     private Socket clientSocket;
@@ -57,6 +65,7 @@ public class ClientService extends Service {
      * Boolean to decide if the service is connected for the first time.
      */
     private boolean first = true;
+    private boolean subscirbedVoting = false;
     /**
      * Spotify connection token which is refreshing every hour
      */
@@ -66,6 +75,7 @@ public class ClientService extends Service {
      */
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
+    private final ArrayList<Voting> currentVoting = new ArrayList<>();
     private Map<Integer, ClientVoting> clientVotings = new HashMap<>();
     private HostService.PartyType partyType = HostService.PartyType.AllInParty;
 
@@ -142,6 +152,28 @@ public class ClientService extends Service {
             }));
             tokenRefresh.start();
             first = false;
+            VotedYesReceiver.registerCallback(id -> {
+                ClientVoting voting = clientVotings.get(id);
+                if(voting != null) voting.addVoting(Constants.YES, clientThread);
+                updateVotingNotification();
+            });
+            VotedNoReceiver.registerCallback(id -> {
+                ClientVoting voting = clientVotings.get(id);
+                if(voting != null) voting.addVoting(Constants.NO, clientThread);
+                updateVotingNotification();
+            });
+            VotedIgnoredReceiver.registerCallback(id -> {
+                ClientVoting voting = clientVotings.get(id);
+                if(voting != null) voting.addVoting(Constants.IGNORED, clientThread);
+                updateVotingNotification();
+            });
+
+            NotificationChannel votingChannel = new NotificationChannel(Constants.VOTING_CHANNEL_ID,
+                    "Voting notification channel", NotificationManager.IMPORTANCE_HIGH);
+            votingChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+            votingManager = (NotificationManager) getSystemService(
+                    Context.NOTIFICATION_SERVICE);
+            votingManager.createNotificationChannel(votingChannel);
         }
         return START_NOT_STICKY;
     }
@@ -149,6 +181,96 @@ public class ClientService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return mBinder;
+    }
+
+    /**
+     * When a Que-Voting gets startet this method will create a notification, so the user does not
+     * have to vote from the fragment. Instead he can use the notification buttons. If already one
+     * voting notification is displayed, the notification gets queued in
+     * {@link ClientService#currentVoting}. Otherwise it will be displayed.
+     * @param voting New voting to create the notification about this voting
+     */
+    private void createVotingNotification(Voting voting) {
+        Arrays.stream(votingManager.getActiveNotifications()).forEach(n -> {
+            if(votingManager.getActiveNotifications().length == 1  &&
+                    n.getId() == Constants.NOTIFY_ID) {
+                Log.d(TAG, "voting notification started for: " + voting.getId());
+                showVotingNotification(voting);
+                currentVoting.add(voting);
+            } else {
+                if(n.getId() == Constants.VOTING_NOTIFY_ID) {
+                    currentVoting.add(voting);
+                    Log.d(TAG, "currently voting notification visible. In Queue: " +
+                            currentVoting.size());
+                }
+            }
+        });
+    }
+
+    private void showVotingNotification(Voting voting) {
+        Intent votingNotificationIntent = new Intent(this, HostActivity.class)
+                .putExtra(Constants.FROM_NOTIFICATION, true);
+        PendingIntent votingPendingIntent = PendingIntent.getActivity(this,
+                0, votingNotificationIntent, 0);
+        Intent votedYesIntent = new Intent(this, VotedYesReceiver.class);
+        votedYesIntent.putExtra(Constants.ID, voting.getId());
+        Intent votedNoIntent = new Intent(this, VotedNoReceiver.class);
+        votedNoIntent.putExtra(Constants.ID, voting.getId());
+        Intent votedIgnoredIntent = new Intent(this, VotedIgnoredReceiver.class);
+        votedIgnoredIntent.putExtra(Constants.ID, voting.getId());
+        PendingIntent votingYesIntentButton = PendingIntent.getBroadcast(this,1,
+                votedYesIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent votingNoIntentButton = PendingIntent.getBroadcast(this,2,
+                votedNoIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent votingIgnoreIntentButton = PendingIntent.getBroadcast(this,3,
+                votedIgnoredIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Notification notification = new NotificationCompat.Builder(this,
+                Constants.VOTING_CHANNEL_ID)
+                .setContentTitle(getString(R.string.notification_votingTitle,
+                        voting.getTrack().getName()))
+                .setSmallIcon(R.drawable.logo_service_notification)
+                .setContentIntent(votingPendingIntent)
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText(getString(R.string.notification_votingMessageSecondLine)))
+                .addAction(R.drawable.icon_thumb_up_nocirce, getString(R.string.text_yes),votingYesIntentButton)
+                .addAction(R.drawable.icon_thumb_down_nocircle, getString(R.string.text_no), votingNoIntentButton)
+                .addAction(R.drawable.icon_x, getString(R.string.text_ignored), votingIgnoreIntentButton)
+                .build();
+        votingManager.notify(Constants.VOTING_NOTIFY_ID, notification);
+    }
+
+    /**
+     * Update the current voting notification when the user voted for the previous one. If the
+     * ArrayList {@link ClientService#currentVoting} is empty the notification will be
+     * dismissed.
+     */
+    public void updateVotingNotification(){
+        if(currentVoting.size() > 1) {
+            currentVoting.remove(0);
+            showVotingNotification(currentVoting.get(0));
+        } else {
+            currentVoting.remove(0);
+            votingManager.cancel(Constants.VOTING_NOTIFY_ID);
+        }
+    }
+
+    public void notificationAfterVote(int id) {
+        Log.d(TAG, "Current Voting: " + currentVoting.get(0).getId());
+        if(currentVoting != null)
+            if(id == currentVoting.get(0).getId())
+                updateVotingNotification();
+            else{
+                int toRemove = 0;
+                for(int i = 0; i < currentVoting.size(); i++) {
+                    if(id == currentVoting.get(i).getId()) {
+                        toRemove = i;
+                        break;
+                    }
+                }
+                if(toRemove > 0)
+                    currentVoting.remove(toRemove);
+            }
     }
 
 
@@ -212,6 +334,9 @@ public class ClientService extends Service {
         this.clientVotings = clientVotings;
     }
 
+    public void setSubscirbedVoting(boolean subscirbedVoting) {
+        this.subscirbedVoting = subscirbedVoting;
+    }
 
     //Service methods
 
@@ -439,17 +564,20 @@ public class ClientService extends Service {
                                     ClientVoting voting = clientVotings.get(votingID);
                                     if (voting != null) {
                                         if(tempObject.getBoolean(Constants.FINISHED_VOTE)) {
-                                            if (clientServiceCallback != null)
-                                                clientServiceCallback.removeVoting(voting.getId(), voting.getType());
+                                            if (clientServiceCallback != null && subscirbedVoting)
+                                                clientServiceCallback.removeVoting(voting.getId(),
+                                                        voting.getType());
                                             clientVotings.remove(votingID);
+                                            if(voting.getType() == Type.QUE)
+                                                notificationAfterVote(voting.getId());
                                         } else {
                                             voting.updateVotingResult(
                                                     tempObject.getInt(Constants.YES_VOTE),
                                                     tempObject.getInt(Constants.NO_VOTE),
                                                     tempObject.getInt(Constants.GREY_VOTE));
                                             if (clientServiceCallback != null)
-                                                clientServiceCallback.notifyVotingAdapter(votingID
-                                                        , voting.getType());
+                                                clientServiceCallback.notifyVotingAdapter(votingID,
+                                                        voting.getType());
                                         }
                                     }
                                     break;
@@ -464,8 +592,10 @@ public class ClientService extends Service {
                                         }).start();
                                     });
                                     clientVotings.put(newVoting.getId(), newVoting);
-                                    if(clientServiceCallback != null)
+                                    if(clientServiceCallback != null && subscirbedVoting)
                                         clientServiceCallback.addVoting(newVoting);
+                                    if(newVoting.getType() == Type.QUE)
+                                        createVotingNotification(newVoting);
                             }
                         }
                     }

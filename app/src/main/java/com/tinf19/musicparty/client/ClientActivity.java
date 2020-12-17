@@ -13,7 +13,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -39,7 +38,6 @@ import com.tinf19.musicparty.client.fragments.ClientSearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.client.fragments.ClientSongFragment;
 import com.tinf19.musicparty.music.Track;
-import com.tinf19.musicparty.util.HostVoting;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
 
@@ -454,6 +452,7 @@ public class ClientActivity extends AppCompatActivity {
                                 new Thread(() -> {
                                     try {
                                         mBoundService.getClientThread().sendMessage(Commands.SUBSCRIBE, "Subscribed the update event");
+                                        mBoundService.setSubscirbedVoting(true);
                                     } catch (IOException e) {
                                         Log.e(TAG, e.getMessage(), e);
                                     }
@@ -519,7 +518,7 @@ public class ClientActivity extends AppCompatActivity {
                                 @Override
                                 public void updateCurrentVoting(int id) {
                                     if(mBoundService != null)
-                                        return;
+                                        mBoundService.notificationAfterVote(id);
                                 }
                             },
                             new VotingFragment.VotingCallback() {
@@ -535,6 +534,7 @@ public class ClientActivity extends AppCompatActivity {
                                         new Thread(() -> {
                                             try {
                                                 mBoundService.getClientThread().sendMessage(Commands.UNSUBSCRIBE, "Unsubscribed the update event");
+                                                mBoundService.setSubscirbedVoting(false);
                                             } catch (IOException e) {
                                                 Log.e(TAG, e.getMessage(), e);
                                             }
