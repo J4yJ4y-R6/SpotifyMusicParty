@@ -24,13 +24,7 @@
         android:theme="@style/Theme.MusicParty">
         <receiver android:name=".receiver.ActionReceiver" />
 
-        <receiver android:name=".receiver.VotedYesReceiver"
-            android:enabled="true"
-            android:exported="true"/>
-        <receiver android:name=".receiver.VotedNoReceiver"
-            android:enabled="true"
-            android:exported="true"/>
-        <receiver android:name=".receiver.VotedIgnoredReceiver"
+        <receiver android:name=".receiver.VotedReceiver"
             android:enabled="true"
             android:exported="true"/>
 
