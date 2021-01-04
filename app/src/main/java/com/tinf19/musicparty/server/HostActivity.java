@@ -854,7 +854,7 @@ public class HostActivity extends AppCompatActivity {
         Log.d(TAG, "Trying to get auth token");
         AuthorizationRequest.Builder builder =
                 new AuthorizationRequest.Builder(BuildConfig.CLIENT_ID, AuthorizationResponse.Type.CODE, Constants.REDIRECT_URI);
-        builder.setScopes(new String[]{"streaming", "app-remote-control", "playlist-modify-private", "playlist-modify-public", "user-read-private", "ugc-image-upload"});
+        builder.setScopes(Constants.SERVER_SCOPES);
         AuthorizationRequest request = builder.build();
         AuthorizationClient.openLoginActivity(this, Constants.REQUEST_CODE, request);
     }
