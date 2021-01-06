@@ -28,6 +28,11 @@ jobs:
         env:
           FILE_NAME: "/home/runner/work/SpotifyMusicParty/SpotifyMusicParty/apikey.properties"
           FILE_DATA: "CLIENT_ID = ${{ secrets.CLIENT_ID }} \nCLIENT_SECRET = ${{ secrets.CLIENT_SECRET }}"
+      - name: Create APIKEY
+        run: |
+          cd /home/runner/work/SpotifyMusicParty/SpotifyMusicParty/
+          ls
+          cat apikey.properties
       - name: set up JDK 1.8
         uses: actions/setup-java@v1
         with:
