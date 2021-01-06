@@ -16,18 +16,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      - name: Create APIKEY
-        run: |
-          echo $GITHUB_WORKSPACE
-          echo $CLIENT_SECRET
-          echo $CLIENT_ID
-        env:
-          CLIENT_ID: ${{ secrets.CLIENT_ID }}
-          CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
       - uses: "finnp/create-file-action@master"
         env:
           FILE_NAME: "/home/runner/work/SpotifyMusicParty/SpotifyMusicParty/apikey.properties"
-          FILE_DATA: "CLIENT_ID = ${{ secrets.CLIENT_ID }} \nCLIENT_SECRET = ${{ secrets.CLIENT_SECRET }}"
+          FILE_DATA: "CLIENT_ID = \"${{ secrets.CLIENT_ID }}\" \nCLIENT_SECRET = \"${{ secrets.CLIENT_SECRET }}\""
       - name: Create APIKEY
         run: |
           cd /home/runner/work/SpotifyMusicParty/SpotifyMusicParty/
