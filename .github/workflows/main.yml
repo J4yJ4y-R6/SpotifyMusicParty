@@ -16,14 +16,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v1
-      - uses: "finnp/create-file-action@master"
-        env:
-          FILE_NAME: "/home/runner/work/SpotifyMusicParty/SpotifyMusicParty/apikey.properties"
-          FILE_DATA: "CLIENT_ID = \"${{ secrets.CLIENT_ID }}\" \nCLIENT_SECRET = \"${{ secrets.CLIENT_SECRET }}\""
       - name: Create APIKEY
         run: |
           cd /home/runner/work/SpotifyMusicParty/SpotifyMusicParty/
-          ls
+          cat << EOF > apikey.properties
+          CLIENT_ID = \"${{ secrets.CLIENT_ID }}\"
+          CLIENT_SECRET = \"${{ secrets.CLIENT_SECRET }}\"
+          EOF
           cat apikey.properties
       - name: set up JDK 1.8
         uses: actions/setup-java@v1
