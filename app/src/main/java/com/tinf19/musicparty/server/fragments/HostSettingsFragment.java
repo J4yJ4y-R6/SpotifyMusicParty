@@ -24,7 +24,6 @@ import android.widget.NumberPicker;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
@@ -33,6 +32,7 @@ import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.DisplayMessages;
 import com.tinf19.musicparty.util.HostVoting;
 import com.tinf19.musicparty.util.Type;
 
@@ -155,8 +155,8 @@ public class HostSettingsFragment extends Fragment {
         JSONObject json = new JSONObject();
         try {
             Log.d(TAG, "generating qr code with connection information");
-            json.put("ipaddress", hostSettingsCallback.getIpAddress());
-            json.put("password", hostSettingsCallback.getPassword());
+            json.put(Constants.IP_ADDRESS, hostSettingsCallback.getIpAddress());
+            json.put(Constants.PASSWORD, hostSettingsCallback.getPassword());
             MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
             BitMatrix bitMatrix = multiFormatWriter.encode(json.toString(), BarcodeFormat.QR_CODE, 200, 200);
 
@@ -235,8 +235,8 @@ public class HostSettingsFragment extends Fragment {
                     Log.d(TAG, "new Party Name set to: " + newPartyName);
                     partyName = newPartyName;
                     hostSettingsCallback.setNewPartyName(newPartyName);
-                    Snackbar.make(this.requireView(),getString(R.string.snackbar_partyNameChanged,
-                            partyName), Snackbar.LENGTH_SHORT).show();
+                    new DisplayMessages(getString(R.string.snackbar_partyNameChanged, partyName),
+                            this.requireView()).makeMessage();
                 }
             });
         }
@@ -252,8 +252,8 @@ public class HostSettingsFragment extends Fragment {
                         votingTimeEditText.setVisibility(View.INVISIBLE);
                         saveVotingTimeButton.setVisibility(View.GONE);
                     }
-                    Snackbar.make(this.requireView(), getString(R.string.snackbar_partyTypeChanged,
-                            partyType), Snackbar.LENGTH_LONG).show();
+                    new DisplayMessages(getString(R.string.snackbar_partyTypeChanged, partyName),
+                            this.requireView()).makeMessage();
                 }
             });
 
@@ -271,9 +271,8 @@ public class HostSettingsFragment extends Fragment {
                             saveVotingTimeButton.setVisibility(View.VISIBLE);
                         }
                     }
-                    Snackbar.make(this.requireView(), getString(R.string.snackbar_partyTypeChanged,
-                            partyType), Snackbar.LENGTH_LONG).show();
-
+                    new DisplayMessages(getString(R.string.snackbar_partyTypeChanged, partyName),
+                            this.requireView()).makeMessage();
                 }
             });
 
@@ -283,12 +282,12 @@ public class HostSettingsFragment extends Fragment {
                     int votingTime = Integer.parseInt(votingTimeEditText.getText().toString());
                     if(votingTime >= 1) {
                         hostSettingsCallback.changeVotingTime(votingTime);
-                        Snackbar.make(this.requireView(), getString(R.string
-                                .snackbar_votingTimeChanged, votingTime), Snackbar.LENGTH_SHORT).show();
+                        new DisplayMessages(getString(R.string.snackbar_votingTimeChanged, votingTime),
+                                this.requireView()).makeMessage();
                     }
                     else
-                        Snackbar.make(this.requireView(), getString(R.string
-                                .snackbar_votingTimeToShort), Snackbar.LENGTH_SHORT).show();
+                        new DisplayMessages(getString(R.string.snackbar_votingTimeToShort),
+                                this.requireView()).makeMessage();
                 }
             });
         }

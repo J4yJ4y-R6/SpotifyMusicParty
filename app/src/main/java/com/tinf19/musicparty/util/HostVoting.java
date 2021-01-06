@@ -28,10 +28,12 @@ public class HostVoting implements Voting {
     private final double threshold;
     private final int id;
     private final VotingCallback votingCallback;
+    private final List<Thread> accepted = new ArrayList<>();
+    private final List<Thread> denied = new ArrayList<>();
+    private final List<Thread> ignored = new ArrayList<>();
+
     private static int counter = 0;
-    private List<Thread> accepted = new ArrayList<>();
-    private List<Thread> denied = new ArrayList<>();
-    private List<Thread> ignored = new ArrayList<>();
+
     private CustomCountDownTimer closeTimer;
     private int ignoredCount = 0;
     private boolean finished = false;
@@ -72,8 +74,6 @@ public class HostVoting implements Voting {
 
 
 
-    //Getter
-
     /**
      * Evaluate the voting results regarding the threshold
      */
@@ -106,8 +106,8 @@ public class HostVoting implements Voting {
      * @param thread Thread which gets checked to be in the ignored list
      * @return Get true if the given thread is in the ignored list or false if it is not
      */
-    public boolean containsIgnored(Thread thread) {
-        return ignored.contains(thread);
+    public boolean ignoredNotIncluded(Thread thread) {
+        return !ignored.contains(thread);
     }
 
     /**
@@ -120,6 +120,9 @@ public class HostVoting implements Voting {
         ignored.remove(thread);
     }
 
+    /**
+     * After a QUEUE voting was closed the CountDownTimer gets stopped.
+     */
     public void closeVoting() {
         if(type == Type.QUE)
             closeTimer.cancel();

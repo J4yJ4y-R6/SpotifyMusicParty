@@ -66,12 +66,23 @@ public class HostService extends Service implements Parcelable {
     private final SpotifyHelper spotifyHelper = new SpotifyHelper();
     private final List<Track> playlist = new ArrayList<>();
     /**
-     * A List of all client connected to the server. Each CommunicationThread has a
+     * A List of all clients connected to the server. Each CommunicationThread has a
      * {@link Socket} and a timestamp from the time he connected to the server.
      */
     private final List<CommunicationThread> clientThreads = new ArrayList<>();
+    /**
+     * A sublist of the clientThreads with all clients currently displaying the
+     * {@link com.tinf19.musicparty.fragments.VotingFragment}. It is used to decide which clients
+     * get the result information about a voting after updating.
+     */
     private final List<CommunicationThread> subscribedClients = new ArrayList<>();
+    /**
+     * A ArrayList of all votings where the host has not submitted his vote yet.
+     */
     private final ArrayList<Voting> currentVoting = new ArrayList<>();
+    /**
+     * A Map with all currently opened votings. The key is always the votingID.
+     */
     private static final Map<Integer, HostVoting> hostVotings = new HashMap<>();
 
     private Thread serverThread = null;
@@ -95,7 +106,6 @@ public class HostService extends Service implements Parcelable {
     private int votingTime = 2;
     private boolean first = true;
     private boolean pause = true;
-    private boolean newSong;
     private boolean stopped;
     private boolean previous;
     private PartyType partyType = PartyType.AllInParty;
@@ -571,6 +581,11 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
+    /**
+     * Generating and displaying the votingNotification with three buttons, so the user can vote in the
+     * notification.
+     * @param voting Voting to generate the notification about this voting.
+     */
     private void showVotingNotification(Voting voting) {
         Intent votingNotificationIntent = new Intent(this, HostActivity.class)
                 .putExtra(Constants.FROM_NOTIFICATION, true);
@@ -622,6 +637,11 @@ public class HostService extends Service implements Parcelable {
         }
     }
 
+    /**If the host voted for the voting which is currently displayed in the votingNotification, the
+     * notification will be updated. Otherwise it will only be removed from the currentVoting list
+     * where all votings are listed were the host has not voted yet.
+     * @param id Id of the last voted voting
+     */
     public void notificationAfterVote(int id) {
         if(currentVoting != null)
             if(id == currentVoting.get(0).getId())
@@ -637,6 +657,39 @@ public class HostService extends Service implements Parcelable {
                 if(toRemove > 0)
                     currentVoting.remove(toRemove);
             }
+    }
+
+    /**
+     * Evaluating all votings after the PartyType was changed to a All-In-Party.
+     */
+    public void evaluateAllVotings() {
+        ArrayList<HostVoting> tempVotings = new ArrayList<>(hostVotings.values());
+        for(HostVoting voting: tempVotings){
+            voting.evaluateVoting();
+            voting.closeVoting();
+        }
+    }
+
+    /**
+     * Create a new Voting
+     * @param track Track which is voted about
+     * @param type Type of the voting
+     * @return Get the new voting
+     */
+    public int createVoting(Track track, Type type){
+        HostVoting newVoting = new HostVoting(type, track, Constants.THRESHOLD_VALUE,
+                votingCallback);
+        Log.d(TAG, "New " + type.toString() + "-Voting created for: " + newVoting.getTrack()
+                .getName());
+        hostVotings.put(newVoting.getId(), newVoting);
+        if(hostServiceCallback != null)
+            hostServiceCallback.notifyVotingAdapter(newVoting);
+        try {
+            notifyClientsNewVoting(newVoting);
+        } catch (JSONException | IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+        }
+        return newVoting.getId();
     }
 
 
@@ -736,7 +789,7 @@ public class HostService extends Service implements Parcelable {
     /**
      * @return Get all votings which are not ignored by the host
      */
-    public List<Voting> getHostVotings() { return hostVotings.values().stream().filter(v -> !v.containsIgnored(serverThread)).collect(Collectors.toList()); }
+    public List<Voting> getHostVotings() { return hostVotings.values().stream().filter(v -> v.ignoredNotIncluded(serverThread)).collect(Collectors.toList()); }
 
     /**
      * @return Get the current voting time
@@ -1192,39 +1245,6 @@ public class HostService extends Service implements Parcelable {
     }
 
 
-    /**
-     * Evaluating all votings after the PartyType was changed to a All-In-Party.
-     */
-    public void evaluateAllVotings() {
-        ArrayList<HostVoting> tempVotings = new ArrayList<>(hostVotings.values());
-        for(HostVoting voting: tempVotings){
-            voting.evaluateVoting();
-            voting.closeVoting();
-        }
-    }
-
-    /**
-     * Create a new Voting
-     * @param track Track which is voted about
-     * @param type Type of the voting
-     * @return Get the new voting
-     */
-    public int createVoting(Track track, Type type){
-        HostVoting newVoting = new HostVoting(type, track, Constants.THRESHOLD_VALUE,
-                votingCallback);
-        Log.d(TAG, "New " + type.toString() + "-Voting created for: " + newVoting.getTrack()
-                .getName());
-        hostVotings.put(newVoting.getId(), newVoting);
-        if(hostServiceCallback != null)
-            hostServiceCallback.notifyVotingAdapter(newVoting);
-        try {
-            notifyClientsNewVoting(newVoting);
-        } catch (JSONException | IOException e) {
-            Log.e(TAG, e.getMessage(), e);
-        }
-        return newVoting.getId();
-    }
-
 
 
     // Parcel
@@ -1521,7 +1541,7 @@ public class HostService extends Service implements Parcelable {
                                 case VOTING:
                                     StringBuilder votingResponse = new StringBuilder();
                                     for(HostVoting hostVoting : hostVotings.values()) {
-                                        if(!hostVoting.containsIgnored(this)) {
+                                        if(hostVoting.ignoredNotIncluded(this)) {
                                             votingResponse.append(Constants.DELIMITER);
                                             votingResponse.append(hostVoting.serialize(this));
                                         }

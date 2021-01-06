@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.tinf19.musicparty.util.Constants;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
  * SearchSongsSoutputItemTouchHelper is managing the touch events in the RecyclerView of
  * {@link com.tinf19.musicparty.fragments.SearchSongsOutputFragment}
@@ -59,7 +61,11 @@ public class SearchSongsOutputItemTouchHelper extends ItemTouchHelper.Callback {
     }
 
     @Override
-    public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) { return false; }
+    public boolean onMove(@NonNull RecyclerView recyclerView,
+                          @NonNull RecyclerView.ViewHolder viewHolder,
+                          @NonNull RecyclerView.ViewHolder target) {
+        return false;
+    }
 
     @Override
     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
@@ -69,7 +75,9 @@ public class SearchSongsOutputItemTouchHelper extends ItemTouchHelper.Callback {
     }
 
     @Override
-    public void onChildDraw(Canvas c, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+    public void onChildDraw(@NotNull Canvas c, @NotNull RecyclerView recyclerView,
+                            @NotNull RecyclerView.ViewHolder viewHolder, float dX, float dY,
+                            int actionState, boolean isCurrentlyActive) {
         if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
             final float alpha = Constants.ALPHA_FULL - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
             viewHolder.itemView.setAlpha(alpha);
@@ -83,7 +91,8 @@ public class SearchSongsOutputItemTouchHelper extends ItemTouchHelper.Callback {
     public void onSelectedChanged(RecyclerView.ViewHolder viewHolder, int actionState) {
         if (actionState != ItemTouchHelper.ACTION_STATE_IDLE) {
             if (viewHolder instanceof SearchSongOutputItemTouchHelperViewHolderCallback) {
-                SearchSongOutputItemTouchHelperViewHolderCallback itemViewHolder = (SearchSongOutputItemTouchHelperViewHolderCallback) viewHolder;
+                SearchSongOutputItemTouchHelperViewHolderCallback itemViewHolder =
+                        (SearchSongOutputItemTouchHelperViewHolderCallback) viewHolder;
                 itemViewHolder.onItemSelected();
             }
         }
@@ -91,7 +100,8 @@ public class SearchSongsOutputItemTouchHelper extends ItemTouchHelper.Callback {
     }
 
     @Override
-    public void clearView(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+    public void clearView(@NotNull RecyclerView recyclerView,
+                          @NotNull RecyclerView.ViewHolder viewHolder) {
         super.clearView(recyclerView, viewHolder);
 
         viewHolder.itemView.setAlpha(Constants.ALPHA_FULL);

@@ -41,8 +41,8 @@ public class ClientPlaylistAdapter extends RecyclerView.Adapter<ClientPlaylistAd
          */
         public ViewHolder(View itemView) {
             super(itemView);
-            songTitleTextView = (TextView) itemView.findViewById(R.id.playlistSongTitleTextView);
-            artistNameTextView = (TextView) itemView.findViewById(R.id.playlistArtistNameTextView);
+            songTitleTextView = itemView.findViewById(R.id.playlistSongTitleTextView);
+            artistNameTextView = itemView.findViewById(R.id.playlistArtistNameTextView);
         }
     }
 

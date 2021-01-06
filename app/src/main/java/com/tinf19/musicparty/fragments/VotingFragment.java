@@ -10,18 +10,19 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.CountDownTimer;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.ramotion.cardslider.CardSliderLayoutManager;
 import com.ramotion.cardslider.CardSnapHelper;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.adapter.VotingAdapter;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.DisplayMessages;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
 
@@ -131,7 +132,7 @@ public class VotingFragment extends Fragment implements VotingAdapter.VotingAdap
         else if(vote == Constants.NO) voteText = getString(R.string.text_no);
         else voteText = getString(R.string.text_ignored);
         String snackbarText = getString(R.string.snackbar_votingSubmitted, voteText);
-        Snackbar.make(this.requireView(), snackbarText, Snackbar.LENGTH_SHORT).show();
+        new DisplayMessages(snackbarText, this.requireView()).makeMessage();
     }
 
 

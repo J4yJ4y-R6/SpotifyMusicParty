@@ -55,7 +55,6 @@ public class ClientService extends Service {
     private ClientServiceCallback clientServiceCallback;
     private NotificationManager votingManager;
     private ClientThread clientThread;
-    private Thread sendMessageThread;
     private Socket clientSocket;
     private Track nowPlaying;
     private boolean stopped;
@@ -63,6 +62,10 @@ public class ClientService extends Service {
      * Boolean to decide if the service is connected for the first time.
      */
     private boolean first = true;
+    /**
+     * Boolean to decide if this client is currently displaying the
+     * {@link com.tinf19.musicparty.fragments.VotingFragment}.
+     */
     private boolean subscirbedVoting = false;
     /**
      * Spotify connection token which is refreshing every hour
@@ -73,7 +76,14 @@ public class ClientService extends Service {
      */
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
+    /**
+     * An ArrayList with all currently opened votings where this clients has not submitted his vote
+     * yet.
+     */
     private final ArrayList<Voting> currentVoting = new ArrayList<>();
+    /**
+     * A Map with all currently opened votings. The key is always the votingID.
+     */
     private Map<Integer, ClientVoting> clientVotings = new HashMap<>();
     private HostService.PartyType partyType = HostService.PartyType.AllInParty;
 
@@ -212,6 +222,11 @@ public class ClientService extends Service {
         });
     }
 
+    /**
+     * Generating and displaying the votingNotification with three buttons, so the user can vote in
+     * the notification.
+     * @param voting Voting to generate the notification about this voting.
+     */
     private void showVotingNotification(Voting voting) {
         Intent votingNotificationIntent = new Intent(this, HostActivity.class)
                 .putExtra(Constants.FROM_NOTIFICATION, true);
@@ -263,6 +278,11 @@ public class ClientService extends Service {
         }
     }
 
+    /**If this client voted for the voting which is currently displayed in the votingNotification, the
+     * notification will be updated. Otherwise it will only be removed from the currentVoting list
+     * where all votings are listed were this client has not voted yet.
+     * @param id Id of the last voted voting
+     */
     public void notificationAfterVote(int id) {
         if(currentVoting != null)
             if(id == currentVoting.get(0).getId())
@@ -453,11 +473,26 @@ public class ClientService extends Service {
          * Splitting the server message to communicate with the server by different commands:
          * LOGIN:       logging in to the server with a username, ip-address and a password
          * QUIT:        quit the connection to the server
-         * PLAYING:     get the current playling track from the server
+         * PLAYING:     get the current playing track from the server
          * PLAYLIST:    get a list of tracks which is equal to the current state of the playlist in
          *              the server
          * VOTING:      get a list of all currently opened votings
          * VOTE_RESULT: Asking for the current result of a specific voting
+         * VOTE_ADDED:  After a voting was added in the server all clients will receive the
+         *              information about this voting and save it locally in the clientVotings.
+         *              If the client is currently displaying
+         *              {@link com.tinf19.musicparty.fragments.VotingFragment} the RecyclerView will
+         *              be updated.
+         *              If the voting is a QUEUE-Voting the client will generate or queue a
+         *              notification about this voting.
+         * VOTE_CLOSED: After a voting was closed by the server all clients will receive the
+         *              information about the id and the type of the voting. The voting will be
+         *              removed from the clientVotings-List.
+         *              If the client is currently displaying
+         *              {@link com.tinf19.musicparty.fragments.VotingFragment} the RecyclerView will
+         *              be updated.
+         *              If the voting is a QUEUE-Voting the client will update or remove the
+         *              votingNotification.
          */
         @Override
         public void run() {
@@ -494,7 +529,7 @@ public class ClientService extends Service {
                                 case LOGIN:
                                     Log.d(TAG, "logged in to: " + partyName);
                                     partyName = attribute;
-                                    setPartyType(parts[3].equals("AllInParty") ?
+                                    setPartyType(parts[3].equals(HostService.PartyType.AllInParty.toString()) ?
                                             HostService.PartyType.AllInParty :
                                             HostService.PartyType.VoteParty);
                                     if (parts.length > 4) {
@@ -510,7 +545,7 @@ public class ClientService extends Service {
                                     exit();
                                     return;
                                 case PARTY_TYPE:
-                                    HostService.PartyType partyType = attribute.equals("AllInParty")
+                                    HostService.PartyType partyType = attribute.equals(HostService.PartyType.AllInParty.toString())
                                             ? HostService.PartyType.AllInParty
                                             : HostService.PartyType.VoteParty;
                                     setPartyType(partyType);

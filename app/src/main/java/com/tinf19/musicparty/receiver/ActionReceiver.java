@@ -21,7 +21,8 @@ import com.tinf19.musicparty.util.Constants;
 public class ActionReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.d(ActionReceiver.class.getName(), "ActionReceiver stopped the connection");
+        Log.d(ActionReceiver.class.getName(), "ActionReceiver opened HostClosePartyFragment");
         context.sendBroadcast(new Intent(Constants.STOP));
+        context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
     }
 }

@@ -6,6 +6,7 @@ public class Constants {
     public static final String PASSWORD = "password";
     public static final String CODE = "code";
     public static final String ADDRESS = "address";
+    public static final String IP_ADDRESS = "ipaddress";
     public static final String USERNAME = "username";
     public static final String PARTYNAME = "partyname";
     public static final String TAG = "tag";
@@ -17,6 +18,8 @@ public class Constants {
     public static final String FIRST_CONNECTION = "first_connection";
 
     public static final String FROM_NOTIFICATION = "from_notification";
+
+    public static final String AFTER_VOTING = "after_voting";
 
 
     public static final String ID = "id";
@@ -66,6 +69,11 @@ public class Constants {
      * Used to authenticate the app with Spotify
      */
     public static final String REDIRECT_URI = "http://com.example.musicparty/callback";
+
+    /**
+     * Prefix for Spotify-Image Http-Requests
+     */
+    public static final String IMAGE_URI = "https://i.scdn.co/image/";
 
     /**
      * Request code for Spotify login

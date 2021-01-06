@@ -132,20 +132,17 @@ public class HostPlaylistItemMoveHelper extends ItemTouchHelper.Callback {
     private void setTouchListener(Canvas c, RecyclerView recyclerView,
                                   RecyclerView.ViewHolder viewHolder, float dX, float dY,
                                   int actionState, boolean isCurrentlyActive) {
-        recyclerView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                swipeBack = event.getAction() == MotionEvent.ACTION_CANCEL || event.getAction() == MotionEvent.ACTION_UP;
-                if (swipeBack) {
-                    if (dX < -buttonWidth) buttonShowedState = ButtonState.RIGHT_VISIBLE;
+        recyclerView.setOnTouchListener((v, event) -> {
+            swipeBack = event.getAction() == MotionEvent.ACTION_CANCEL || event.getAction() == MotionEvent.ACTION_UP;
+            if (swipeBack) {
+                if (dX < -buttonWidth) buttonShowedState = ButtonState.RIGHT_VISIBLE;
 
-                    if (buttonShowedState != ButtonState.GONE && actionState == ACTION_STATE_SWIPE) {
-                        setTouchDownListener(c, recyclerView, viewHolder, 0F, dY, actionState, isCurrentlyActive);
-                        setItemsClickable(recyclerView, false);
-                    }
+                if (buttonShowedState != ButtonState.GONE && actionState == ACTION_STATE_SWIPE) {
+                    setTouchDownListener(c, recyclerView, viewHolder, 0F, dY, actionState, isCurrentlyActive);
+                    setItemsClickable(recyclerView, false);
                 }
-                return false;
             }
+            return false;
         });
     }
 
@@ -153,14 +150,11 @@ public class HostPlaylistItemMoveHelper extends ItemTouchHelper.Callback {
                                       final RecyclerView.ViewHolder viewHolder, final float dX,
                                       final float dY, final int actionState,
                                       final boolean isCurrentlyActive) {
-        recyclerView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                    setTouchUpListener(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-                }
-                return false;
+        recyclerView.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                setTouchUpListener(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
             }
+            return false;
         });
         recyclerView.performClick();
     }
@@ -169,30 +163,22 @@ public class HostPlaylistItemMoveHelper extends ItemTouchHelper.Callback {
                                     final RecyclerView.ViewHolder viewHolder, final float dX,
                                     final float dY, final int actionState,
                                     final boolean isCurrentlyActive) {
-        recyclerView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    HostPlaylistItemMoveHelper.super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-                    recyclerView.setOnTouchListener(new View.OnTouchListener() {
-                        @Override
-                        public boolean onTouch(View v, MotionEvent event) {
-                            return false;
-                        }
-                    });
-                    setItemsClickable(recyclerView, true);
-                    swipeBack = false;
+        recyclerView.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                HostPlaylistItemMoveHelper.super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+                recyclerView.setOnTouchListener((v1, event1) -> false);
+                setItemsClickable(recyclerView, true);
+                swipeBack = false;
 
-                    if (buttonInstance != null && buttonInstance.contains(event.getX(), event.getY())) {
-                        if (buttonShowedState == ButtonState.RIGHT_VISIBLE) {
-                            mAdapter.onRowDeleted(viewHolder.getAdapterPosition());
-                        }
+                if (buttonInstance != null && buttonInstance.contains(event.getX(), event.getY())) {
+                    if (buttonShowedState == ButtonState.RIGHT_VISIBLE) {
+                        mAdapter.onRowDeleted(viewHolder.getAdapterPosition());
                     }
-                    buttonShowedState = ButtonState.GONE;
-                    currentItemViewHolder = null;
                 }
-                return false;
+                buttonShowedState = ButtonState.GONE;
+                currentItemViewHolder = null;
             }
+            return false;
         });
         recyclerView.performClick();
     }

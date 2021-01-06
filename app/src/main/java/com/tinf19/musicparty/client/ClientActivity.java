@@ -15,9 +15,9 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
+import android.view.Display;
 
 
-import com.google.android.material.snackbar.Snackbar;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
@@ -38,6 +38,7 @@ import com.tinf19.musicparty.client.fragments.ClientSearchBarFragment;
 import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.client.fragments.ClientSongFragment;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.util.DisplayMessages;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
 
@@ -312,7 +313,7 @@ public class ClientActivity extends AppCompatActivity {
         mBoundService.getClientThread().interrupt();
         doUnbindService();
         stopService(new Intent(ClientActivity.this, ClientService.class));
-        ClientActivity.this.runOnUiThread(() -> Snackbar.make(findViewById(R.id.showSongFragmentFrame), text, Snackbar.LENGTH_SHORT).show());
+        new DisplayMessages(text, findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
         startActivity((new Intent(ClientActivity.this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
     }
 
@@ -407,10 +408,12 @@ public class ClientActivity extends AppCompatActivity {
                 public void showFragments() {
                     Log.d(TAG, "initializing global fragments with callbacks");
                     searchSongsOutputFragment = new SearchSongsOutputFragment(track -> {
-                        ClientActivity.this.runOnUiThread(() -> Snackbar.
-                                make(findViewById(R.id.showSongFragmentFrame), track.getName() +
-                                        " " + getText(R.string.text_queAdded),
-                                        Snackbar.LENGTH_SHORT).show());
+                        if(getPartyType().equals(HostService.PartyType.VoteParty))
+                            new DisplayMessages(getString(R.string.snackbar_votingCreated, track.getName()),
+                                    findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
+                        else
+                            new DisplayMessages(track.getName() + " " + getText(R.string.text_queAdded),
+                                    findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
                         new Thread(() -> {
                             try {
                                 if (mBoundService != null)
@@ -462,8 +465,7 @@ public class ClientActivity extends AppCompatActivity {
 
                         @Override
                         public HostService.PartyType getPartyType() {
-                            return mBoundService != null ? mBoundService.getPartyType() :
-                                    HostService.PartyType.AllInParty;
+                            return ClientActivity.this.getPartyType();
                         }
 
                         @Override
@@ -561,9 +563,8 @@ public class ClientActivity extends AppCompatActivity {
                 @Override
                 public void updateVotingButton(HostService.PartyType partyType) {
                     if(clientSongFragment != null && clientSongFragment.isVisible()) {
-                        Snackbar.make(clientSongFragment.requireView(), getString(
-                                R.string.snackbar_partyTypeChanged, partyType), Snackbar.LENGTH_LONG)
-                                .show();
+                        new DisplayMessages(getString(R.string.snackbar_partyTypeChanged, partyType),
+                                clientSongFragment.requireView());
                         runOnUiThread(() -> clientSongFragment.toggleVotingButton(partyType));
                     }
                 }
@@ -579,5 +580,13 @@ public class ClientActivity extends AppCompatActivity {
             getSupportFragmentManager().beginTransaction().
                     replace(R.id.searchBarFragmentFrame, clientSearchBarFragment, "SearchBarFragment").commitAllowingStateLoss();
         showShowSongFragment();
+    }
+
+    /**
+     * @return The current party type
+     */
+    private HostService.PartyType getPartyType() {
+        return mBoundService != null ? mBoundService.getPartyType() :
+                HostService.PartyType.AllInParty;
     }
 }

@@ -20,6 +20,7 @@ import android.widget.TextView;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.server.adapter.HostPlaylistItemMoveHelper;
+import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.server.adapter.HostPlaylistAdapter;
 
@@ -38,14 +39,12 @@ import java.util.List;
 public class HostPlaylistFragment extends Fragment {
 
     private static final String TAG = HostPlaylistFragment.class.getName();
-    private RecyclerView recyclerView;
     private TextView currentSongTitleTextView;
     private TextView currentSongArtistTextView;
     private ImageView currentSongCoverImageView;
     private HostPlaylistAdapter hostPlaylistAdapter;
     private HostPlaylistCallback hostPlaylistCallback;
     private HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
-    private View view;
     private HostPlaylistItemMoveHelper hostPlaylistItemMoveHelper;
 
     public interface HostPlaylistCallback {
@@ -86,7 +85,7 @@ public class HostPlaylistFragment extends Fragment {
             if (currentSongArtistTextView != null)
                 currentSongArtistTextView.setText(currentPlaying.getArtist(0).getName());
             if (currentSongCoverImageView != null) {
-                String coverURL = "https://i.scdn.co/image/" + currentPlaying.getCoverFull();
+                String coverURL = Constants.IMAGE_URI + currentPlaying.getCoverFull();
                 new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
             }
         } else {
@@ -108,8 +107,8 @@ public class HostPlaylistFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        view =  inflater.inflate(R.layout.fragment_host_playlist, container, false);
-        recyclerView = view.findViewById(R.id.hostPlaylistRecyclerView);
+        View view = inflater.inflate(R.layout.fragment_host_playlist, container, false);
+        RecyclerView recyclerView = view.findViewById(R.id.hostPlaylistRecyclerView);
         if(recyclerView != null) {
             hostPlaylistAdapter = new HostPlaylistAdapter(new ArrayList<Track>(), hostPlaylistAdapterCallback);
             hostPlaylistItemMoveHelper = new HostPlaylistItemMoveHelper(hostPlaylistAdapter, getContext());

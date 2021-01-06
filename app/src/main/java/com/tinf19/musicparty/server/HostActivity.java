@@ -21,7 +21,6 @@ import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.spotify.android.appremote.api.error.CouldNotFindSpotifyApp;
 import com.spotify.android.appremote.api.error.SpotifyConnectionTerminatedException;
 import com.spotify.sdk.android.auth.AuthorizationClient;
@@ -47,6 +46,7 @@ import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.server.adapter.HostPlaylistAdapter;
 import com.tinf19.musicparty.server.adapter.HostFavoritePlaylistsAdapter;
+import com.tinf19.musicparty.util.DisplayMessages;
 import com.tinf19.musicparty.util.HostVoting;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
@@ -61,6 +61,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -157,11 +158,11 @@ public class HostActivity extends AppCompatActivity {
         void afterFailure();
     }
 
-    BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+    BroadcastReceiver exitReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "user stopped server by service-notification");
-            stopService();
+            Log.d(TAG, "HostActivitiy started: afterNotification called exit");
+            animateFragmentChange(true, hostClosePartyFragment, "ExitConnectionFragment");
         }
     };
 
@@ -174,7 +175,7 @@ public class HostActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_host);
 
-        registerReceiver(broadcastReceiver, new IntentFilter(Constants.STOP));
+        registerReceiver(exitReceiver, new IntentFilter(Constants.STOP));
 
         hostSearchBarFragment = new HostSearchBarFragment(new HostSearchBarFragment.HostSearchBarCallback() {
             @Override
@@ -276,9 +277,12 @@ public class HostActivity extends AppCompatActivity {
             }
         });
         searchSongsOutputFragment = new SearchSongsOutputFragment(track -> {
-            HostActivity.this.runOnUiThread(() -> Snackbar.make(findViewById(
-                    R.id.showSongHostFragmentFrame), track.getName() + " " + getText(R.string.text_queAdded),
-                    Snackbar.LENGTH_SHORT).show());
+            if(getPartyType().equals(HostService.PartyType.VoteParty))
+                new DisplayMessages(getString(R.string.snackbar_votingCreated, track.getName()),
+                        findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
+            else
+                new DisplayMessages(track.getName() + " " + getText(R.string.text_queAdded),
+                        findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
             new Thread(() -> {
                 if (mBoundService != null) {
                     runOnUiThread( () -> {
@@ -321,8 +325,7 @@ public class HostActivity extends AppCompatActivity {
 
             @Override
             public HostService.PartyType getPartyType() {
-                return mBoundService != null ? mBoundService.getPartyType() :
-                        HostService.PartyType.AllInParty;
+                return HostActivity.this.getPartyType();
             }
 
             @Override
@@ -656,10 +659,10 @@ public class HostActivity extends AppCompatActivity {
                                         Log.d(TAG, "connected to spotify remote control");
                                         hostActivityCallback.afterConnection(spotifyAppRemote);
                                         if(mBoundService != null && mBoundService.isFirst()) {
-                                            HostActivity.this.runOnUiThread(()-> Snackbar.make(
-                                                    findViewById(R.id.showSongFragmentFrame),
-                                                    getString(R.string.service_serverMsg, getString(R.string.text_partyName)),
-                                                    Snackbar.LENGTH_SHORT).show());
+                                            new DisplayMessages(getString(R.string.service_serverMsg,
+                                                    getString(R.string.text_partyName)),
+                                                    findViewById(R.id.showSongHostFragmentFrame))
+                                                    .makeMessage();
                                         }
                                     }
 
@@ -671,14 +674,17 @@ public class HostActivity extends AppCompatActivity {
                                         } else if(throwable instanceof CouldNotFindSpotifyApp) {
                                             final String appPackageName = "com.spotify.music";
                                             stopped = true;
-                                            HostActivity.this.runOnUiThread(()-> Snackbar.make(
-                                                    findViewById(R.id.showSongFragmentFrame),
-                                                    getString(R.string.text_noSpotifyFound),
-                                                    Snackbar.LENGTH_SHORT).show());
+                                            new DisplayMessages(getString(R.string.text_noSpotifyFound),
+                                                    findViewById(R.id.showSongHostFragmentFrame))
+                                                    .makeMessage();
                                             try {
-                                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + appPackageName)));
+                                                startActivity(new Intent(Intent.ACTION_VIEW,
+                                                        Uri.parse("market://details?id=" +
+                                                                appPackageName)));
                                             } catch (android.content.ActivityNotFoundException anfe) {
-                                                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + appPackageName)));
+                                                startActivity(new Intent(Intent.ACTION_VIEW,
+                                                        Uri.parse("https://play.google.com/store/" +
+                                                                "apps/details?id=" + appPackageName)));
                                             }
                                         }
                                         else
@@ -721,9 +727,8 @@ public class HostActivity extends AppCompatActivity {
                     Log.d(TAG, "playlist " + name + " has been added to favorites");
                     SharedPreferences savePlaylistMemory = getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
                     if(!savePlaylistMemory.getString("29", "").equals("")) {
-                        Snackbar.make(findViewById(R.id.showSongFragmentFrame),
-                                getString(R.string.text_toastPlaylistNotSaved),
-                                Snackbar.LENGTH_LONG).show();
+                        new DisplayMessages(getString(R.string.text_toastPlaylistNotSaved),
+                                findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
                         return;
                     }
                     SharedPreferences.Editor editor = savePlaylistMemory.edit();
@@ -796,8 +801,8 @@ public class HostActivity extends AppCompatActivity {
         public void onServiceDisconnected(ComponentName className) {
             Log.d(TAG, "Service has been disconnected");
             String partyName = mBoundService != null ? mBoundService.getPartyName() : "MusicParty";
-            Snackbar.make(findViewById(R.id.showSongFragmentFrame), getString(
-                    R.string.service_serverDisconnected, partyName), Snackbar.LENGTH_SHORT).show();
+            new DisplayMessages(getString(R.string.service_serverDisconnected),
+                    findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
             mBoundService = null;
         }
     };
@@ -928,6 +933,14 @@ public class HostActivity extends AppCompatActivity {
     }
 
     /**
+     * @return The current Party-Type
+     */
+    public HostService.PartyType getPartyType() {
+        return mBoundService != null ? mBoundService.getPartyType() :
+                HostService.PartyType.AllInParty;
+    }
+
+    /**
      * @param useIPv4 Decide whether the host has a IPv4-Address or an IPv6-Address
      * @return Get the IP-Address from the host
      */
@@ -953,7 +966,9 @@ public class HostActivity extends AppCompatActivity {
                     }
                 }
             }
-        } catch (Exception ignored) { }
+        } catch (SocketException e) {
+            Log.e(TAG, e.getMessage(), e);
+        }
         return "";
     }
 }

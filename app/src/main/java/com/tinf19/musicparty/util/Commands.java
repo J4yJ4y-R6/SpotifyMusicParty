@@ -5,8 +5,6 @@ public enum Commands {
     LOGIN,
     QUEUE,
     PLAYING,
-    REMOVE,
-    ERROR,
     PLAYLIST,
     VOTING,
     VOTE,

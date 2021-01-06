@@ -12,9 +12,10 @@ import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.DisplayMessages;
 import com.tinf19.musicparty.util.DownloadImageTask;
 
 import java.util.List;
@@ -36,6 +37,7 @@ public class SearchSongsOutputAdapter extends RecyclerView.Adapter<SearchSongsOu
     private final SearchSongOutputAdapterCallback searchSongOutputAdapterCallback;
     private List<Track> mDataset;
     private View textView;
+    private Context context;
 
 
     /**
@@ -95,7 +97,7 @@ public class SearchSongsOutputAdapter extends RecyclerView.Adapter<SearchSongsOu
     @NonNull
     @Override
     public SearchSongsOutputAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        Context context = parent.getContext();
+        context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
         textView = inflater.inflate(R.layout.row_song_output, parent, false);
         return new ViewHolder(textView);
@@ -105,7 +107,7 @@ public class SearchSongsOutputAdapter extends RecyclerView.Adapter<SearchSongsOu
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         String name = mDataset.get(position).getName();
         String artist = mDataset.get(position).getArtist(0).getName();
-        String cover = "https://i.scdn.co/image/" + mDataset.get(position).getCover();
+        String cover = Constants.IMAGE_URI + mDataset.get(position).getCover();
         TextView songTitleTV = holder.songTitleTextView;
         if(songTitleTV != null)
             songTitleTV.setText(name);
@@ -116,7 +118,8 @@ public class SearchSongsOutputAdapter extends RecyclerView.Adapter<SearchSongsOu
         if(songCoverIV != null)
             new DownloadImageTask(songCoverIV).execute(cover);
         holder.itemView.setOnClickListener(v -> {
-            Snackbar.make(textView, textView.getContext().getString(R.string.text_songsOutputSwipeForQue), Snackbar.LENGTH_LONG).show();
+            new DisplayMessages(context.getString(R.string.text_songsOutputSwipeForQue),
+                    textView.findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
         });
 
     }

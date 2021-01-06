@@ -15,8 +15,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.util.DisplayMessages;
 
 import org.json.JSONException;
 
@@ -87,9 +87,8 @@ public class HostClosePartyFragment extends Fragment {
                         }
                     } else {
                         if(savePlaylist) {
-                            Snackbar.make(this.requireView(),
-                                    getString(R.string.text_toastPlaylistNameNeeded),
-                                    Snackbar.LENGTH_SHORT).show();
+                            new DisplayMessages(getString(R.string.text_toastPlaylistNameNeeded),
+                                    this.requireView()).makeMessage();
                         } else {
                             hostClosePartyCallback.acceptEndParty();
                         }

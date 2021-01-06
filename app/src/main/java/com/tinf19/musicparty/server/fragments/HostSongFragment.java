@@ -21,6 +21,7 @@ import android.widget.TextView;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.server.HostService;
+import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DownloadImageTask;
 
 /**
@@ -43,7 +44,6 @@ public class HostSongFragment extends Fragment {
     private TextView currentPlayingArtistTextView;
     private ImageView currentPlayingCoverTextView;
     private TextView partyNameTextView;
-    private ImageButton openVotingButton;
     private LinearLayout playBarLinearLayout;
     private LinearLayout openVotingButtonLinearLayout;
 
@@ -135,7 +135,7 @@ public class HostSongFragment extends Fragment {
             openSettingsButton.setOnClickListener(v -> hostSongCallback.openSettingsFragment());
         }
 
-        openVotingButton = view.findViewById(R.id.votingButtonHostImageButton);
+        ImageButton openVotingButton = view.findViewById(R.id.votingButtonHostImageButton);
         if(openVotingButton != null) {
             openVotingButton.setOnClickListener(v -> hostSongCallback.openVotingFragment());
         }
@@ -223,7 +223,7 @@ public class HostSongFragment extends Fragment {
         if(currentPlayingArtistTextView != null) currentPlayingArtistTextView.setText(nowPlaying.getArtist(0).getName());
         if(currentPlayingAlbumTextView != null) currentPlayingAlbumTextView.setText(nowPlaying.getAlbum());
         if(currentPlayingCoverTextView != null) {
-            String coverURL = "https://i.scdn.co/image/"+nowPlaying.getCoverFull();
+            String coverURL = Constants.IMAGE_URI + nowPlaying.getCoverFull();
             new DownloadImageTask(currentPlayingCoverTextView).execute(coverURL);
         }
     }

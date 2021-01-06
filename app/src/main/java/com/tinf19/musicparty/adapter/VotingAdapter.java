@@ -20,8 +20,6 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.snackbar.Snackbar;
-import com.ramotion.cardslider.CardSliderLayoutManager;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DownloadImageTask;
@@ -47,9 +45,9 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
     private static final String TAG = VotingAdapter.class.getName();
     private final VotingAdapterCallback votingAdapterCallback;
     private final VotingAdapterToFragmentCallback votingAdapterToFragmentCallback;
+    private final Map<Integer, Integer> votingPositions = new HashMap<>();
     private List<Voting> mDataset;
     private Context context;
-    private Map<Integer, Integer> votingPositions = new HashMap<>();
 
     public interface VotingAdapterCallback {
         Thread getCurrentThread();
@@ -144,13 +142,13 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         if(mDataset.get(position).isVoted(votingAdapterCallback.getCurrentThread()))
             showVotingResult(holder, position);
         else
-            hideVotingResult(holder, position);
+            hideVotingResult(holder);
         if(songtitleTV != null)
             songtitleTV.setText(mDataset.get(position).getTrack().getName());
         if(artistTV != null)
             artistTV.setText(mDataset.get(position).getTrack().getArtist(0).getName());
         if(coverTV != null)
-            new DownloadImageTask(coverTV).execute("https://i.scdn.co/image/" + mDataset.get(position).getTrack().getCoverFull());
+            new DownloadImageTask(coverTV).execute(Constants.IMAGE_URI + mDataset.get(position).getTrack().getCoverFull());
         if(yesButton != null)
             yesButton.setOnClickListener(v -> {
                 Voting voting = mDataset.get(position);
@@ -259,7 +257,7 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         }
     }
 
-    private void hideVotingResult(MyViewHolder holder, int position) {
+    private void hideVotingResult(MyViewHolder holder) {
         holder.votePercentageLinearLayout.setVisibility(View.GONE);
         holder.voteYesButton.setVisibility(View.VISIBLE);
         holder.voteNoButton.setVisibility(View.VISIBLE);
@@ -274,6 +272,10 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         return position != null ? position : -1;
     }
 
+    /**
+     * Removing an item from the current dataset after a voting was closed by the host
+     * @param position Position of the voting which shall be deleted
+     */
     public void removeItemFromDataset(int position) {
         mDataset.remove(position);
         notifyDataSetChanged();
