@@ -69,6 +69,7 @@ public class Constants {
      * Used to authenticate the app with Spotify
      */
     public static final String REDIRECT_URI = "http://com.example.musicparty/callback";
+    public static final String [] SERVER_SCOPES = new String[]{"streaming", "app-remote-control", "playlist-modify-private", "playlist-modify-public", "user-read-private", "ugc-image-upload", "user-read-playback-state"};
 
     /**
      * Prefix for Spotify-Image Http-Requests

@@ -480,6 +480,11 @@ public class HostService extends Service implements Parcelable {
                     if(playlist.size() != 0) {
                         nowPlaying = track;
                         if(lastSongTitle == null || !nowPlaying.uri.equals(lastSongTitle.uri)) {
+                            int position = playlist.size()-1-que.size();
+                            if(position >= 0 && !nowPlaying.uri.equals(playlist.get(position).getURI())) {
+                                Log.d(TAG, "addEventListener: Different song has been started: " + nowPlaying.name);
+                                getPlayingContext();
+                            }
                             if(hostServiceCallback != null)
                                 hostServiceCallback.setNowPlaying(getNowPlaying());
                             lastSongTitle = track;
@@ -999,6 +1004,40 @@ public class HostService extends Service implements Parcelable {
                         if(count > 100 * page)
                             getQueFromPlaylist(id, page + 1);
                     } catch (JSONException | IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
+                }
+                response.close();
+            }
+        });
+    }
+
+    private void getPlayingContext() {
+        spotifyHelper.getPlayingContext(token, new SpotifyHelper.SpotifyHelperCallback() {
+            @Override
+            public void onFailure() {
+                Log.d(TAG, "Request Failed.");
+            }
+
+            @Override
+            public void onResponse(Response response) {
+                if(!response.isSuccessful()){
+                    try {
+                        Log.d(TAG, response.body().string());
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
+                }else {
+                    try {
+                        Log.d(TAG, "Request successfully");
+                        JSONObject body = new JSONObject(response.body().string());
+                        Log.d(TAG, "onResponse: " + body.toString());
+                        JSONObject context = body.getJSONObject("context");
+                        if(context.getString("type").equals("playlist")) {
+                            String [] parts = context.getString("uri").split(":");
+                            getQueFromPlaylist(parts[parts.length-1]);
+                        }
+                    } catch (IOException | JSONException e) {
                         Log.e(TAG, e.getMessage(), e);
                     }
                 }

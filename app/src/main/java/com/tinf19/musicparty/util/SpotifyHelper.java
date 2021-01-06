@@ -144,6 +144,18 @@ public class SpotifyHelper {
         get(token, completeURL, spotifyHelperCallback);
     }
 
+    public void getPlayingContext( String token, SpotifyHelperCallback spotifyHelperCallback) {
+        if(token == null) return;
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(Constants.HOST)
+                .addPathSegment("v1")
+                .addPathSegment("me")
+                .addPathSegment("player")
+                .build();
+        get(token, completeURL, spotifyHelperCallback);
+    }
+
     /**
      * Follow the playlist after starting it from
      * {@link com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment}.
