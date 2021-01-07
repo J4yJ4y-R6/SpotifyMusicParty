@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -98,6 +99,7 @@ public class HostService extends Service implements Parcelable {
     private boolean newSong;
     private boolean stopped;
     private boolean previous;
+    private boolean isPlayingContext;
     private PartyType partyType = PartyType.AllInParty;
 
 
@@ -471,17 +473,24 @@ public class HostService extends Service implements Parcelable {
                         nowPlaying = track;
                         if(lastSongTitle == null || !nowPlaying.uri.equals(lastSongTitle.uri)) {
                             int position = playlist.size()-1-que.size();
-                            if(position >= 0 && !nowPlaying.uri.equals(playlist.get(position).getURI())) {
+                            if(position >= 0
+                                    && !nowPlaying.uri.equals(playlist.get(position).getURI())
+                                    && !isPlaylistEnded()) {
                                 Log.d(TAG, "addEventListener: Different song has been started: " + nowPlaying.name);
-                                getPlayingContext();
-                            }
-                            if(hostServiceCallback != null)
+                                //mSpotifyAppRemote.getPlayerApi().pause();
+                                //getPlayingContext(0, nowPlaying.uri);
+                            } else if(hostServiceCallback != null)
                                 hostServiceCallback.setNowPlaying(getNowPlaying());
                             lastSongTitle = track;
                         }
 
                         if(hostServiceCallback != null)
                             hostServiceCallback.setPlayImage(pause);
+                    } else if(!pause && lastSongTitle == null && track != null && !isPlayingContext) {
+                        Log.d(TAG, "addEventListener: Different song has been started: " + track.name);
+                        isPlayingContext = true;
+                        mSpotifyAppRemote.getPlayerApi().pause();
+                        getPlayingContext(0, track.uri);
                     }
                     /*if(playlistID != null) {
                         nowPlaying = track;
@@ -959,7 +968,7 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
-    private void getPlayingContext() {
+    private void getPlayingContext(int time, String uri) {
         spotifyHelper.getPlayingContext(token, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
             public void onFailure() {
@@ -976,13 +985,25 @@ public class HostService extends Service implements Parcelable {
                     }
                 }else {
                     try {
-                        Log.d(TAG, "Request successfully");
-                        JSONObject body = new JSONObject(response.body().string());
-                        Log.d(TAG, "onResponse: " + body.toString());
-                        JSONObject context = body.getJSONObject("context");
-                        if(context.getString("type").equals("playlist")) {
-                            String [] parts = context.getString("uri").split(":");
-                            getQueFromPlaylist(parts[parts.length-1]);
+                        Log.d(TAG, "Request successfully " + uri);
+                        String result = response.body().string();
+                        JSONObject body = new JSONObject(result);
+                        Log.d(TAG, "onResponse: " + result);
+                        if(!body.isNull("context")
+                                && !body.isNull("item")
+                                && body.getJSONObject("item").getString("uri").equals(uri)) {
+                            JSONObject context = body.getJSONObject("context");
+                            if(context.getString("type").equals("playlist")) {
+                                String [] parts = context.getString("uri").split(":");
+                                getQueFromPlaylist(parts[parts.length-1]);
+                            } else if (playlist.size() != 0){
+                                restartQue();
+                            }
+                            isPlayingContext = false;
+                        } else if (time < 5) {
+                            getPlayingContext(time+1, uri);
+                        } else {
+                            restartQue();
                         }
                     } catch (IOException | JSONException e) {
                         Log.e(TAG, e.getMessage(), e);

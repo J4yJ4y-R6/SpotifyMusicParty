@@ -144,6 +144,13 @@ public class SpotifyHelper {
         get(token, completeURL, spotifyHelperCallback);
     }
 
+
+    /**
+     * Getting information about the current played song.
+     * @param token Spotify-token which is unique for every Spotify-user and needs to be refreshed
+     *              every hour.
+     * @param spotifyHelperCallback Callback to handle the request results
+     */
     public void getPlayingContext( String token, SpotifyHelperCallback spotifyHelperCallback) {
         if(token == null) return;
         HttpUrl completeURL = new HttpUrl.Builder()
@@ -152,6 +159,7 @@ public class SpotifyHelper {
                 .addPathSegment("v1")
                 .addPathSegment("me")
                 .addPathSegment("player")
+                .addPathSegment("currently-playing")
                 .build();
         get(token, completeURL, spotifyHelperCallback);
     }

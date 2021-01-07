@@ -49,7 +49,6 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
     private final VotingAdapterToFragmentCallback votingAdapterToFragmentCallback;
     private List<Voting> mDataset;
     private Context context;
-    private Map<Integer, Integer> votingPositions = new HashMap<>();
 
     public interface VotingAdapterCallback {
         Thread getCurrentThread();
@@ -137,7 +136,6 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         ImageView noButton = holder.voteNoButton;
         ImageView ignoreVoteButton = holder.ignoreVoteImageView;
 
-        votingPositions.put(mDataset.get(position).getId(), position);
         Log.d(TAG, "position: " + position + ", name: " + mDataset.get(position).getTrack().getName());
 
         Log.d(TAG, "name: " + mDataset.get(position).getTrack().getName() + " voted: " + mDataset.get(position).isVoted(votingAdapterCallback.getCurrentThread()));
@@ -270,8 +268,11 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
      * @return Get the position of a voting at the local Map
      */
     public int getVotingPosition(int id) {
-        Integer position = votingPositions.get(id);
-        return position != null ? position : -1;
+        for(int i = 0; i < mDataset.size(); i++) {
+            if (mDataset.get(i).getId() == id)
+                return i;
+        }
+        return -1;
     }
 
     public void removeItemFromDataset(int position) {
