@@ -53,6 +53,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -477,8 +478,8 @@ public class HostService extends Service implements Parcelable {
                                     && !nowPlaying.uri.equals(playlist.get(position).getURI())
                                     && !isPlaylistEnded()) {
                                 Log.d(TAG, "addEventListener: Different song has been started: " + nowPlaying.name);
-                                //mSpotifyAppRemote.getPlayerApi().pause();
-                                //getPlayingContext(0, nowPlaying.uri);
+                                mSpotifyAppRemote.getPlayerApi().pause();
+                                getPlayingContext(8, nowPlaying.uri);
                             } else if(hostServiceCallback != null)
                                 hostServiceCallback.setNowPlaying(getNowPlaying());
                             lastSongTitle = track;
@@ -490,7 +491,7 @@ public class HostService extends Service implements Parcelable {
                         Log.d(TAG, "addEventListener: Different song has been started: " + track.name);
                         isPlayingContext = true;
                         mSpotifyAppRemote.getPlayerApi().pause();
-                        getPlayingContext(0, track.uri);
+                        getPlayingContext(8, track.uri);
                     }
                     /*if(playlistID != null) {
                         nowPlaying = track;
@@ -954,10 +955,10 @@ public class HostService extends Service implements Parcelable {
                             que.addItem(tmpTrack);
                             playlist.add(tmpTrack);
                         }
-                        Log.d(TAG, "added " + que.size() + " elements" );
+                        Log.d(TAG, "added " + items.length() + " elements to the playlist" );
                         if(page == 0 && que.size() > 0)
                             que.next();
-                        if(count > 100 * page)
+                        if(count > 100 * (page + 1))
                             getQueFromPlaylist(id, page + 1);
                     } catch (JSONException | IOException e) {
                         Log.e(TAG, e.getMessage(), e);
@@ -988,7 +989,6 @@ public class HostService extends Service implements Parcelable {
                         Log.d(TAG, "Request successfully " + uri);
                         String result = response.body().string();
                         JSONObject body = new JSONObject(result);
-                        Log.d(TAG, "onResponse: " + result);
                         if(!body.isNull("context")
                                 && !body.isNull("item")
                                 && body.getJSONObject("item").getString("uri").equals(uri)) {
@@ -1000,8 +1000,8 @@ public class HostService extends Service implements Parcelable {
                                 restartQue();
                             }
                             isPlayingContext = false;
-                        } else if (time < 5) {
-                            getPlayingContext(time+1, uri);
+                        } else if (time >= 0) {
+                            getPlayingContext(time-1, uri);
                         } else {
                             restartQue();
                         }
@@ -1148,6 +1148,16 @@ public class HostService extends Service implements Parcelable {
                 response.close();
             }
         });
+    }
+
+    public void swapItem(int from, int to) {
+        int position = playlist.size() - que.size();
+        Log.d(TAG, "swapItem: From " + from + " To: " + to + " Position: " + position);
+        from = from + position;
+        to = to + position;
+        if (from < to) to++;
+        Log.d(TAG, "swapItem: " + playlist.get(from).getName() + " TO: " + playlist.get(to).getName());
+        Collections.swap(playlist, from, to);
     }
 
     /**

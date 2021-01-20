@@ -397,6 +397,9 @@ public class HostActivity extends AppCompatActivity {
                         e.printStackTrace();
                     }
                 }*/
+                if (mBoundService != null) {
+                    mBoundService.swapItem(from, to);
+                }
             }
 
             @Override
