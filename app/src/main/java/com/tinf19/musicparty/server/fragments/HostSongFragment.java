@@ -153,7 +153,7 @@ public class HostSongFragment extends Fragment {
         ImageButton lastTrackImageButton = view.findViewById(R.id.lastTrackImageButton);
         if(lastTrackImageButton != null) {
             lastTrackImageButton.setOnClickListener(v -> {
-                buttonEffect(lastTrackImageButton);
+                //buttonEffect(lastTrackImageButton);
                 hostSongCallback.lastTrack();
                 setPlayTrackButtonImage(false);
             });
@@ -162,7 +162,7 @@ public class HostSongFragment extends Fragment {
         playTrackImageButton = view.findViewById(R.id.playTrackImageButton);
         if(playTrackImageButton != null) {
             playTrackImageButton.setOnClickListener(v -> {
-                buttonEffect(playTrackImageButton);
+                //buttonEffect(playTrackImageButton);
                 boolean pause = !hostSongCallback.getPauseState();
                 hostSongCallback.playTrack();
                 setPlayTrackButtonImage(pause);
@@ -172,7 +172,7 @@ public class HostSongFragment extends Fragment {
         ImageButton nextTrackImageButton = view.findViewById(R.id.nextTrackImageButton);
         if(nextTrackImageButton != null) {
             nextTrackImageButton.setOnClickListener(v -> {
-                buttonEffect(nextTrackImageButton);
+                //buttonEffect(nextTrackImageButton);
                 hostSongCallback.nextTrack();
                 setPlayTrackButtonImage(false);
             });

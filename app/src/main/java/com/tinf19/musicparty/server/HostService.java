@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -52,6 +53,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,6 +110,7 @@ public class HostService extends Service implements Parcelable {
     private boolean pause = true;
     private boolean stopped;
     private boolean previous;
+    private boolean isPlayingContext;
     private PartyType partyType = PartyType.AllInParty;
 
 
@@ -481,17 +484,24 @@ public class HostService extends Service implements Parcelable {
                         nowPlaying = track;
                         if(lastSongTitle == null || !nowPlaying.uri.equals(lastSongTitle.uri)) {
                             int position = playlist.size()-1-que.size();
-                            if(position >= 0 && !nowPlaying.uri.equals(playlist.get(position).getURI())) {
+                            if(position >= 0
+                                    && !nowPlaying.uri.equals(playlist.get(position).getURI())
+                                    && !isPlaylistEnded()) {
                                 Log.d(TAG, "addEventListener: Different song has been started: " + nowPlaying.name);
-                                getPlayingContext();
-                            }
-                            if(hostServiceCallback != null)
+                                mSpotifyAppRemote.getPlayerApi().pause();
+                                getPlayingContext(8, nowPlaying.uri);
+                            } else if(hostServiceCallback != null)
                                 hostServiceCallback.setNowPlaying(getNowPlaying());
                             lastSongTitle = track;
                         }
 
                         if(hostServiceCallback != null)
                             hostServiceCallback.setPlayImage(pause);
+                    } else if(!pause && lastSongTitle == null && track != null && !isPlayingContext) {
+                        Log.d(TAG, "addEventListener: Different song has been started: " + track.name);
+                        isPlayingContext = true;
+                        mSpotifyAppRemote.getPlayerApi().pause();
+                        getPlayingContext(8, track.uri);
                     }
                     /*if(playlistID != null) {
                         nowPlaying = track;
@@ -998,10 +1008,10 @@ public class HostService extends Service implements Parcelable {
                             que.addItem(tmpTrack);
                             playlist.add(tmpTrack);
                         }
-                        Log.d(TAG, "added " + que.size() + " elements" );
+                        Log.d(TAG, "added " + items.length() + " elements to the playlist" );
                         if(page == 0 && que.size() > 0)
                             que.next();
-                        if(count > 100 * page)
+                        if(count > 100 * (page + 1))
                             getQueFromPlaylist(id, page + 1);
                     } catch (JSONException | IOException e) {
                         Log.e(TAG, e.getMessage(), e);
@@ -1012,7 +1022,7 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
-    private void getPlayingContext() {
+    private void getPlayingContext(int time, String uri) {
         spotifyHelper.getPlayingContext(token, new SpotifyHelper.SpotifyHelperCallback() {
             @Override
             public void onFailure() {
@@ -1029,13 +1039,24 @@ public class HostService extends Service implements Parcelable {
                     }
                 }else {
                     try {
-                        Log.d(TAG, "Request successfully");
-                        JSONObject body = new JSONObject(response.body().string());
-                        Log.d(TAG, "onResponse: " + body.toString());
-                        JSONObject context = body.getJSONObject("context");
-                        if(context.getString("type").equals("playlist")) {
-                            String [] parts = context.getString("uri").split(":");
-                            getQueFromPlaylist(parts[parts.length-1]);
+                        Log.d(TAG, "Request successfully " + uri);
+                        String result = response.body().string();
+                        JSONObject body = new JSONObject(result);
+                        if(!body.isNull("context")
+                                && !body.isNull("item")
+                                && body.getJSONObject("item").getString("uri").equals(uri)) {
+                            JSONObject context = body.getJSONObject("context");
+                            if(context.getString("type").equals("playlist")) {
+                                String [] parts = context.getString("uri").split(":");
+                                getQueFromPlaylist(parts[parts.length-1]);
+                            } else if (playlist.size() != 0){
+                                restartQue();
+                            }
+                            isPlayingContext = false;
+                        } else if (time >= 0) {
+                            getPlayingContext(time-1, uri);
+                        } else {
+                            restartQue();
                         }
                     } catch (IOException | JSONException e) {
                         Log.e(TAG, e.getMessage(), e);
@@ -1180,6 +1201,16 @@ public class HostService extends Service implements Parcelable {
                 response.close();
             }
         });
+    }
+
+    public void swapItem(int from, int to) {
+        int position = playlist.size() - que.size();
+        Log.d(TAG, "swapItem: From " + from + " To: " + to + " Position: " + position);
+        from = from + position;
+        to = to + position;
+        if (from < to) to++;
+        Log.d(TAG, "swapItem: " + playlist.get(from).getName() + " TO: " + playlist.get(to).getName());
+        Collections.swap(playlist, from, to);
     }
 
     /**
