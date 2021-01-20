@@ -190,6 +190,19 @@ public class SpotifyHelper {
         put(token, "application/json", completeURL, body, spotifyHelperCallback);
     }
 
+    public void checkPlaylistExists(String token, String id, SpotifyHelperCallback spotifyHelperCallback) throws JSONException {
+        if(token == null) return;
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(Constants.HOST)
+                .addPathSegment("v1")
+                .addPathSegment("playlists")
+                .addPathSegment(id)
+                .build();
+        Log.d(TAG, "Check weather the playlist with id:  " + id + " exists: " + completeURL.toString());
+        get(token, completeURL, spotifyHelperCallback);
+    }
+
     /**
      * Unfollow a existing Spotify-Playlist when the host deleted it from his SharedPreferences.
      * @param token Spotify-token which is unique for every Spotify-user and needs to be refreshed

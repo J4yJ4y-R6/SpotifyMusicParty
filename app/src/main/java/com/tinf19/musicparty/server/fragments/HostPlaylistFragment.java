@@ -46,6 +46,7 @@ public class HostPlaylistFragment extends Fragment {
     private HostPlaylistCallback hostPlaylistCallback;
     private HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
     private HostPlaylistItemMoveHelper hostPlaylistItemMoveHelper;
+    private int displayWidth;
 
     public interface HostPlaylistCallback {
         void showPlaylist();
@@ -59,9 +60,10 @@ public class HostPlaylistFragment extends Fragment {
      * @param hostPlaylistAdapterCallback Communication callback which is given by the
      *                                    {@link HostPlaylistAdapter}
      */
-    public HostPlaylistFragment(HostPlaylistCallback hostPlaylistCallback, HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
+    public HostPlaylistFragment(int displayWidth, HostPlaylistCallback hostPlaylistCallback, HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
         this.hostPlaylistCallback = hostPlaylistCallback;
         this.hostPlaylistAdapterCallback = hostPlaylistAdapterCallback;
+        this.displayWidth = displayWidth;
     }
 
     /**
@@ -111,15 +113,10 @@ public class HostPlaylistFragment extends Fragment {
         RecyclerView recyclerView = view.findViewById(R.id.hostPlaylistRecyclerView);
         if(recyclerView != null) {
             hostPlaylistAdapter = new HostPlaylistAdapter(new ArrayList<Track>(), hostPlaylistAdapterCallback);
-            hostPlaylistItemMoveHelper = new HostPlaylistItemMoveHelper(hostPlaylistAdapter, getContext());
+            hostPlaylistItemMoveHelper = new HostPlaylistItemMoveHelper(hostPlaylistAdapter,
+                    getContext(), displayWidth);
             ItemTouchHelper touchHelper = new ItemTouchHelper(hostPlaylistItemMoveHelper);
             touchHelper.attachToRecyclerView(recyclerView);
-            recyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
-                @Override
-                public void onDraw(@NonNull Canvas c, @NonNull RecyclerView parent, @NonNull RecyclerView.State state) {
-                    hostPlaylistItemMoveHelper.onDraw(c);
-                }
-            });
             recyclerView.setAdapter(hostPlaylistAdapter);
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(view.getContext());
             recyclerView.setLayoutManager(layoutManager);

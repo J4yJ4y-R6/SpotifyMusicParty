@@ -1,10 +1,16 @@
 package com.tinf19.musicparty.util;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ImageView;
+
+import androidx.core.content.ContextCompat;
+
+import com.tinf19.musicparty.R;
 
 import java.io.InputStream;
 
@@ -17,6 +23,7 @@ import java.io.InputStream;
 public class DownloadImageTask extends AsyncTask<String, Void, Bitmap> {
 
     ImageView bmImage;
+    private Context context;
 
     /**
      * Constructor to set the bitmap directly in the view

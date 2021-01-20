@@ -19,6 +19,7 @@ import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.IBinder;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 import com.spotify.android.appremote.api.error.CouldNotFindSpotifyApp;
@@ -374,7 +375,10 @@ public class HostActivity extends AppCompatActivity {
                 }
             }
         });
-        hostPlaylistFragment = new HostPlaylistFragment(new HostPlaylistFragment.HostPlaylistCallback() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        hostPlaylistFragment = new HostPlaylistFragment(displayMetrics.widthPixels,
+                new HostPlaylistFragment.HostPlaylistCallback() {
             @Override
             public void showPlaylist() {
                 if (mBoundService != null) {
@@ -432,12 +436,12 @@ public class HostActivity extends AppCompatActivity {
             }
         }, new HostFavoritePlaylistsAdapter.HostFavoritePlaylistAdapterCallback() {
             @Override
-            public void playFavoritePlaylist(String id, ArrayList<String> idList) {
+            public void playFavoritePlaylist(String id, int position) {
                 if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)  {
                     mBoundService.setPlaylistID(id);
                     mBoundService.getQueFromPlaylist(id);
                     try {
-                        mBoundService.checkPlaylistFollowStatus(id);
+                        mBoundService.checkPlaylistExists(id, position);
                     } catch (JSONException e) {
                         Log.e(TAG, e.getMessage(), e);
                     }
@@ -723,6 +727,31 @@ public class HostActivity extends AppCompatActivity {
                         votingFragment.addItemToDataset(voting);
                         runOnUiThread( () -> votingFragment.notifyAllVotes(voting.getType()));
                     }
+                }
+
+                @Override
+                public void removePlaylistFromFav(String id, int position) {
+                    SharedPreferences savePlaylistMemory = getSharedPreferences("savePlaylistMemory", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = savePlaylistMemory.edit();
+                    Log.d(TAG, "removing " + id + "from SharedPreferences");
+                    editor.remove("" + position);
+                    editor.apply();
+                    if (position < 8) {
+                        int counter = position;
+                        while (counter <= 8) {
+                            String nextPlaylist = savePlaylistMemory.getString("" + (counter + 1), "");
+                            if (!nextPlaylist.equals(""))
+                                editor.putString("" + counter, nextPlaylist);
+                            else {
+                                editor.remove("" + counter);
+                            }
+                            editor.apply();
+                            counter++;
+                        }
+                    }
+                    new DisplayMessages(getString(R.string.snackbar_playlistNotFound),
+                            findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
+                    notifyFavPlaylistAdapter();
                 }
 
                 @Override

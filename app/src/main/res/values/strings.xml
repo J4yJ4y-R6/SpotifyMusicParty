@@ -134,6 +134,7 @@
     <string name="snackbar_votingTimeToShort"> Die Votingzeit muss mindestens eine Minute betragen</string>
     <string name="snackbar_votingTimeChanged"> Die Votingzeit wurde auf %1$d geändert</string>
     <string name="snackbar_votingCreated">Für "%1$s" wurde ein neues Warteschlangen-Voting eröffnet.</string>
+    <string name="snackbar_playlistNotFound">Spotify kann diese Playlist nicht mehr finden. Sie wurde aus deinen Favoriten entfernt.</string>
 
     <string name="notification_votingTitle">Voting zum Lied: %1$s</string>
     <string name="notification_votingMessageSecondLine">Vote jetzt zum Hinzufügen des Liedes zu der aktuellen Queue.</string>

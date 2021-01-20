@@ -313,7 +313,6 @@ public class ClientActivity extends AppCompatActivity {
         mBoundService.getClientThread().interrupt();
         doUnbindService();
         stopService(new Intent(ClientActivity.this, ClientService.class));
-        new DisplayMessages(text, findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
         startActivity((new Intent(ClientActivity.this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
     }
 

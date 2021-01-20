@@ -212,6 +212,9 @@ public class HostFavoritePlaylistsFragment extends Fragment implements HostFavor
                 if (!response.isSuccessful()) {
                     try {
                         Log.d(TAG, response.body().string());
+                        Playlist playlist = new Playlist(id, name, "error");
+                        playlists[key] = playlist;
+                        counter++;
                     } catch (IOException e) {
                         Log.e(TAG, e.getMessage(), e);
                     }

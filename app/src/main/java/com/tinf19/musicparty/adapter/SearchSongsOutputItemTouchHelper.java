@@ -37,7 +37,7 @@ public class SearchSongsOutputItemTouchHelper extends ItemTouchHelper.Callback {
      * @param adapter Adapter of the RecyclerView in {@link com.tinf19.musicparty.fragments.SearchSongsOutputFragment}
      */
     public SearchSongsOutputItemTouchHelper(SearchSongOutputItemTouchHelperCallback adapter) {
-        mAdapter = adapter;
+        this.mAdapter = adapter;
         this.adapter = (SearchSongsOutputAdapter) adapter;
     }
 
@@ -71,7 +71,6 @@ public class SearchSongsOutputItemTouchHelper extends ItemTouchHelper.Callback {
     public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
         mAdapter.sendToPlaylist(viewHolder.getAdapterPosition());
         adapter.notifyItemChanged(viewHolder.getAdapterPosition());
-
     }
 
     @Override

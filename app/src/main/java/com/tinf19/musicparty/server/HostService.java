@@ -128,6 +128,7 @@ public class HostService extends Service implements Parcelable {
         void notifyVotingAdapter(int id, Type type);
         void removeVoting(int id, Type type);
         void notifyVotingAdapter(Voting voting);
+        void removePlaylistFromFav(String id, int position);
     }
 
     public enum PartyType {
@@ -1063,6 +1064,34 @@ public class HostService extends Service implements Parcelable {
                     }
                 }
                 response.close();
+            }
+        });
+    }
+
+    public void checkPlaylistExists(String id, int position) throws JSONException {
+        spotifyHelper.checkPlaylistExists(token, id, new SpotifyHelper.SpotifyHelperCallback() {
+            @Override
+            public void onFailure()  {
+                Log.d(TAG, "failed to get status of playlist with id: " + id);
+            }
+
+            @Override
+            public void onResponse(Response response) {
+                if(!response.isSuccessful()) {
+                    try {
+                        Log.d(TAG, response.body().string());
+                        Log.d(TAG, "Removed Playlist from Shared Preferences");
+                        hostServiceCallback.removePlaylistFromFav(id, position);
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
+                } else {
+                    try {
+                        checkPlaylistFollowStatus(id);
+                    } catch (JSONException e) {
+                        Log.e(TAG, e.getMessage(), e);
+                    }
+                }
             }
         });
     }
