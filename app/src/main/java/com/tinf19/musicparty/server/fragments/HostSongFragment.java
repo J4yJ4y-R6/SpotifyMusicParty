@@ -215,6 +215,7 @@ public class HostSongFragment extends Fragment {
             Log.d(TAG, "welcome message gets changed to first song");
             playBarLinearLayout.setVisibility(View.VISIBLE);
             currentPlayingTitleTextView.setSingleLine(true);
+            currentPlayingAlbumTextView.setSelected(true);
             currentPlayingTitleTextView.setHeight(150);
         }
         if(currentPlayingTitleTextView != null) {
