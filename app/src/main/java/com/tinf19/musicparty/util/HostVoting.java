@@ -61,7 +61,7 @@ public class HostVoting implements Voting {
         this.id = counter++;
         this.track = track;
         this.votingCallback = votingCallback;
-        if(type == Type.QUE)
+        if(type == Type.QUEUE)
             closeTimer = new CustomCountDownTimer(votingCallback.getVotingTime()*60*1000,
                     1000) {
                 @Override
@@ -80,7 +80,7 @@ public class HostVoting implements Voting {
     public void makeCallback(Thread thread){
         int clientCount = (int) Math.ceil((votingCallback.getClientCount() + 1 - ignoredCount) * threshold);
         switch (type) {
-            case QUE:
+            case QUEUE:
                 if(clientCount <= accepted.size()) {
                     finished = true;
                     votingCallback.addAndClose(id, thread);
@@ -124,7 +124,7 @@ public class HostVoting implements Voting {
      * After a QUEUE voting was closed the CountDownTimer gets stopped.
      */
     public void closeVoting() {
-        if(type == Type.QUE)
+        if(type == Type.QUEUE)
             closeTimer.cancel();
     }
 
@@ -176,7 +176,7 @@ public class HostVoting implements Voting {
     public void evaluateVoting() {
         finished = true;
         if(Math.ceil((accepted.size() + denied.size()) * threshold) <= accepted.size() &&
-            type.equals(Type.QUE))
+            type.equals(Type.QUEUE))
             votingCallback.addAndClose(id, new Thread());
         else
             votingCallback.close(id, new Thread());

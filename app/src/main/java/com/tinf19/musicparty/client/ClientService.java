@@ -199,7 +199,7 @@ public class ClientService extends Service {
     }
 
     /**
-     * When a Que-Voting gets startet this method will create a notification, so the user does not
+     * When a Queue-Voting gets startet this method will create a notification, so the user does not
      * have to vote from the fragment. Instead he can use the notification buttons. If already one
      * voting notification is displayed, the notification gets queued in
      * {@link ClientService#currentVoting}. Otherwise it will be displayed.
@@ -574,15 +574,13 @@ public class ClientService extends Service {
                                     clientVotings.clear();
                                     for(int i = 3; i < parts.length; i++) {
                                         if(!parts[i].equals("")){
-                                            ClientVoting voting = new ClientVoting(parts[i], (vote, id) -> {
-                                                new Thread(() -> {
-                                                    try {
-                                                        sendMessage(Commands.VOTE, id + Constants.DELIMITER + vote);
-                                                    } catch (IOException e) {
-                                                        Log.e(TAG, e.getMessage(), e);
-                                                    }
-                                                }).start();
-                                            });
+                                            ClientVoting voting = new ClientVoting(parts[i], (vote, id) -> new Thread(() -> {
+                                                try {
+                                                    sendMessage(Commands.VOTE, id + Constants.DELIMITER + vote);
+                                                } catch (IOException e) {
+                                                    Log.e(TAG, e.getMessage(), e);
+                                                }
+                                            }).start());
                                             clientVotings.put(voting.getId(), voting);
                                         }
                                     }
@@ -604,30 +602,28 @@ public class ClientService extends Service {
                                     }
                                     break;
                                 case VOTE_ADDED:
-                                    ClientVoting newVoting = new ClientVoting(attribute, (vote, id) -> {
-                                        new Thread(() -> {
-                                            try {
-                                                sendMessage(Commands.VOTE, id + Constants.DELIMITER + vote);
-                                            } catch (IOException e) {
-                                                Log.e(TAG, e.getMessage(), e);
-                                            }
-                                        }).start();
-                                    });
+                                    ClientVoting newVoting = new ClientVoting(attribute, (vote, id) -> new Thread(() -> {
+                                        try {
+                                            sendMessage(Commands.VOTE, id + Constants.DELIMITER + vote);
+                                        } catch (IOException e) {
+                                            Log.e(TAG, e.getMessage(), e);
+                                        }
+                                    }).start());
                                     clientVotings.put(newVoting.getId(), newVoting);
                                     if(clientServiceCallback != null && subscirbedVoting)
                                         clientServiceCallback.addVoting(newVoting);
-                                    if(newVoting.getType() == Type.QUE)
+                                    if(newVoting.getType() == Type.QUEUE)
                                         createVotingNotification(newVoting);
                                     break;
                                 case VOTE_CLOSED:
                                     int votingClosedId = Integer.parseInt(attribute);
-                                    Voting votingClosed = clientVotings.get(0);
+                                    Voting votingClosed = clientVotings.get(votingClosedId);
                                     if(votingClosed != null) {
                                         if (clientServiceCallback != null && subscirbedVoting)
                                             clientServiceCallback.removeVoting(votingClosedId,
                                                     votingClosed.getType());
                                         clientVotings.remove(votingClosedId);
-                                        if (votingClosed.getType() == Type.QUE)
+                                        if (votingClosed.getType() == Type.QUEUE)
                                             notificationAfterVote(votingClosedId);
                                     }
                             }

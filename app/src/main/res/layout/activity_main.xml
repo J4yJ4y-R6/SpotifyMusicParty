@@ -182,7 +182,7 @@
                         android:layout_width="235dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="5"
-                        android:text="Hier schreiben wir die Info hin, wie unsere App funktioniert und was man alles so machen kann xd!Hier schreiben wir die Info hin, wie unsere App funktioniert und was man alles so machen kann xd!Hier schreiben wir die Info hin, wie unsere App funktioniert und was man alles so machen kann xd!"
+                        android:text="@string/info_text"
                         android:textSize="30sp" />
 
                     <ImageButton

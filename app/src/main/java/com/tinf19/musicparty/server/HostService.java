@@ -10,32 +10,31 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Binder;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Base64;
-import android.os.IBinder;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.spotify.android.appremote.api.SpotifyAppRemote;
+import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPerson;
-import com.tinf19.musicparty.music.Que;
+import com.tinf19.musicparty.music.Queue;
+import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.receiver.ActionReceiver;
 import com.tinf19.musicparty.receiver.VotedReceiver;
 import com.tinf19.musicparty.util.Commands;
-import com.tinf19.musicparty.R;
-import com.tinf19.musicparty.music.Track;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.HostVoting;
 import com.tinf19.musicparty.util.SpotifyHelper;
 import com.tinf19.musicparty.util.TokenRefresh;
-import com.tinf19.musicparty.util.HostVoting;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
 
@@ -90,7 +89,7 @@ public class HostService extends Service implements Parcelable {
     private Thread serverThread = null;
     private NotificationManager votingManager;
     private ServerSocket serverSocket;
-    private Que que;
+    private Queue queue;
     private SpotifyAppRemote mSpotifyAppRemote;
     private HostServiceCallback hostServiceCallback;
     private com.spotify.protocol.types.Track nowPlaying;
@@ -102,14 +101,10 @@ public class HostService extends Service implements Parcelable {
     private String password;
     private String userID;
     private String token;
-    private String playlistID;
     private String partyName;
-    private int size = 0;
     private int votingTime = 2;
     private boolean first = true;
     private boolean pause = true;
-    private boolean stopped;
-    private boolean previous;
     private boolean isPlayingContext;
     private PartyType partyType = PartyType.AllInParty;
 
@@ -151,7 +146,7 @@ public class HostService extends Service implements Parcelable {
     @Override
     public void onCreate() {
         super.onCreate();
-        que = new Que(new Que.QueCallback() {
+        queue = new Queue(new Queue.QueCallback() {
             @Override
             public void playSong(Track track) {
                 if(getmSpotifyAppRemote() != null) {
@@ -159,8 +154,8 @@ public class HostService extends Service implements Parcelable {
                     mSpotifyAppRemote.getPlayerApi().play(track.getURI());
                     new Thread(()->{
                         try {
-                            sendToAll(Commands.PLAYING, que.getNowPlaying().serialize());
-                        } catch (IOException | JSONException e) {
+                            sendToAll(Commands.PLAYING, queue.getNowPlaying().serialize());
+                        } catch (JSONException e) {
                             Log.e(TAG, e.getMessage(), e);
                         }
                     }).start();
@@ -184,7 +179,7 @@ public class HostService extends Service implements Parcelable {
         votingCallback = new HostVoting.VotingCallback() {
             @Override
             public void skipAndClose(int id, Thread thread) {
-                que.next();
+                queue.next();
                 close(id, thread);
             }
 
@@ -212,9 +207,9 @@ public class HostService extends Service implements Parcelable {
                 if(voting != null) {
                     voting.closeVoting();
                     hostVotings.remove(id);
-                    HostService.this.notifyClientsResult(voting, serverThread);
+                    HostService.this.notifyClientsClosedVoting(voting.getId());
                     if(hostServiceCallback != null) {
-                        hostServiceCallback.notifyVotingAdapter(id, voting.getType());
+                        //hostServiceCallback.notifyVotingAdapter(id, voting.getType());
                         hostServiceCallback.removeVoting(id, voting.getType());
                     }
                     if(thread != serverThread)
@@ -224,6 +219,9 @@ public class HostService extends Service implements Parcelable {
 
             @Override
             public void notifyClients(HostVoting voting, Thread thread) {
+                if (hostServiceCallback != null)
+                    hostServiceCallback.notifyVotingAdapter(
+                            voting.getId(), voting.getType());
                 HostService.this.notifyClientsResult(voting, thread);
 
             }
@@ -339,7 +337,6 @@ public class HostService extends Service implements Parcelable {
         super.onDestroy();
         Log.d(TAG, "service has been destroyed with " + clientThreads.size() + " clients");
         lastSongTitle = null;
-        stopped = false;
         new Thread(() -> {
             try {
                 serverSocket.close();
@@ -366,14 +363,14 @@ public class HostService extends Service implements Parcelable {
      * queue list. In the playlist array list all songs, played by the queue, are saved.
      */
     public void restartQue() {
-        Log.d(TAG, "que has been restarted");
-        if(que.size() == 0) {
+        Log.d(TAG, "queue has been restarted");
+        if(queue.size() == 0) {
             lastSongTitle = null;
             nowPlaying = null;
-            que.setQueList(new ArrayList<>(playlist));
+            queue.setQueList(new ArrayList<>(playlist));
         }
-        que.setPlaylistEnded(false);
-        que.next();
+        queue.setPlaylistEnded(false);
+        queue.next();
     }
 
     /**
@@ -387,11 +384,11 @@ public class HostService extends Service implements Parcelable {
     public void deleteFromQue(int position, AfterCallback callback) {
         callback.deleteFromDataset();
         playlist.remove(position);
-        que.remove(position);
+        queue.remove(position);
     }
 
     public void next() {
-        que.next();
+        queue.next();
     }
 
     /**
@@ -399,9 +396,8 @@ public class HostService extends Service implements Parcelable {
      * played at least two seconds. Otherwise it will start the last played song.
      */
     public void back() {
-        previous = true;
-        if(playlist.size() - que.size() - 2 >= 0)
-            que.back(playlist.get(playlist.size() - que.size() - 2));
+        if(playlist.size() - queue.size() - 2 >= 0)
+            queue.back(playlist.get(playlist.size() - queue.size() - 2));
         else
             mSpotifyAppRemote.getPlayerApi().play(nowPlaying.uri);
     }
@@ -409,21 +405,19 @@ public class HostService extends Service implements Parcelable {
     /**
      * When an item is added to the queue it also has to be added to the playlist array list. So in
      * both list the {@link Track} will be added at the end of the list.
-     * @param track
+     * @param track to be added to the playlist
      */
     public void addItemToPlaylist(Track track) {
         Log.d(TAG, "added track (" + track.getName() + ") to playlist");
         playlist.add(track);
-        que.addItem(track);
+        queue.addItem(track);
         if(playlist.size() == 1)
-            que.next();
+            queue.next();
     }
-
-    public void addItemToTrackList(Track track) { que.addItem(track); }
 
     public void queueItem(Track track) {
         if(partyType == PartyType.VoteParty) {
-            int votingID = createVoting(track, Type.QUE);
+            int votingID = createVoting(track, Type.QUEUE);
             HostVoting hostVoting = hostVotings.get(votingID);
             createVotingNotification(hostVoting);
         }
@@ -442,21 +436,19 @@ public class HostService extends Service implements Parcelable {
      */
     public void togglePlayback() {
         if (pause && getmSpotifyAppRemote() != null) {
-            if(que.isPlaylistEnded()) {
+            if(queue.isPlaylistEnded()) {
                 Log.d(TAG, "Last song has been played. Queue has been restarted");
                 restartQue();
             } else {
-                Log.d(TAG, "Current Song has been resumed. Queue-Size: " + que.size());
+                Log.d(TAG, "Current Song has been resumed. Queue-Size: " + queue.size());
                 getmSpotifyAppRemote().getPlayerApi().resume();
             }
         }
         else if (getmSpotifyAppRemote() != null){
-            Log.d(TAG, "Current Song has been paused. Queue-Size: " + que.size());
+            Log.d(TAG, "Current Song has been paused. Queue-Size: " + queue.size());
             getmSpotifyAppRemote().getPlayerApi().pause();
         }
     }
-
-    //TODO: javadoc fertig machen
 
     /**
      * A Listener which is reacting on the {@link android.content.BroadcastReceiver} which is
@@ -473,18 +465,18 @@ public class HostService extends Service implements Parcelable {
                     final com.spotify.protocol.types.Track track = playerState.track;
                     if(playerState.isPaused != pause) {
                         if(playerState.isPaused)
-                            que.pause();
+                            queue.pause();
                         else
-                            que.resume();
+                            queue.resume();
                     } else if(playlist.size() != 0 && !playerState.isPaused && (track.duration - playerState.playbackPosition) > Constants.CROSSFADE * 1000) {
-                        que.setTimer(track.duration - playerState.playbackPosition, true);
+                        queue.setTimer(track.duration - playerState.playbackPosition, true);
                     }
 
                     pause = playerState.isPaused;
                     if(playlist.size() != 0) {
                         nowPlaying = track;
                         if(lastSongTitle == null || !nowPlaying.uri.equals(lastSongTitle.uri)) {
-                            int position = playlist.size()-1-que.size();
+                            int position = playlist.size()-1- queue.size();
                             if(position >= 0
                                     && !nowPlaying.uri.equals(playlist.get(position).getURI())
                                     && !isPlaylistEnded()) {
@@ -504,50 +496,6 @@ public class HostService extends Service implements Parcelable {
                         mSpotifyAppRemote.getPlayerApi().pause();
                         getPlayingContext(8, track.uri);
                     }
-                    /*if(playlistID != null) {
-                        nowPlaying = track;
-
-                        if((lastSongTitle == null && !playerState.isPaused) || (nowPlaying != null && !nowPlaying.uri.equals(lastSongTitle.uri))) {
-                            if(tracks.size() == 0 && lastSongTitle != null && !stopped) {
-                                stopped = true;
-                                Log.d(TAG, "Playlist hast ended " + lastSongTitle.name + " Duration: " + lastSongTitle.duration);
-                                mSpotifyAppRemote.getPlayerApi().skipPrevious();
-                                mSpotifyAppRemote.getPlayerApi().pause();
-                                pause = true;
-                                if(spotifyPlayerCallback != null)
-                                    spotifyPlayerCallback.setPlayImage(true);
-                                return;
-                            } else if(tracks.size() == 0 && lastSongTitle != null) {
-                                return;
-                            }
-                            lastSongTitle = nowPlaying;
-                            Log.d(TAG, "New song has been started " + track.uri.split(":")[2]);
-                            stopped = false;
-                            new Thread(()->{
-                                try {
-                                    sendToAll(Commands.PLAYING, getNowPlaying().serialize());
-                                } catch (IOException | JSONException e) {
-                                    Log.e(TAG, e.getMessage(), e);
-                                }
-                            }).start();
-
-                            if(tracks.size() > 0 && tracks.get(0).getURI().equals(nowPlaying.uri)) {
-                                tracks.remove(0);
-                            }
-                        }
-                        pause = playerState.isPaused;
-                        if(tracks.size() > 0 && nowPlaying.uri.equals(tracks.get(0).getURI()))
-                            tracks.remove(0);
-                        Log.d(TAG, "addEventListener: " + track + " - " + spotifyPlayerCallback);
-                        if (track != null && spotifyPlayerCallback != null) {
-                            Log.d(TAG, track.name + " by " + track.artist.name);
-                            //if (playerState.playbackPosition == 0)
-                            //nextSong();
-                            spotifyPlayerCallback.setNowPlaying(getNowPlaying());
-                        }
-
-                        if(spotifyPlayerCallback != null) spotifyPlayerCallback.setPlayImage(pause);
-                    }*/
                 });
     }
 
@@ -573,7 +521,7 @@ public class HostService extends Service implements Parcelable {
     }
 
     /**
-     * When a Que-Voting gets startet this method will create a notification, so the user does not
+     * When a Queue-Voting gets startet this method will create a notification, so the user does not
      * have to vote from the fragment. Instead he can use the notification buttons. If already one
      * voting notification is displayed, the notification gets queued in
      * {@link HostService#currentVoting}. Otherwise it will be displayed.
@@ -660,7 +608,7 @@ public class HostService extends Service implements Parcelable {
      */
     public void notificationAfterVote(int id) {
         if(currentVoting != null)
-            if(id == currentVoting.get(0).getId())
+            if(currentVoting.size() > 0 && id == currentVoting.get(0).getId())
                 updateVotingNotification();
             else{
                 int toRemove = 0;
@@ -702,7 +650,7 @@ public class HostService extends Service implements Parcelable {
             hostServiceCallback.notifyVotingAdapter(newVoting);
         try {
             notifyClientsNewVoting(newVoting);
-        } catch (JSONException | IOException e) {
+        } catch (JSONException e) {
             Log.e(TAG, e.getMessage(), e);
         }
         return newVoting.getId();
@@ -722,7 +670,7 @@ public class HostService extends Service implements Parcelable {
     /**
      * @return Get true if the queue is at the end or false if there is a next song
      */
-    public boolean isPlaylistEnded() { return que.isPlaylistEnded(); }
+    public boolean isPlaylistEnded() { return queue.isPlaylistEnded(); }
 
     /**
      * @return Get the Spotify-Remote-Control if is connected
@@ -790,7 +738,7 @@ public class HostService extends Service implements Parcelable {
      * @return Get the current state of the queue list with all songs that are going to be played
      */
     public List<Track> getPlaylist() {
-        return que.getQueList();
+        return queue.getQueList();
     }
 
     /**
@@ -820,18 +768,10 @@ public class HostService extends Service implements Parcelable {
      * Change the current party type
      * @param partyType New party type
      */
-    public void setPartyType(PartyType partyType) throws IOException {
+    public void setPartyType(PartyType partyType) {
         this.partyType = partyType;
         sendToAll(Commands.PARTY_TYPE, partyType.toString());
     }
-
-    /**
-     * Set the playlist id when a external playlist has been started from Spotify or the
-     * {@link com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment}.
-     * @param id Playlist-Id of the started playlist given by the Spotify-API
-     */
-    public void setPlaylistID(String id) { this.playlistID = id; }
-
     /**
      * Set the party name after changing it in the
      * {@link com.tinf19.musicparty.server.fragments.HostSettingsFragment}.
@@ -944,7 +884,7 @@ public class HostService extends Service implements Parcelable {
      * @param id Id of the started playlist.
      */
     public void getQueFromPlaylist(String id) {
-        que.clear();
+        queue.clear();
         playlist.clear();
         getQueFromPlaylist(id, 0);
     }
@@ -1006,12 +946,12 @@ public class HostService extends Service implements Parcelable {
                                             imageFull[imageFull.length-1],
                                             track.getInt("duration_ms"),
                                             track.getJSONObject("album").getString("name"));
-                            que.addItem(tmpTrack);
+                            queue.addItem(tmpTrack);
                             playlist.add(tmpTrack);
                         }
                         Log.d(TAG, "added " + items.length() + " elements to the playlist" );
-                        if(page == 0 && que.size() > 0)
-                            que.next();
+                        if(page == 0 && queue.size() > 0)
+                            queue.next();
                         if(count > 100 * (page + 1))
                             getQueFromPlaylist(id, page + 1);
                     } catch (JSONException | IOException e) {
@@ -1194,87 +1134,13 @@ public class HostService extends Service implements Parcelable {
         });
     }
 
-    /**
-     * Making a HttpRequest to delete a Song from the current Spotify-Playlist.
-     * Currently not in usage because queue is managed by {@link Que}
-     * @param uri Track-URI which identifies the song in the Spotify-API
-     * @param name Song-Title to log the deletion
-     * @param position The position of the song in the current Spotify-Playlist
-     * @param callback Communication callback for
-     *                 {@link com.tinf19.musicparty.server.fragments.HostPlaylistFragment} to notify the adapter
-     *                 that the dataset has changed.
-     * @throws JSONException when the call was not successful
-     */
-    public void deleteItem(String uri, String name, int position, AfterCallback callback) throws JSONException {
-        spotifyHelper.deleteItem(token, playlistID, uri, size, que.size(), position, new SpotifyHelper.SpotifyHelperCallback() {
-            @Override
-            public void onFailure() {
-                Log.d(TAG, "Request Failed.");
-            }
-
-            @Override
-            public void onResponse(Response response) {
-                if(!response.isSuccessful()){
-                    try {
-                        Log.d(TAG, response.body().string());
-                    } catch (IOException e) {
-                        Log.e(TAG, e.getMessage(), e);
-                    }
-                }else {
-                    Log.d(TAG,"Request Successful. Track " + name + " has been deleted.");
-                    callback.deleteFromDataset();
-                    playlist.remove(size - que.size() + position);
-                    que.remove(position);
-                    size--;
-                }
-                response.close();
-            }
-        });
-    }
-
     public void swapItem(int from, int to) {
-        int position = playlist.size() - que.size();
+        int position = playlist.size() - queue.size();
         Log.d(TAG, "swapItem: From " + from + " To: " + to + " Position: " + position);
         from = from + position;
         to = to + position;
-        if (from < to) to++;
         Log.d(TAG, "swapItem: " + playlist.get(from).getName() + " TO: " + playlist.get(to).getName());
         Collections.swap(playlist, from, to);
-    }
-
-    /**
-     * Making a HttpRequest to swap two songs in the current Spotify-Playlist.
-     * Currently not in usage because queue is managed by {@link Que}
-     * @param from Position of the first song
-     * @param to Position of the second song
-     * @throws JSONException when the call was not successful
-     */
-    public void moveItem(int from, int to) throws JSONException {
-        int position = size - que.size();
-        Log.d(TAG, "moveItem: From " + from + " To: " + to + " Position: " + position);
-        from = from + position;
-        to = to + position;
-        if (from < to) to++;
-        spotifyHelper.moveItem(token, playlistID, from, to, new SpotifyHelper.SpotifyHelperCallback() {
-            @Override
-            public void onFailure() {
-                Log.d(TAG, "Request failed");
-            }
-
-            @Override
-            public void onResponse(Response response) {
-                if(!response.isSuccessful()){
-                    try {
-                        Log.d(TAG, response.body().string());
-                    } catch (IOException e) {
-                        Log.e(TAG, e.getMessage(), e);
-                    }
-                }else {
-                    Log.d(TAG,"Request Successful. Track moved.");
-                }
-                response.close();
-            }
-        });
     }
 
     /**
@@ -1412,7 +1278,7 @@ public class HostService extends Service implements Parcelable {
 
     /**
      * Disconnecting all clients from the sever after the host closed the party.
-     * @throws IOException
+     * @throws IOException if client does not exist anymore
      */
     private void stopAll() throws IOException {
         for(CommunicationThread client : clientThreads) {
@@ -1432,20 +1298,15 @@ public class HostService extends Service implements Parcelable {
             tempList.remove((CommunicationThread) thread);
             try {
                 sendToClientList(tempList, Commands.VOTE_RESULT, voting.serializeResult());
-            } catch (IOException | JSONException e) {
+            } catch (JSONException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
         } else {
             try {
                 sendToClientList(subscribedClients, Commands.VOTE_RESULT, voting.serializeResult());
-            } catch (IOException | JSONException e) {
+            } catch (JSONException e) {
                 Log.e(TAG, e.getMessage(), e);
             }
-        }
-        try {
-            HostService.this.notifyClientsClosedVoting(voting.getId());
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage(), e);
         }
     }
 
@@ -1453,13 +1314,12 @@ public class HostService extends Service implements Parcelable {
      * Notify all subscribed clients when a new voting has been added
      * @param voting New Voting
      * @throws JSONException when the serializing failed
-     * @throws IOException when the message could not be send to all subscribed clients
      */
-    private void notifyClientsNewVoting(HostVoting voting) throws JSONException, IOException {
+    private void notifyClientsNewVoting(HostVoting voting) throws JSONException {
         sendToClientList(clientThreads, Commands.VOTE_ADDED, voting.serialize(serverThread));
     }
 
-    private void notifyClientsClosedVoting(int id) throws IOException {
+    private void notifyClientsClosedVoting(int id) {
         sendToClientList(clientThreads, Commands.VOTE_CLOSED, String.valueOf(id));
     }
 
@@ -1467,10 +1327,8 @@ public class HostService extends Service implements Parcelable {
      * Sending a command and a message to all clients
      * @param command Communication command for actions in the client
      * @param message Attributes for mapping the command successfully
-     * @throws IOException when the Output-Stream in
-     * {@link CommunicationThread#sendMessage(Commands, String)} is not writing bytes.
      */
-    public void sendToAll(Commands command, String message) throws IOException {
+    public void sendToAll(Commands command, String message) {
         sendToClientList(clientThreads, command, message);
     }
 
@@ -1479,10 +1337,8 @@ public class HostService extends Service implements Parcelable {
      * @param clientThreads A list of clients that should receive the message
      * @param command Communication command for actions in the client
      * @param message Attributes for mapping the command successfully
-     * @throws IOException when the Output-Stream in
-     * {@link CommunicationThread#sendMessage(Commands, String)} is not writing bytes.
      */
-    public void sendToClientList(List<CommunicationThread> clientThreads, Commands command, String message) throws IOException {
+    public void sendToClientList(List<CommunicationThread> clientThreads, Commands command, String message) {
         for(CommunicationThread client : clientThreads) {
             if (client.login)
                 client.sendMessage(command, message);
@@ -1554,7 +1410,7 @@ public class HostService extends Service implements Parcelable {
          * PLAYING:     After starting a new song all clients get the new {@link Track}-Object to
          *              change all information about the currently playing song.
          * PLAYLIST:    Returning the current queue state after a client request.
-         * VOTING:      Returning all currently opened votings for Que and for Skip
+         * VOTING:      Returning all currently opened votings for Queue and for Skip
          * VOTE:        Process a submitted voting by a client.
          * VOTE_RESULT: Returning the current result of a specific voting
          */
@@ -1617,7 +1473,6 @@ public class HostService extends Service implements Parcelable {
                                     if(this.login) {
                                         Track track = new Track(attribute);
                                         queueItem(track);
-                                        //addItem(track.getURI(), track.getName());
                                     }
                                     break;
                                 case PLAYING:
@@ -1631,7 +1486,7 @@ public class HostService extends Service implements Parcelable {
                                         response.append(Constants.DELIMITER);
                                         response.append(getNowPlaying().serialize());
                                     }
-                                    for (Track track: que.getQueList()) {
+                                    for (Track track: queue.getQueList()) {
                                         response.append(Constants.DELIMITER);
                                         response.append(track.serialize());
                                     }
@@ -1652,9 +1507,9 @@ public class HostService extends Service implements Parcelable {
                                         HostVoting voting = hostVotings.get(Integer.parseInt(attribute));
                                         if(voting != null) {
                                             voting.addVoting(Integer.parseInt(parts[3]), this);
-                                            if (hostServiceCallback != null)
+                                            /*if (hostServiceCallback != null)
                                                 hostServiceCallback.notifyVotingAdapter(
-                                                        Integer.parseInt(attribute), voting.getType());
+                                                        Integer.parseInt(attribute), voting.getType());*/
                                         }
                                         break;
                                     }

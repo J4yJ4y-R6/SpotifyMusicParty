@@ -1,10 +1,5 @@
 package com.tinf19.musicparty.server;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -17,49 +12,51 @@ import android.net.Uri;
 import android.net.wifi.p2p.WifiP2pManager;
 import android.net.wifi.p2p.WifiP2pManager.Channel;
 import android.os.Bundle;
-import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+
+import com.spotify.android.appremote.api.ConnectionParams;
+import com.spotify.android.appremote.api.Connector;
+import com.spotify.android.appremote.api.SpotifyAppRemote;
 import com.spotify.android.appremote.api.error.CouldNotFindSpotifyApp;
 import com.spotify.android.appremote.api.error.SpotifyConnectionTerminatedException;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.tinf19.musicparty.BuildConfig;
-import com.tinf19.musicparty.adapter.VotingAdapter;
-import com.tinf19.musicparty.fragments.LoadingFragment;
-import com.tinf19.musicparty.server.fragments.HostClosePartyFragment;
-import com.tinf19.musicparty.server.fragments.HostPlaylistFragment;
-import com.tinf19.musicparty.server.fragments.HostSearchBarFragment;
-import com.tinf19.musicparty.server.fragments.HostPartyPeopleFragment;
-import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
-import com.tinf19.musicparty.server.fragments.HostSettingsFragment;
-import com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment;
-import com.tinf19.musicparty.server.fragments.HostSongFragment;
-import com.tinf19.musicparty.music.PartyPerson;
-import com.tinf19.musicparty.music.Track;
-import com.tinf19.musicparty.fragments.VotingFragment;
-import com.tinf19.musicparty.util.Commands;
-import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.MainActivity;
 import com.tinf19.musicparty.R;
-import com.tinf19.musicparty.server.adapter.HostPlaylistAdapter;
+import com.tinf19.musicparty.adapter.VotingAdapter;
+import com.tinf19.musicparty.fragments.LoadingFragment;
+import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
+import com.tinf19.musicparty.fragments.VotingFragment;
+import com.tinf19.musicparty.music.PartyPerson;
+import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.server.adapter.HostFavoritePlaylistsAdapter;
+import com.tinf19.musicparty.server.adapter.HostPlaylistAdapter;
+import com.tinf19.musicparty.server.fragments.HostClosePartyFragment;
+import com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment;
+import com.tinf19.musicparty.server.fragments.HostPartyPeopleFragment;
+import com.tinf19.musicparty.server.fragments.HostPlaylistFragment;
+import com.tinf19.musicparty.server.fragments.HostSearchBarFragment;
+import com.tinf19.musicparty.server.fragments.HostSettingsFragment;
+import com.tinf19.musicparty.server.fragments.HostSongFragment;
+import com.tinf19.musicparty.util.Commands;
+import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DisplayMessages;
-import com.tinf19.musicparty.util.HostVoting;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
 import com.tinf19.musicparty.util.WiFiDirectBroadcastReceiver;
-import com.spotify.android.appremote.api.ConnectionParams;
-import com.spotify.android.appremote.api.Connector;
-import com.spotify.android.appremote.api.SpotifyAppRemote;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
@@ -91,7 +88,7 @@ import java.util.Random;
  * At the initialization of this activity the app is connecting to Spoitfy by opening a login mask
  * given by the Spotify-API. If the user has signed in once, these information will be saved and the
  * at the next app start, it will automatically connect to Spoitfy. In the next step the activity is
- * opening a server and simultaneously with it a port {@value #PORT} so clients can connect to it.
+ * opening a server and simultaneously with it a port {@link Constants#PORT} so clients can connect to it.
  * Here clients are users who choose "join party" in the {@link MainActivity}. The connection can is
  * build with a {@link java.net.Socket} and can only build up when the end devices are connected to
  * the same network. The client is typing in a IP-Address and a password and only if they are
@@ -107,7 +104,7 @@ import java.util.Random;
  * start any stored playlist from as passed party.
  * The connection to the remote control ist opened in the {@link HostActivity#mConnection} with its
  * own callback for controlling. Highly necessary for this are the CLIENT_ID which is stored
- * secretly and die REDIRECT_URI: {@value REDIRECT_URI}. These are also used to authenticate in
+ * secretly and die REDIRECT_URI: {@link Constants#REDIRECT_URI}. These are also used to authenticate in
  * front of the Spotify-API
  * @author Jannik Junker
  * @author Silas Wessely
@@ -120,8 +117,6 @@ import java.util.Random;
 public class HostActivity extends AppCompatActivity {
 
     private static final String TAG = HostActivity.class.getName();
-    public static final int PORT = Constants.PORT;
-    public static final String REDIRECT_URI = Constants.REDIRECT_URI;
     private Channel channel;
     private WifiP2pManager manager;
     private BroadcastReceiver receiver;
@@ -286,9 +281,7 @@ public class HostActivity extends AppCompatActivity {
                         findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
             new Thread(() -> {
                 if (mBoundService != null) {
-                    runOnUiThread( () -> {
-                        mBoundService.queueItem(track);
-                    });
+                    runOnUiThread( () -> mBoundService.queueItem(track));
                 }
             }).start();
         });
@@ -335,12 +328,8 @@ public class HostActivity extends AppCompatActivity {
                     Log.d(TAG, "party name has changed to: " + newPartyName);
                     mBoundService.setPartyName(newPartyName);
                     new Thread(() -> {
-                        try {
-                            mBoundService.sendToAll(Commands.LOGIN, mBoundService.getPartyName());
-                            mBoundService.updateServiceNotifaction();
-                        } catch (IOException e) {
-                            Log.e(TAG, e.getMessage(), e);
-                        }
+                        mBoundService.sendToAll(Commands.LOGIN, mBoundService.getPartyName());
+                        mBoundService.updateServiceNotifaction();
                     }).start();
                 }
             }
@@ -348,11 +337,7 @@ public class HostActivity extends AppCompatActivity {
             @Override
             public void changePartyType(HostService.PartyType partyType) {
                 if(mBoundService != null) {
-                    try {
-                        mBoundService.setPartyType(partyType);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    mBoundService.setPartyType(partyType);
                 }
             }
 
@@ -424,9 +409,7 @@ public class HostActivity extends AppCompatActivity {
             @Override
             public void changePlaylistCover(String id, Bitmap image) {
                 if (mBoundService != null) {
-                    new Thread(() -> {
-                        mBoundService.updatePlaylistCover(id, image);
-                    }).start();
+                    new Thread(() -> mBoundService.updatePlaylistCover(id, image)).start();
                 }
             }
 
@@ -438,7 +421,6 @@ public class HostActivity extends AppCompatActivity {
             @Override
             public void playFavoritePlaylist(String id, int position) {
                 if(mBoundService != null && mBoundService.getmSpotifyAppRemote() != null)  {
-                    mBoundService.setPlaylistID(id);
                     mBoundService.getQueFromPlaylist(id);
                     try {
                         mBoundService.checkPlaylistExists(id, position);
@@ -621,7 +603,7 @@ public class HostActivity extends AppCompatActivity {
 
     //Service methods
 
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private final ServiceConnection mConnection = new ServiceConnection() {
         /**
          * Assigning the service after logging in to Spotify or closing the service after ending
          * the party
@@ -717,7 +699,7 @@ public class HostActivity extends AppCompatActivity {
                 @Override
                 public void removeVoting(int id, Type type) {
                     if(votingFragment != null && votingFragment.isVisible())
-                        votingFragment.removeSingleVote(id, type);
+                        runOnUiThread(() ->  votingFragment.removeSingleVote(id, type));
                 }
 
                 @Override
@@ -789,7 +771,7 @@ public class HostActivity extends AppCompatActivity {
                 public void reloadPlaylistFragment() {
                     if(hostPlaylistFragment != null && hostPlaylistFragment.isVisible())
                         runOnUiThread( () -> {
-                            Fragment frg = null;
+                            Fragment frg;
                             frg = getSupportFragmentManager().findFragmentByTag("HostPlaylistFragment");
                             final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
                             ft.detach(frg);
@@ -832,9 +814,6 @@ public class HostActivity extends AppCompatActivity {
          */
         public void onServiceDisconnected(ComponentName className) {
             Log.d(TAG, "Service has been disconnected");
-            String partyName = mBoundService != null ? mBoundService.getPartyName() : "MusicParty";
-            new DisplayMessages(getString(R.string.service_serverDisconnected),
-                    findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
             mBoundService = null;
         }
     };
@@ -941,7 +920,7 @@ public class HostActivity extends AppCompatActivity {
      * a playlist has been deleted from the SharedPreferences.
      */
     private void notifyFavPlaylistAdapter() {
-        Fragment frg = null;
+        Fragment frg;
         frg = getSupportFragmentManager().findFragmentByTag("ShowSavedPlaylistFragment");
         final FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.detach(frg);

@@ -1,11 +1,5 @@
 package com.tinf19.musicparty.client;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentTransaction;
-
-
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -15,29 +9,32 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.Display;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.tinf19.musicparty.BuildConfig;
+import com.tinf19.musicparty.MainActivity;
+import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.adapter.VotingAdapter;
+import com.tinf19.musicparty.client.fragments.ClientExitConnectionFragment;
 import com.tinf19.musicparty.client.fragments.ClientPlaylistFragment;
+import com.tinf19.musicparty.client.fragments.ClientSearchBarFragment;
+import com.tinf19.musicparty.client.fragments.ClientSongFragment;
 import com.tinf19.musicparty.databinding.ActivityClientBinding;
 import com.tinf19.musicparty.fragments.LoadingFragment;
+import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
 import com.tinf19.musicparty.fragments.VotingFragment;
+import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.ClientVoting;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
-import com.tinf19.musicparty.client.fragments.ClientExitConnectionFragment;
-import com.tinf19.musicparty.MainActivity;
-import com.tinf19.musicparty.R;
-import com.tinf19.musicparty.client.fragments.ClientSearchBarFragment;
-import com.tinf19.musicparty.fragments.SearchSongsOutputFragment;
-import com.tinf19.musicparty.client.fragments.ClientSongFragment;
-import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.util.DisplayMessages;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
@@ -148,7 +145,7 @@ public class ClientActivity extends AppCompatActivity {
                 Fragment currentFragment = getSupportFragmentManager().findFragmentByTag(currentFragmentTag);
                 if(currentFragment != null)
                     getSupportFragmentManager().beginTransaction().
-                            replace(R.id.showSongHostFragmentFrame, currentFragment, currentFragmentTag);
+                            replace(R.id.showSongFragmentFrame, currentFragment, currentFragmentTag);
             }
         } else {
             if (!getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false)) {
@@ -409,10 +406,10 @@ public class ClientActivity extends AppCompatActivity {
                     searchSongsOutputFragment = new SearchSongsOutputFragment(track -> {
                         if(getPartyType().equals(HostService.PartyType.VoteParty))
                             new DisplayMessages(getString(R.string.snackbar_votingCreated, track.getName()),
-                                    findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
+                                    findViewById(R.id.showSongFragmentFrame)).makeMessage();
                         else
                             new DisplayMessages(track.getName() + " " + getText(R.string.text_queAdded),
-                                    findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
+                                    findViewById(R.id.showSongFragmentFrame)).makeMessage();
                         new Thread(() -> {
                             try {
                                 if (mBoundService != null)

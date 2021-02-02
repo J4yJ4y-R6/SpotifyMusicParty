@@ -1,7 +1,5 @@
 package com.tinf19.musicparty.adapter;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,28 +9,21 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DownloadImageTask;
-import com.tinf19.musicparty.util.HostVoting;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
-
-import org.w3c.dom.Text;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * VotingAdapter
@@ -154,7 +145,7 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
                 voting.addVoting(Constants.YES, votingAdapterCallback.getCurrentThread());
                 votingAdapterToFragmentCallback.showVotedSnackbar(Constants.YES);
                 showVotingResult(holder, position);
-                if(voting.getType() == Type.QUE)
+                if(voting.getType() == Type.QUEUE)
                     votingAdapterCallback.updateCurrentVoting(voting.getId());
             });
         if(noButton != null)
@@ -163,7 +154,7 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
                 voting.addVoting(Constants.NO, votingAdapterCallback.getCurrentThread());
                 votingAdapterToFragmentCallback.showVotedSnackbar(Constants.NO);
                 showVotingResult(holder, position);
-                if(voting.getType() == Type.QUE)
+                if(voting.getType() == Type.QUEUE)
                     votingAdapterCallback.updateCurrentVoting(voting.getId());
             });
         if(ignoreVoteButton != null)
@@ -172,7 +163,7 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
                 voting.addVoting(Constants.IGNORED, votingAdapterCallback.getCurrentThread());
                 votingAdapterToFragmentCallback.showVotedSnackbar(Constants.IGNORED);
                 setAnimation(holder, position);
-                if(voting.getType() == Type.QUE)
+                if(voting.getType() == Type.QUEUE)
                     votingAdapterCallback.updateCurrentVoting(voting.getId());
             });
     }
@@ -211,7 +202,7 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
     }
 
     /**
-     * Set a List of all currently opened votings for Que and for Skip
+     * Set a List of all currently opened votings for Queue and for Skip
      * @param votings List of all currently opened votings
      */
     public void setDataset(List<Voting> votings) {
