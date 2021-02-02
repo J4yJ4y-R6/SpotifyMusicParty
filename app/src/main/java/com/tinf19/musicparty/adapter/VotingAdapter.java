@@ -1,7 +1,5 @@
 package com.tinf19.musicparty.adapter;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -11,30 +9,21 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearSmoothScroller;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.snackbar.Snackbar;
-import com.ramotion.cardslider.CardSliderLayoutManager;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DownloadImageTask;
-import com.tinf19.musicparty.util.HostVoting;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
-
-import org.w3c.dom.Text;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * VotingAdapter
@@ -47,12 +36,13 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
     private static final String TAG = VotingAdapter.class.getName();
     private final VotingAdapterCallback votingAdapterCallback;
     private final VotingAdapterToFragmentCallback votingAdapterToFragmentCallback;
+    private final Map<Integer, Integer> votingPositions = new HashMap<>();
     private List<Voting> mDataset;
     private Context context;
-    private Map<Integer, Integer> votingPositions = new HashMap<>();
 
     public interface VotingAdapterCallback {
         Thread getCurrentThread();
+        void updateCurrentVoting(int id);
     }
 
     public interface VotingAdapterToFragmentCallback {
@@ -136,37 +126,45 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         ImageView noButton = holder.voteNoButton;
         ImageView ignoreVoteButton = holder.ignoreVoteImageView;
 
-        votingPositions.put(mDataset.get(position).getId(), position);
         Log.d(TAG, "position: " + position + ", name: " + mDataset.get(position).getTrack().getName());
 
         Log.d(TAG, "name: " + mDataset.get(position).getTrack().getName() + " voted: " + mDataset.get(position).isVoted(votingAdapterCallback.getCurrentThread()));
         if(mDataset.get(position).isVoted(votingAdapterCallback.getCurrentThread()))
             showVotingResult(holder, position);
         else
-            hideVotingResult(holder, position);
+            hideVotingResult(holder);
         if(songtitleTV != null)
             songtitleTV.setText(mDataset.get(position).getTrack().getName());
         if(artistTV != null)
             artistTV.setText(mDataset.get(position).getTrack().getArtist(0).getName());
         if(coverTV != null)
-            new DownloadImageTask(coverTV).execute("https://i.scdn.co/image/" + mDataset.get(position).getTrack().getCoverFull());
+            new DownloadImageTask(coverTV).execute(Constants.IMAGE_URI + mDataset.get(position).getTrack().getCoverFull());
         if(yesButton != null)
             yesButton.setOnClickListener(v -> {
-                mDataset.get(position).addVoting(Constants.YES, votingAdapterCallback.getCurrentThread());
+                Voting voting = mDataset.get(position);
+                voting.addVoting(Constants.YES, votingAdapterCallback.getCurrentThread());
                 votingAdapterToFragmentCallback.showVotedSnackbar(Constants.YES);
                 showVotingResult(holder, position);
+                if(voting.getType() == Type.QUEUE)
+                    votingAdapterCallback.updateCurrentVoting(voting.getId());
             });
         if(noButton != null)
             noButton.setOnClickListener(v -> {
-                mDataset.get(position).addVoting(Constants.NO, votingAdapterCallback.getCurrentThread());
+                Voting voting = mDataset.get(position);
+                voting.addVoting(Constants.NO, votingAdapterCallback.getCurrentThread());
                 votingAdapterToFragmentCallback.showVotedSnackbar(Constants.NO);
                 showVotingResult(holder, position);
+                if(voting.getType() == Type.QUEUE)
+                    votingAdapterCallback.updateCurrentVoting(voting.getId());
             });
         if(ignoreVoteButton != null)
             ignoreVoteButton.setOnClickListener(v -> {
-                mDataset.get(position).addVoting(Constants.IGNORED, votingAdapterCallback.getCurrentThread());
+                Voting voting = mDataset.get(position);
+                voting.addVoting(Constants.IGNORED, votingAdapterCallback.getCurrentThread());
                 votingAdapterToFragmentCallback.showVotedSnackbar(Constants.IGNORED);
                 setAnimation(holder, position);
+                if(voting.getType() == Type.QUEUE)
+                    votingAdapterCallback.updateCurrentVoting(voting.getId());
             });
     }
 
@@ -204,12 +202,18 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
     }
 
     /**
-     * Set a List of all currently opened votings for Que and for Skip
+     * Set a List of all currently opened votings for Queue and for Skip
      * @param votings List of all currently opened votings
      */
     public void setDataset(List<Voting> votings) {
         this.mDataset = votings;
     }
+
+    /**
+     * Add a Voting at the end of the dataset
+     * @param voting New voting
+     */
+    public void addToDataset(Voting voting) { mDataset.add(voting); }
 
     /**
      * Display the voting result in the percentage bar.
@@ -223,6 +227,7 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
             LinearLayout yesVoteLL = holder.yesVotePercentage;
             LinearLayout noVoteLL = holder.noVotePercentage;
             LinearLayout ignoredVoteLL = holder.ignoredVotePercentage;
+            holder.voteYesButton.setVisibility(View.GONE);
             holder.voteYesButton.setVisibility(View.GONE);
             holder.voteNoButton.setVisibility(View.GONE);
             votePercentageLL.setVisibility(View.VISIBLE);
@@ -242,7 +247,7 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
         }
     }
 
-    private void hideVotingResult(MyViewHolder holder, int position) {
+    private void hideVotingResult(MyViewHolder holder) {
         holder.votePercentageLinearLayout.setVisibility(View.GONE);
         holder.voteYesButton.setVisibility(View.VISIBLE);
         holder.voteNoButton.setVisibility(View.VISIBLE);
@@ -253,10 +258,17 @@ public class VotingAdapter extends RecyclerView.Adapter<VotingAdapter.MyViewHold
      * @return Get the position of a voting at the local Map
      */
     public int getVotingPosition(int id) {
-        Integer position = votingPositions.get(id);
-        return position != null ? position : -1;
+        for(int i = 0; i < mDataset.size(); i++) {
+            if (mDataset.get(i).getId() == id)
+                return i;
+        }
+        return -1;
     }
 
+    /**
+     * Removing an item from the current dataset after a voting was closed by the host
+     * @param position Position of the voting which shall be deleted
+     */
     public void removeItemFromDataset(int position) {
         mDataset.remove(position);
         notifyDataSetChanged();

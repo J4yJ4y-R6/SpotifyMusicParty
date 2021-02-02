@@ -144,6 +144,26 @@ public class SpotifyHelper {
         get(token, completeURL, spotifyHelperCallback);
     }
 
+
+    /**
+     * Getting information about the current played song.
+     * @param token Spotify-token which is unique for every Spotify-user and needs to be refreshed
+     *              every hour.
+     * @param spotifyHelperCallback Callback to handle the request results
+     */
+    public void getPlayingContext( String token, SpotifyHelperCallback spotifyHelperCallback) {
+        if(token == null) return;
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(Constants.HOST)
+                .addPathSegment("v1")
+                .addPathSegment("me")
+                .addPathSegment("player")
+                .addPathSegment("currently-playing")
+                .build();
+        get(token, completeURL, spotifyHelperCallback);
+    }
+
     /**
      * Follow the playlist after starting it from
      * {@link com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment}.
@@ -168,6 +188,19 @@ public class SpotifyHelper {
         jsonObject.put("public", false);
         RequestBody body = RequestBody.create(jsonObject.toString(), Constants.JSON);
         put(token, "application/json", completeURL, body, spotifyHelperCallback);
+    }
+
+    public void checkPlaylistExists(String token, String id, SpotifyHelperCallback spotifyHelperCallback) throws JSONException {
+        if(token == null) return;
+        HttpUrl completeURL = new HttpUrl.Builder()
+                .scheme("https")
+                .host(Constants.HOST)
+                .addPathSegment("v1")
+                .addPathSegment("playlists")
+                .addPathSegment(id)
+                .build();
+        Log.d(TAG, "Check weather the playlist with id:  " + id + " exists: " + completeURL.toString());
+        get(token, completeURL, spotifyHelperCallback);
     }
 
     /**

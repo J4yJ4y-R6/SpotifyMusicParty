@@ -5,12 +5,13 @@ public enum Commands {
     LOGIN,
     QUEUE,
     PLAYING,
-    REMOVE,
-    ERROR,
     PLAYLIST,
     VOTING,
     VOTE,
-    VOTERESULT,
+    VOTE_RESULT,
+    VOTE_ADDED,
+    VOTE_CLOSED,
     SUBSCRIBE,
-    UNSUBSCRIBE
+    UNSUBSCRIBE,
+    PARTY_TYPE
 }

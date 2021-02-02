@@ -1,19 +1,23 @@
 package com.tinf19.musicparty.client;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.os.Looper;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
-import com.tinf19.musicparty.adapter.VotingAdapter;
 import com.tinf19.musicparty.receiver.ActionReceiver;
+import com.tinf19.musicparty.receiver.VotedReceiver;
+import com.tinf19.musicparty.server.HostActivity;
+import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.ClientVoting;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
@@ -33,6 +37,7 @@ import java.io.InputStreamReader;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,13 +48,13 @@ import java.util.Map;
  * @author Silas Wessely
  * @since 1.1
  */
-public class ClientService extends Service implements VotingAdapter.VotingAdapterCallback {
+public class ClientService extends Service {
 
     private static final String TAG = ClientService.class.getName();
     private final IBinder mBinder = new LocalBinder();
     private ClientServiceCallback clientServiceCallback;
+    private NotificationManager votingManager;
     private ClientThread clientThread;
-    private Thread sendMessageThread;
     private Socket clientSocket;
     private Track nowPlaying;
     private boolean stopped;
@@ -57,6 +62,11 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
      * Boolean to decide if the service is connected for the first time.
      */
     private boolean first = true;
+    /**
+     * Boolean to decide if this client is currently displaying the
+     * {@link com.tinf19.musicparty.fragments.VotingFragment}.
+     */
+    private boolean subscirbedVoting = false;
     /**
      * Spotify connection token which is refreshing every hour
      */
@@ -66,7 +76,16 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
      */
     private PendingIntent pendingIntent;
     private PendingIntent pendingIntentButton;
+    /**
+     * An ArrayList with all currently opened votings where this clients has not submitted his vote
+     * yet.
+     */
+    private final ArrayList<Voting> currentVoting = new ArrayList<>();
+    /**
+     * A Map with all currently opened votings. The key is always the votingID.
+     */
     private Map<Integer, ClientVoting> clientVotings = new HashMap<>();
+    private HostService.PartyType partyType = HostService.PartyType.AllInParty;
 
 
 
@@ -77,9 +96,11 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
         void setPlaylist(List<Track> trackList);
         void setCurrentTrack(Track track);
         void setVotings(List<Voting> ClientVotings);
+        void addVoting(ClientVoting voting);
         void showFragments();
         void notifyVotingAdapter(int id, Type type);
         void removeVoting(int id, Type type);
+        void updateVotingButton(HostService.PartyType partyType);
     }
 
     /**
@@ -139,6 +160,35 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
             }));
             tokenRefresh.start();
             first = false;
+            VotedReceiver.registerCallback(new VotedReceiver.VotedCallback() {
+                @Override
+                public void notificationVotedYes(int id) {
+                    ClientVoting voting = clientVotings.get(id);
+                    if(voting != null) voting.addVoting(Constants.YES, clientThread);
+                    updateVotingNotification();
+                }
+
+                @Override
+                public void notificationVotedIgnored(int id) {
+                    ClientVoting voting = clientVotings.get(id);
+                    if(voting != null) voting.addVoting(Constants.IGNORED, clientThread);
+                    updateVotingNotification();
+                }
+
+                @Override
+                public void notificationVotedNo(int id) {
+                    ClientVoting voting = clientVotings.get(id);
+                    if(voting != null) voting.addVoting(Constants.NO, clientThread);
+                    updateVotingNotification();
+                }
+            });
+
+            NotificationChannel votingChannel = new NotificationChannel(Constants.VOTING_CHANNEL_ID,
+                    "Voting notification channel", NotificationManager.IMPORTANCE_HIGH);
+            votingChannel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+            votingManager = (NotificationManager) getSystemService(
+                    Context.NOTIFICATION_SERVICE);
+            votingManager.createNotificationChannel(votingChannel);
         }
         return START_NOT_STICKY;
     }
@@ -148,9 +198,117 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
         return mBinder;
     }
 
+    /**
+     * When a Queue-Voting gets startet this method will create a notification, so the user does not
+     * have to vote from the fragment. Instead he can use the notification buttons. If already one
+     * voting notification is displayed, the notification gets queued in
+     * {@link ClientService#currentVoting}. Otherwise it will be displayed.
+     * @param voting New voting to create the notification about this voting
+     */
+    private void createVotingNotification(Voting voting) {
+        Arrays.stream(votingManager.getActiveNotifications()).forEach(n -> {
+            if(votingManager.getActiveNotifications().length == 1  &&
+                    n.getId() == Constants.NOTIFY_ID) {
+                Log.d(TAG, "voting notification started for: " + voting.getId());
+                showVotingNotification(voting);
+                currentVoting.add(voting);
+            } else {
+                if(n.getId() == Constants.VOTING_NOTIFY_ID) {
+                    currentVoting.add(voting);
+                    Log.d(TAG, "currently voting notification visible. In Queue: " +
+                            currentVoting.size());
+                }
+            }
+        });
+    }
+
+    /**
+     * Generating and displaying the votingNotification with three buttons, so the user can vote in
+     * the notification.
+     * @param voting Voting to generate the notification about this voting.
+     */
+    private void showVotingNotification(Voting voting) {
+        Intent votingNotificationIntent = new Intent(this, HostActivity.class)
+                .putExtra(Constants.FROM_NOTIFICATION, true);
+        PendingIntent votingPendingIntent = PendingIntent.getActivity(this,
+                0, votingNotificationIntent, 0);
+        Intent votedYesIntent = new Intent(this, VotedReceiver.class);
+        votedYesIntent.putExtra(Constants.ID, voting.getId());
+        votedYesIntent.putExtra(Constants.VOTE, Constants.YES_VOTE);
+        Intent votedNoIntent = new Intent(this, VotedReceiver.class);
+        votedNoIntent.putExtra(Constants.ID, voting.getId());
+        votedNoIntent.putExtra(Constants.VOTE, Constants.NO_VOTE);
+        Intent votedIgnoredIntent = new Intent(this, VotedReceiver.class);
+        votedIgnoredIntent.putExtra(Constants.ID, voting.getId());
+        votedIgnoredIntent.putExtra(Constants.VOTE, Constants.GREY_VOTE);
+        PendingIntent votingYesIntentButton = PendingIntent.getBroadcast(this,1,
+                votedYesIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent votingNoIntentButton = PendingIntent.getBroadcast(this,2,
+                votedNoIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+        PendingIntent votingIgnoreIntentButton = PendingIntent.getBroadcast(this,3,
+                votedIgnoredIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+
+        Notification notification = new NotificationCompat.Builder(this,
+                Constants.VOTING_CHANNEL_ID)
+                .setContentTitle(getString(R.string.notification_votingTitle,
+                        voting.getTrack().getName()))
+                .setSmallIcon(R.drawable.logo_service_notification)
+                .setContentIntent(votingPendingIntent)
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText(getString(R.string.notification_votingMessageSecondLine)))
+                .addAction(R.drawable.icon_thumb_up_nocirce, getString(R.string.text_yes),votingYesIntentButton)
+                .addAction(R.drawable.icon_thumb_down_nocircle, getString(R.string.text_no), votingNoIntentButton)
+                .addAction(R.drawable.icon_x, getString(R.string.text_ignored), votingIgnoreIntentButton)
+                .build();
+        votingManager.notify(Constants.VOTING_NOTIFY_ID, notification);
+    }
+
+    /**
+     * Update the current voting notification when the user voted for the previous one. If the
+     * ArrayList {@link ClientService#currentVoting} is empty the notification will be
+     * dismissed.
+     */
+    public void updateVotingNotification(){
+        if(currentVoting.size() > 1) {
+            currentVoting.remove(0);
+            showVotingNotification(currentVoting.get(0));
+        } else {
+            currentVoting.remove(0);
+            votingManager.cancel(Constants.VOTING_NOTIFY_ID);
+        }
+    }
+
+    /**If this client voted for the voting which is currently displayed in the votingNotification, the
+     * notification will be updated. Otherwise it will only be removed from the currentVoting list
+     * where all votings are listed were this client has not voted yet.
+     * @param id Id of the last voted voting
+     */
+    public void notificationAfterVote(int id) {
+        if(currentVoting != null)
+            if(id == currentVoting.get(0).getId())
+                updateVotingNotification();
+            else{
+                int toRemove = 0;
+                for(int i = 0; i < currentVoting.size(); i++) {
+                    if(id == currentVoting.get(i).getId()) {
+                        toRemove = i;
+                        break;
+                    }
+                }
+                if(toRemove > 0)
+                    currentVoting.remove(toRemove);
+            }
+    }
+
 
 
     //Getter
+
+
+    /**
+     * @return Get the current partyType
+     */
+    public HostService.PartyType getPartyType() { return partyType; }
 
     /**
      * @return Get the current life state of the service
@@ -166,15 +324,26 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
         return token;
     }
 
-    @Override
-    public Thread getCurrentThread() { return clientThread; }
+
+//    public Thread getCurrentThread() { return clientThread; }
 
     /**
      * @return Get all currently opened votings
      */
     public List<Voting> getClientVotings() { return new ArrayList<>(clientVotings.values()); }
 
+    /**
+     * @return Get the currently playing song
+     */
+    public Track getNowPlaying() { return nowPlaying; }
+
     //Setter
+
+    /**
+     * Changing the current party name after the host changed it
+     * @param partyType New party type
+     */
+    public void setPartyType(HostService.PartyType partyType) { this.partyType = partyType; }
 
     /**
      * Set the {@link ClientServiceCallback}
@@ -192,6 +361,9 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
         this.clientVotings = clientVotings;
     }
 
+    public void setSubscirbedVoting(boolean subscirbedVoting) {
+        this.subscirbedVoting = subscirbedVoting;
+    }
 
     //Service methods
 
@@ -248,17 +420,6 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
             clientServiceCallback.setTrack(nowPlaying);
     }
 
-    public void fetchVotingResult() {
-        clientVotings.keySet().forEach(v-> {
-            try {
-                clientThread.sendMessage(Commands.VOTERESULT, String.valueOf(v));
-            } catch (IOException e) {
-                Log.e(TAG, e.getMessage(), e);
-            }
-        });
-    }
-
-
 
     /**
      * Subclass for managing the communication with the server
@@ -312,11 +473,26 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
          * Splitting the server message to communicate with the server by different commands:
          * LOGIN:       logging in to the server with a username, ip-address and a password
          * QUIT:        quit the connection to the server
-         * PLAYING:     get the current playling track from the server
+         * PLAYING:     get the current playing track from the server
          * PLAYLIST:    get a list of tracks which is equal to the current state of the playlist in
          *              the server
          * VOTING:      get a list of all currently opened votings
          * VOTE_RESULT: Asking for the current result of a specific voting
+         * VOTE_ADDED:  After a voting was added in the server all clients will receive the
+         *              information about this voting and save it locally in the clientVotings.
+         *              If the client is currently displaying
+         *              {@link com.tinf19.musicparty.fragments.VotingFragment} the RecyclerView will
+         *              be updated.
+         *              If the voting is a QUEUE-Voting the client will generate or queue a
+         *              notification about this voting.
+         * VOTE_CLOSED: After a voting was closed by the server all clients will receive the
+         *              information about the id and the type of the voting. The voting will be
+         *              removed from the clientVotings-List.
+         *              If the client is currently displaying
+         *              {@link com.tinf19.musicparty.fragments.VotingFragment} the RecyclerView will
+         *              be updated.
+         *              If the voting is a QUEUE-Voting the client will update or remove the
+         *              votingNotification.
          */
         @Override
         public void run() {
@@ -353,8 +529,11 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                                 case LOGIN:
                                     Log.d(TAG, "logged in to: " + partyName);
                                     partyName = attribute;
-                                    if (parts.length > 3) {
-                                        nowPlaying = new Track(parts[3]);
+                                    setPartyType(parts[3].equals(HostService.PartyType.AllInParty.toString()) ?
+                                            HostService.PartyType.AllInParty :
+                                            HostService.PartyType.VoteParty);
+                                    if (parts.length > 4) {
+                                        nowPlaying = new Track(parts[4]);
                                     }
                                     if(clientServiceCallback != null) {
                                         clientServiceCallback.setPartyName(partyName);
@@ -365,6 +544,14 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                                     Log.d(TAG, "Server has been closed");
                                     exit();
                                     return;
+                                case PARTY_TYPE:
+                                    HostService.PartyType partyType = attribute.equals(HostService.PartyType.AllInParty.toString())
+                                            ? HostService.PartyType.AllInParty
+                                            : HostService.PartyType.VoteParty;
+                                    setPartyType(partyType);
+                                    if(clientServiceCallback != null)
+                                        clientServiceCallback.updateVotingButton(partyType);
+                                    break;
                                 case PLAYING:
                                     nowPlaying = new Track(attribute);
                                      Log.d(TAG, "new track has been started: " + nowPlaying.getName());
@@ -387,39 +574,57 @@ public class ClientService extends Service implements VotingAdapter.VotingAdapte
                                     clientVotings.clear();
                                     for(int i = 3; i < parts.length; i++) {
                                         if(!parts[i].equals("")){
-                                            ClientVoting voting = new ClientVoting(parts[i], (vote, id) -> {
-                                                new Thread(() -> {
-                                                    try {
-                                                        sendMessage(Commands.VOTE, id + Constants.DELIMITER + vote);
-                                                    } catch (IOException e) {
-                                                        Log.e(TAG, e.getMessage(), e);
-                                                    }
-                                                }).start();
-                                            });
+                                            ClientVoting voting = new ClientVoting(parts[i], (vote, id) -> new Thread(() -> {
+                                                try {
+                                                    sendMessage(Commands.VOTE, id + Constants.DELIMITER + vote);
+                                                } catch (IOException e) {
+                                                    Log.e(TAG, e.getMessage(), e);
+                                                }
+                                            }).start());
                                             clientVotings.put(voting.getId(), voting);
                                         }
                                     }
                                     clientServiceCallback.setVotings(getClientVotings());
                                     setClientVotings(clientVotings);
                                     break;
-                                case VOTERESULT:
+                                case VOTE_RESULT:
                                     JSONObject tempObject = new JSONObject(attribute);
                                     int votingID = tempObject.getInt(Constants.ID);
                                     ClientVoting voting = clientVotings.get(votingID);
                                     if (voting != null) {
-                                        if(tempObject.getBoolean(Constants.FINISHED_VOTE)) {
-                                            if (clientServiceCallback != null)
-                                                clientServiceCallback.removeVoting(voting.getId(), voting.getType());
-                                            clientVotings.remove(votingID);
-                                        } else {
-                                            voting.updateVotingResult(
-                                                    tempObject.getInt(Constants.YES_VOTE),
-                                                    tempObject.getInt(Constants.NO_VOTE),
-                                                    tempObject.getInt(Constants.GREY_VOTE));
-                                            if (clientServiceCallback != null)
-                                                clientServiceCallback.notifyVotingAdapter(votingID
-                                                        , voting.getType());
+                                        voting.updateVotingResult(
+                                                tempObject.getInt(Constants.YES_VOTE),
+                                                tempObject.getInt(Constants.NO_VOTE),
+                                                tempObject.getInt(Constants.GREY_VOTE));
+                                        if (clientServiceCallback != null)
+                                            clientServiceCallback.notifyVotingAdapter(votingID,
+                                                    voting.getType());
+                                    }
+                                    break;
+                                case VOTE_ADDED:
+                                    ClientVoting newVoting = new ClientVoting(attribute, (vote, id) -> new Thread(() -> {
+                                        try {
+                                            sendMessage(Commands.VOTE, id + Constants.DELIMITER + vote);
+                                        } catch (IOException e) {
+                                            Log.e(TAG, e.getMessage(), e);
                                         }
+                                    }).start());
+                                    clientVotings.put(newVoting.getId(), newVoting);
+                                    if(clientServiceCallback != null && subscirbedVoting)
+                                        clientServiceCallback.addVoting(newVoting);
+                                    if(newVoting.getType() == Type.QUEUE)
+                                        createVotingNotification(newVoting);
+                                    break;
+                                case VOTE_CLOSED:
+                                    int votingClosedId = Integer.parseInt(attribute);
+                                    Voting votingClosed = clientVotings.get(votingClosedId);
+                                    if(votingClosed != null) {
+                                        if (clientServiceCallback != null && subscirbedVoting)
+                                            clientServiceCallback.removeVoting(votingClosedId,
+                                                    votingClosed.getType());
+                                        clientVotings.remove(votingClosedId);
+                                        if (votingClosed.getType() == Type.QUEUE)
+                                            notificationAfterVote(votingClosedId);
                                     }
                             }
                         }

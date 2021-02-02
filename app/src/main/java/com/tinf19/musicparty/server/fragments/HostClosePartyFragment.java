@@ -16,6 +16,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.util.DisplayMessages;
 
 import org.json.JSONException;
 
@@ -86,7 +87,8 @@ public class HostClosePartyFragment extends Fragment {
                         }
                     } else {
                         if(savePlaylist) {
-                            Toast.makeText(getContext(), getString(R.string.text_toastPlaylistNameNeeded), Toast.LENGTH_SHORT).show();
+                            new DisplayMessages(getString(R.string.text_toastPlaylistNameNeeded),
+                                    this.requireView()).makeMessage();
                         } else {
                             hostClosePartyCallback.acceptEndParty();
                         }

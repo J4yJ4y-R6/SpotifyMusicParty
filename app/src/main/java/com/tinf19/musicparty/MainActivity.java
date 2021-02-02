@@ -14,6 +14,7 @@ import android.content.SharedPreferences;
 import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
         binding.createPartyCardView.setEnabled(true);
         binding.joinPartyCardView.setEnabled(true);
+        binding.textView6.setMovementMethod(LinkMovementMethod.getInstance());
 
         SharedPreferences firstConnection = this.getSharedPreferences("firstConnection", Context.MODE_PRIVATE);
         if(firstConnection.getBoolean(Constants.FIRST_CONNECTION, true)) {

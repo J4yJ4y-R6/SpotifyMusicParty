@@ -2,31 +2,25 @@ package com.tinf19.musicparty.fragments;
 
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.ramotion.cardslider.CardSliderLayoutManager;
 import com.ramotion.cardslider.CardSnapHelper;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.adapter.VotingAdapter;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.DisplayMessages;
 import com.tinf19.musicparty.util.Type;
 import com.tinf19.musicparty.util.Voting;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -95,7 +89,7 @@ public class VotingFragment extends Fragment implements VotingAdapter.VotingAdap
                 0);
         if(queueVotingRecyclerView != null) {
             votingQueAdapter = new VotingAdapter(votingCallback.getVotings().stream().filter(v->
-                    v.getType().equals(Type.QUE)).collect(Collectors.toList()),
+                    v.getType().equals(Type.QUEUE)).collect(Collectors.toList()),
                     votingAdapterCallback, this);
             queueVotingRecyclerView.setAdapter(votingQueAdapter);
             queueVotingRecyclerView.setHasFixedSize(true);
@@ -131,7 +125,7 @@ public class VotingFragment extends Fragment implements VotingAdapter.VotingAdap
         else if(vote == Constants.NO) voteText = getString(R.string.text_no);
         else voteText = getString(R.string.text_ignored);
         String snackbarText = getString(R.string.snackbar_votingSubmitted, voteText);
-        Snackbar.make(this.requireView(), snackbarText, Snackbar.LENGTH_SHORT).show();
+        new DisplayMessages(snackbarText, this.requireView()).makeMessage();
     }
 
 
@@ -141,7 +135,7 @@ public class VotingFragment extends Fragment implements VotingAdapter.VotingAdap
      * @param type Voting-Type
      */
     public void notifySingleVote(int id, Type type) {
-        if(type.equals(Type.QUE)) {
+        if(type.equals(Type.QUEUE)) {
             int position = votingQueAdapter.getVotingPosition(id);
             if (position >= 0) votingQueAdapter.notifyItemChanged(position);
         } else {
@@ -151,12 +145,32 @@ public class VotingFragment extends Fragment implements VotingAdapter.VotingAdap
     }
 
     public void removeSingleVote(int id, Type type) {
-        if(type.equals(Type.QUE)) {
+        if(type.equals(Type.QUEUE)) {
             int position = votingQueAdapter.getVotingPosition(id);
             if (position >= 0) votingQueAdapter.removeItemFromDataset(position);
         } else {
             int position = votingSkipAdapter.getVotingPosition(id);
             if (position >= 0) votingSkipAdapter.removeItemFromDataset(position);
+        }
+    }
+
+    public void notifyAllVotes(Type type) {
+        if(type == Type.QUEUE) {
+            if(votingQueAdapter != null)
+                votingQueAdapter.notifyDataSetChanged();
+        } else {
+            if(votingSkipAdapter != null)
+                votingSkipAdapter.notifyDataSetChanged();
+        }
+    }
+
+    public void addItemToDataset(Voting voting) {
+        if(voting.getType() == Type.QUEUE) {
+            if(votingQueAdapter != null)
+                votingQueAdapter.addToDataset(voting);
+        } else {
+            if(votingSkipAdapter != null)
+                votingSkipAdapter.addToDataset(voting);
         }
     }
 
@@ -170,7 +184,7 @@ public class VotingFragment extends Fragment implements VotingAdapter.VotingAdap
         Log.d(VotingFragment.class.getName(), "votings has been updated: " + votings.size());
         if(votingQueAdapter != null) {
             List<Voting> filteredVotings = votings.stream().filter(v->
-                    v.getType().equals(Type.QUE)).collect(Collectors.toList());
+                    v.getType().equals(Type.QUEUE)).collect(Collectors.toList());
             votingQueAdapter.setDataset(filteredVotings);
             queueHeaderTextView.setText(view.getContext().getString(filteredVotings.size() == 0 ?
                     R.string.text_noCurrentQueVotings : R.string.text_currentQueVotings));

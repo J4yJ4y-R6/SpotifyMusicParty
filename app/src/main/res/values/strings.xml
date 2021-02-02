@@ -126,6 +126,20 @@
     <string name="text_ignored">Enthaltung</string>
 
     <string name="snackbar_votingSubmitted">Du hast mit %1$s abgestimmt.</string>
+    <string name="snackbar_partyTypeChanged">Party-Typ wurde zu einer %1$s-Party geändert.</string>
+    <string name="snackbar_coverToBig"> Dein Bild ist zu groß. Die Maximalgröße für Playlist-Cover ist 250KB</string>
+    <string name="snackbar_somethingWentWrong">Etwas lief falsch.</string>
+    <string name="snackbar_pickedImage">Du hast ein Bild ausgewählt"</string>
+    <string name="snackbar_partyNameChanged"> Der Partyname wurde auf %1$s geändert.</string>
+    <string name="snackbar_votingTimeToShort"> Die Votingzeit muss mindestens eine Minute betragen</string>
+    <string name="snackbar_votingTimeChanged"> Die Votingzeit wurde auf %1$d geändert</string>
+    <string name="snackbar_votingCreated">Für "%1$s" wurde ein neues Warteschlangen-Voting eröffnet.</string>
+    <string name="snackbar_playlistNotFound">Spotify kann diese Playlist nicht mehr finden. Sie wurde aus deinen Favoriten entfernt.</string>
+
+    <string name="notification_votingTitle">Voting zum Lied: %1$s</string>
+    <string name="notification_votingMessageSecondLine">Vote jetzt zum Hinzufügen des Liedes zu der aktuellen Queue.</string>
+    <string name="info_text">Hallo zur MusicParty-App, \nwir verändern, wie du feierst. Du kannst über das Menü eine Party erstellen oder einer Party deiner Freunde beitreten. Dazu brauchst du einen QR-Code, einen Link oder die Zugangsdaten bestehend aus IP-Adresse und Passwort. \nEine Liste aller Funktionalitäten findest du unter: <a href="https://github.com/JanielGamer/SpotifyMusicParty/blob/master/README.MD">GitHub</a> \nEinige Funktionen, die du vielleicht von Spotify gewöhnt bist, konnte wir noch nicht genauso in unserer App umsetzen. Beispielsweise empfehlen wir dir das Überspringen und Zurückgehen von Liedern nur über den Knopf in unserer App und nicht über die Schaltflächen der Spotify-App. \nJetzt wünschen wir dir viel Spaß bei deiner ersten Party.</string>
+
 
 
 </resources>

@@ -7,6 +7,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import android.provider.Telephony;
 import android.text.Spannable;
 import android.text.Spanned;
 import android.text.style.StyleSpan;
@@ -16,8 +17,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.material.snackbar.Snackbar;
+import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
@@ -39,11 +44,14 @@ public class ClientSongFragment extends Fragment {
     private TextView songArtist;
     private TextView songAlbum;
     private TextView connectedToParty;
+    private LinearLayout openVotingButtonLinearLayout;
 
     public interface ClientSongCallback {
         void exitConnection();
         void showPlaylist();
         void openVotingFragment();
+        HostService.PartyType getPartyType();
+        Track getNowPlaying();
     }
 
     /**
@@ -70,6 +78,16 @@ public class ClientSongFragment extends Fragment {
         if(songTitle != null) songTitle.setSelected(true);
         if(songArtist != null) songArtist.setSelected(true);
         if(songAlbum != null) songAlbum.setSelected(true);
+        if(openVotingButtonLinearLayout != null) {
+            Log.d(TAG, clientSongCallback.getPartyType().toString());
+            if (clientSongCallback.getPartyType().equals(HostService.PartyType.VoteParty))
+                openVotingButtonLinearLayout.setVisibility(View.VISIBLE);
+            else
+                openVotingButtonLinearLayout.setVisibility(View.GONE);
+        }
+        Track track = clientSongCallback.getNowPlaying();
+        if(track != null)
+            showSongs(track);
     }
 
     @Override
@@ -96,6 +114,7 @@ public class ClientSongFragment extends Fragment {
         songArtist = rootView.findViewById(R.id.artistTextView);
         songAlbum = rootView.findViewById(R.id.albumTextView);
         connectedToParty = rootView.findViewById(R.id.connectedTo);
+        openVotingButtonLinearLayout = rootView.findViewById(R.id.openVotingButtonLinearLayout);
 
         ImageButton exitButton = rootView.findViewById(R.id.exitButton);
         if(exitButton != null) exitButton.setOnClickListener(v -> clientSongCallback.exitConnection());
@@ -149,6 +168,20 @@ public class ClientSongFragment extends Fragment {
             int start = conTo.length();
             int end = start + name.length();
             spannable.setSpan(new StyleSpan(Typeface.BOLD), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+
+    /**
+     * Show the button to open the {@link com.tinf19.musicparty.fragments.VotingFragment} if the
+     * party type was changed to Voting-Party. Otherwise the button gets hidden.
+     * @param partyType Current party type
+     */
+    public void toggleVotingButton(HostService.PartyType partyType) {
+        if(openVotingButtonLinearLayout != null) {
+            if (partyType.equals(HostService.PartyType.VoteParty))
+                openVotingButtonLinearLayout.setVisibility(View.VISIBLE);
+            else
+                openVotingButtonLinearLayout.setVisibility(View.GONE);
         }
     }
 }

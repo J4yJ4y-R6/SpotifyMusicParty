@@ -14,8 +14,10 @@ import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.databinding.ActivityJoinBinding;
+import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.databinding.ActivityClientBinding;
+import com.tinf19.musicparty.util.DisplayMessages;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -85,19 +87,21 @@ public class JoinActivity extends AppCompatActivity {
         if(result != null) {
             if(result.getContents() == null) {
                 Log.d(TAG, "onActivityResult: empty qr code response");
-                Toast.makeText(this, getString(R.string.text_qrCodeNoResult), Toast.LENGTH_LONG).show();
+                new DisplayMessages(getString(R.string.text_qrCodeNoResult),
+                        findViewById(R.id.et_address)).makeMessage();
             } else {
                 try {
                     JSONObject obj = new JSONObject(result.getContents());
-                    ipAddressEditText.setText(obj.getString("ipaddress"));
-                    passwordEditText.setText(obj.getString("password"));
+                    ipAddressEditText.setText(obj.getString(Constants.IP_ADDRESS));
+                    passwordEditText.setText(obj.getString(Constants.PASSWORD));
                     if(!binding.usernameEditText.getText().toString().equals("")) {
                         nextPage(binding.getRoot());
                     }
 
                 } catch (JSONException e) {
                     Log.d(TAG, "Wrong QR-Code-Data: " + result.getContents());
-                    Toast.makeText(this, getString(R.string.text_qrCodeNotMusicParty), Toast.LENGTH_LONG).show();
+                    new DisplayMessages(getString(R.string.text_qrCodeNotMusicParty),
+                            findViewById(R.id.et_address)).makeMessage();
                 }
             }
         } else {

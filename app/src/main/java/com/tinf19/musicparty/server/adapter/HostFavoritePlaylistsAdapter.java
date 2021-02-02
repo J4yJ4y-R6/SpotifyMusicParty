@@ -7,6 +7,7 @@ import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,6 +31,7 @@ import com.tinf19.musicparty.music.Track;
 import com.tinf19.musicparty.server.fragments.HostFavoritePlaylistsFragment;
 import com.tinf19.musicparty.music.Playlist;
 import com.tinf19.musicparty.server.HostActivity;
+import com.tinf19.musicparty.util.DisplayMessages;
 import com.tinf19.musicparty.util.DownloadImageTask;
 
 import org.json.JSONException;
@@ -61,13 +63,14 @@ public class HostFavoritePlaylistsAdapter extends RecyclerView.Adapter<HostFavor
     private ArrayList<Playlist> playlists;
     private Context context;
     private ArrayList<String> idList;
+    private View view;
 
     public interface GalleryCallback {
         void openGalleryForUpload(Intent intent, String playlistID);
     }
 
     public interface HostFavoritePlaylistAdapterCallback {
-        void playFavoritePlaylist(String id, ArrayList<String> idList);
+        void playFavoritePlaylist(String id, int position);
         void changePlaylistName(String name, String id);
         void deletePlaylist(String id);
     }
@@ -121,7 +124,7 @@ public class HostFavoritePlaylistsAdapter extends RecyclerView.Adapter<HostFavor
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         context = parent.getContext();
         LayoutInflater inflater = LayoutInflater.from(context);
-        View view = inflater.inflate(R.layout.row_host_favorite_playlist, parent, false);
+        view = inflater.inflate(R.layout.row_host_favorite_playlist, parent, false);
         StaggeredGridLayoutManager.LayoutParams lp = (StaggeredGridLayoutManager.LayoutParams) view.getLayoutParams();
         if(hostFavoritePlaylistsFragment.getScreenOrientation() == Configuration.ORIENTATION_PORTRAIT)
             lp.height = parent.getMeasuredHeight() / 2;
@@ -145,18 +148,29 @@ public class HostFavoritePlaylistsAdapter extends RecyclerView.Adapter<HostFavor
         String id = playlists.get(position).getId();
         if (headerTV != null && headerET != null && coverIV != null && switcher != null) {
             holder.headerTextView.setText(name);
-            new DownloadImageTask(holder.coverImageView).execute(coverURL);
             new Thread(() -> {
                 try {
-                    int color = convertToBitmap(new URL(coverURL));
-                    GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[] {color, Color.rgb((int)(Color.red(color) * 0.4), (int)(Color.green(color) * 0.4), (int)(Color.blue(color) * 0.4))});
-                    gradientDrawable.setCornerRadius(20);
-                    ((HostActivity) context).runOnUiThread( () -> {
-                        holder.itemView.setBackground(gradientDrawable);
-                        int textColor = 0.2126 * Color.red(color) + 0.7152 * Color.green(color) + 0.0722 * Color.blue(color) > 130 ? Color.BLACK : Color.WHITE;
-                        holder.headerTextView.setTextColor(textColor);
-                        holder.headerEditText.setTextColor(textColor);
-                    });
+                    if(!coverURL.equals("error")) {
+                        new DownloadImageTask(coverIV).execute(coverURL);
+                        int color = convertToBitmap(new URL(coverURL));
+                        GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{color, Color.rgb((int) (Color.red(color) * 0.4), (int) (Color.green(color) * 0.4), (int) (Color.blue(color) * 0.4))});
+                        gradientDrawable.setCornerRadius(20);
+                        ((HostActivity) context).runOnUiThread(() -> {
+                            holder.itemView.setBackground(gradientDrawable);
+                            int textColor = 0.2126 * Color.red(color) + 0.7152 * Color.green(color) + 0.0722 * Color.blue(color) > 130 ? Color.BLACK : Color.WHITE;
+                            holder.headerTextView.setTextColor(textColor);
+                            holder.headerEditText.setTextColor(textColor);
+                        });
+                    } else {
+                        Drawable drawable = ContextCompat.getDrawable(context, R.drawable.icon_error);
+                        coverIV.setImageDrawable(drawable);
+                        int color = Color.RED;
+                        GradientDrawable gradientDrawable = new GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, new int[]{color, Color.rgb((int) (Color.red(color) * 0.4), (int) (Color.green(color) * 0.4), (int) (Color.blue(color) * 0.4))});
+                        gradientDrawable.setCornerRadius(20);
+                        ((HostActivity) context).runOnUiThread(() -> {
+                            holder.itemView.setBackground(gradientDrawable);
+                        });
+                    }
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -181,7 +195,7 @@ public class HostFavoritePlaylistsAdapter extends RecyclerView.Adapter<HostFavor
                                     .setNegativeButtonIcon(ContextCompat.getDrawable(context, R.drawable.icon_edit_image))
                                     .show())
                             .setPositiveButtonIcon(ContextCompat.getDrawable(context, R.drawable.icon_edit_pen))
-                            .setNeutralButton("", (dialog, which) -> hostFavoritePlaylistCallback.playFavoritePlaylist(id, idList))
+                            .setNeutralButton("", (dialog, which) -> hostFavoritePlaylistCallback.playFavoritePlaylist(id, position))
                             .setNeutralButtonIcon(ContextCompat.getDrawable(context, R.drawable.icon_play_cycle))
                             .setNegativeButton("", (dialog, which) -> new AlertDialog.Builder(context)
                                     .setTitle(context.getString(R.string.text_delete))
@@ -207,8 +221,7 @@ public class HostFavoritePlaylistsAdapter extends RecyclerView.Adapter<HostFavor
                                             }
                                         }
                                         String toastMessage = name + context.getString(R.string.text_toastPlaylistDeleted);
-                                        Toast.makeText(context, toastMessage, Toast.LENGTH_SHORT).show();
-                                        notifyDataSetChanged();
+                                        new DisplayMessages(toastMessage, view.findViewById(R.id.showSongHostFragmentFrame));
                                         hostFavoritePlaylistCallback.deletePlaylist(id);
                                     })
                                     .setNegativeButtonIcon(ContextCompat.getDrawable(context, R.drawable.icon_check))

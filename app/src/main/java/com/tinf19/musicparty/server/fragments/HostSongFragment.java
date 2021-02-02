@@ -20,6 +20,8 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.server.HostService;
+import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DownloadImageTask;
 
 /**
@@ -43,7 +45,7 @@ public class HostSongFragment extends Fragment {
     private ImageView currentPlayingCoverTextView;
     private TextView partyNameTextView;
     private LinearLayout playBarLinearLayout;
-    private ImageView newVotingsIndicator;
+    private LinearLayout openVotingButtonLinearLayout;
 
 
     public interface HostSongCallback {
@@ -59,6 +61,7 @@ public class HostSongFragment extends Fragment {
         Track setShowNowPlaying();
         int getPartyPeopleSize();
         String getPartyPeoplePartyName();
+        HostService.PartyType getPartyType();
     }
 
 
@@ -88,6 +91,12 @@ public class HostSongFragment extends Fragment {
             setPlayTrackButtonImage(hostSongCallback.getPauseState());
             Track track = hostSongCallback.setShowNowPlaying();
             if(track != null) setNowPlaying(track);
+            if(openVotingButtonLinearLayout != null) {
+                if (hostSongCallback.getPartyType().equals(HostService.PartyType.VoteParty))
+                    openVotingButtonLinearLayout.setVisibility(View.VISIBLE);
+                else
+                    openVotingButtonLinearLayout.setVisibility(View.GONE);
+            }
         }
         if(currentPlayingTitleTextView != null) currentPlayingTitleTextView.setSelected(true);
         if(currentPlayingAlbumTextView != null) currentPlayingAlbumTextView.setSelected(true);
@@ -114,6 +123,7 @@ public class HostSongFragment extends Fragment {
         currentPlayingAlbumTextView = view.findViewById(R.id.albumHostTextView);
         currentPlayingCoverTextView = view.findViewById(R.id.songCoverHostImageView);
         playBarLinearLayout = view.findViewById(R.id.hostPlayBarLinearLayout);
+        openVotingButtonLinearLayout = view.findViewById(R.id.openVotingButtonLinearLayout);
 
         ImageButton openPlaylistButton = view.findViewById(R.id.playlistButtonHostImageButton);
         if(openPlaylistButton != null) {
@@ -143,7 +153,7 @@ public class HostSongFragment extends Fragment {
         ImageButton lastTrackImageButton = view.findViewById(R.id.lastTrackImageButton);
         if(lastTrackImageButton != null) {
             lastTrackImageButton.setOnClickListener(v -> {
-                buttonEffect(lastTrackImageButton);
+                //buttonEffect(lastTrackImageButton);
                 hostSongCallback.lastTrack();
                 setPlayTrackButtonImage(false);
             });
@@ -152,7 +162,7 @@ public class HostSongFragment extends Fragment {
         playTrackImageButton = view.findViewById(R.id.playTrackImageButton);
         if(playTrackImageButton != null) {
             playTrackImageButton.setOnClickListener(v -> {
-                buttonEffect(playTrackImageButton);
+                //buttonEffect(playTrackImageButton);
                 boolean pause = !hostSongCallback.getPauseState();
                 hostSongCallback.playTrack();
                 setPlayTrackButtonImage(pause);
@@ -162,7 +172,7 @@ public class HostSongFragment extends Fragment {
         ImageButton nextTrackImageButton = view.findViewById(R.id.nextTrackImageButton);
         if(nextTrackImageButton != null) {
             nextTrackImageButton.setOnClickListener(v -> {
-                buttonEffect(nextTrackImageButton);
+                //buttonEffect(nextTrackImageButton);
                 hostSongCallback.nextTrack();
                 setPlayTrackButtonImage(false);
             });
@@ -205,6 +215,7 @@ public class HostSongFragment extends Fragment {
             Log.d(TAG, "welcome message gets changed to first song");
             playBarLinearLayout.setVisibility(View.VISIBLE);
             currentPlayingTitleTextView.setSingleLine(true);
+            currentPlayingAlbumTextView.setSelected(true);
             currentPlayingTitleTextView.setHeight(150);
         }
         if(currentPlayingTitleTextView != null) {
@@ -213,7 +224,7 @@ public class HostSongFragment extends Fragment {
         if(currentPlayingArtistTextView != null) currentPlayingArtistTextView.setText(nowPlaying.getArtist(0).getName());
         if(currentPlayingAlbumTextView != null) currentPlayingAlbumTextView.setText(nowPlaying.getAlbum());
         if(currentPlayingCoverTextView != null) {
-            String coverURL = "https://i.scdn.co/image/"+nowPlaying.getCoverFull();
+            String coverURL = Constants.IMAGE_URI + nowPlaying.getCoverFull();
             new DownloadImageTask(currentPlayingCoverTextView).execute(coverURL);
         }
     }

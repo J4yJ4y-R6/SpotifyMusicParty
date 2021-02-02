@@ -11,6 +11,7 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.provider.MediaStore;
+import android.provider.Telephony;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,8 +20,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.NumberPicker;
+import android.widget.RadioButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
@@ -28,11 +30,17 @@ import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 import com.tinf19.musicparty.R;
+import com.tinf19.musicparty.server.HostService;
 import com.tinf19.musicparty.util.Constants;
+import com.tinf19.musicparty.util.DisplayMessages;
 import com.tinf19.musicparty.util.HostVoting;
+import com.tinf19.musicparty.util.Type;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.Objects;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static android.graphics.Color.WHITE;
 
@@ -58,6 +66,8 @@ public class HostSettingsFragment extends Fragment {
     private EditText changePartyName;
     private TextView ipAddressTextView;
     private TextView passwordTextView;
+    private EditText votingTimeEditText;
+    private Button saveVotingTimeButton;
     private HostSettingsCallback hostSettingsCallback;
     private String partyName = "Music Party";
     /**
@@ -68,7 +78,13 @@ public class HostSettingsFragment extends Fragment {
     public interface HostSettingsCallback {
         String getIpAddress();
         String getPassword();
+        int getVotingTime();
+        HostService.PartyType getPartyType();
         void setNewPartyName(String newPartyName);
+        void changePartyType(HostService.PartyType partyType);
+        void changeVotingTime(int votingTime);
+        void closeAllVotings();
+        void createSkipVoting();
     }
 
     /**
@@ -97,13 +113,21 @@ public class HostSettingsFragment extends Fragment {
     public void onStart() {
         super.onStart();
         Log.d(TAG, "set connection information");
-        if(ipAddressTextView != null) {
+        if(ipAddressTextView != null && hostSettingsCallback != null) {
             String text = getString(R.string.text_ip_address) + ": " + hostSettingsCallback.getIpAddress();
             ipAddressTextView.setText(text);
         }
-        if(passwordTextView != null) {
+        if(passwordTextView != null && hostSettingsCallback != null) {
             String text = getString(R.string.app_password) + ": " + hostSettingsCallback.getPassword();
             passwordTextView.setText(text);
+        }
+
+        if(votingTimeEditText != null && saveVotingTimeButton != null && hostSettingsCallback != null) {
+            if(hostSettingsCallback.getPartyType() == HostService.PartyType.VoteParty) {
+                votingTimeEditText.setText(String.valueOf(hostSettingsCallback.getVotingTime()));
+                votingTimeEditText.setVisibility(View.VISIBLE);
+                saveVotingTimeButton.setVisibility(View.VISIBLE);
+            }
         }
     }
 
@@ -131,8 +155,8 @@ public class HostSettingsFragment extends Fragment {
         JSONObject json = new JSONObject();
         try {
             Log.d(TAG, "generating qr code with connection information");
-            json.put("ipaddress", hostSettingsCallback.getIpAddress());
-            json.put("password", hostSettingsCallback.getPassword());
+            json.put(Constants.IP_ADDRESS, hostSettingsCallback.getIpAddress());
+            json.put(Constants.PASSWORD, hostSettingsCallback.getPassword());
             MultiFormatWriter multiFormatWriter = new MultiFormatWriter();
             BitMatrix bitMatrix = multiFormatWriter.encode(json.toString(), BarcodeFormat.QR_CODE, 200, 200);
 
@@ -157,6 +181,8 @@ public class HostSettingsFragment extends Fragment {
 
         ipAddressTextView = view.findViewById(R.id.ipAddressSettingsTextView);
         passwordTextView = view.findViewById(R.id.passwordSettingsTextView);
+        votingTimeEditText = view.findViewById(R.id.votingTimeEditNumber);
+        saveVotingTimeButton = view.findViewById(R.id.saveVotingTimeButton);
 
         ImageButton shareAddressButton = view.findViewById(R.id.shareButtonSettingsImageButton);
         if(shareAddressButton != null) {
@@ -209,7 +235,59 @@ public class HostSettingsFragment extends Fragment {
                     Log.d(TAG, "new Party Name set to: " + newPartyName);
                     partyName = newPartyName;
                     hostSettingsCallback.setNewPartyName(newPartyName);
-                    Toast.makeText(getContext(), "Der Partyname wurde auf " + newPartyName + " geändert.", Toast.LENGTH_SHORT).show();
+                    new DisplayMessages(getString(R.string.snackbar_partyNameChanged, partyName),
+                            this.requireView()).makeMessage();
+                }
+            });
+        }
+
+        RadioButton allInSettingsRadioButton = view.findViewById(R.id.allInSettingsRadioButton);
+        if(allInSettingsRadioButton != null)
+            allInSettingsRadioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if(isChecked && buttonView.isPressed()) {
+                    HostService.PartyType partyType = HostService.PartyType.AllInParty;
+                    if (hostSettingsCallback != null){
+                        hostSettingsCallback.changePartyType(partyType);
+                        hostSettingsCallback.closeAllVotings();
+                        votingTimeEditText.setVisibility(View.INVISIBLE);
+                        saveVotingTimeButton.setVisibility(View.GONE);
+                    }
+                    new DisplayMessages(getString(R.string.snackbar_partyTypeChanged, partyName),
+                            this.requireView()).makeMessage();
+                }
+            });
+
+        RadioButton votingSettingsRadioButton = view.findViewById(R.id.votingSettingsRadioButton);
+        if(votingSettingsRadioButton != null)
+            votingSettingsRadioButton.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if(isChecked && buttonView.isPressed()) {
+                    HostService.PartyType partyType = HostService.PartyType.VoteParty;
+                    if (hostSettingsCallback != null) {
+                        hostSettingsCallback.changePartyType(HostService.PartyType.VoteParty);
+                        hostSettingsCallback.createSkipVoting();
+                        if(votingTimeEditText != null && saveVotingTimeButton != null) {
+                            votingTimeEditText.setText(String.valueOf(hostSettingsCallback.getVotingTime()));
+                            votingTimeEditText.setVisibility(View.VISIBLE);
+                            saveVotingTimeButton.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    new DisplayMessages(getString(R.string.snackbar_partyTypeChanged, partyName),
+                            this.requireView()).makeMessage();
+                }
+            });
+
+        if(saveVotingTimeButton != null) {
+            saveVotingTimeButton.setOnClickListener(v -> {
+                if(hostSettingsCallback != null && votingTimeEditText != null) {
+                    int votingTime = Integer.parseInt(votingTimeEditText.getText().toString());
+                    if(votingTime >= 1) {
+                        hostSettingsCallback.changeVotingTime(votingTime);
+                        new DisplayMessages(getString(R.string.snackbar_votingTimeChanged, votingTime),
+                                this.requireView()).makeMessage();
+                    }
+                    else
+                        new DisplayMessages(getString(R.string.snackbar_votingTimeToShort),
+                                this.requireView()).makeMessage();
                 }
             });
         }

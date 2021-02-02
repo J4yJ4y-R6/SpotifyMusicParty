@@ -1,6 +1,5 @@
 package com.tinf19.musicparty.util;
 
-import android.os.CountDownTimer;
 import android.util.Log;
 
 import com.tinf19.musicparty.music.Track;
@@ -29,18 +28,22 @@ public class HostVoting implements Voting {
     private final double threshold;
     private final int id;
     private final VotingCallback votingCallback;
-    private List<Thread> accepted = new ArrayList<>();
-    private List<Thread> denied = new ArrayList<>();
-    private List<Thread> ignored = new ArrayList<>();
-    private final CountDownTimer closeTimer;
+    private final List<Thread> accepted = new ArrayList<>();
+    private final List<Thread> denied = new ArrayList<>();
+    private final List<Thread> ignored = new ArrayList<>();
+
+    private static int counter = 0;
+
+    private CustomCountDownTimer closeTimer;
     private int ignoredCount = 0;
     private boolean finished = false;
 
     public interface VotingCallback {
-        void skipAndClose(int id);
-        void addAndClose(int id);
+        void skipAndClose(int id, Thread thread);
+        void addAndClose(int id, Thread thread);
         int getClientCount();
-        void close(int id);
+        int getVotingTime();
+        void close(int id, Thread thread);
         void notifyClients(HostVoting voting, Thread thread);
     }
 
@@ -49,60 +52,53 @@ public class HostVoting implements Voting {
      * @param type Voting-Type
      * @param track Song which should be added or removed from the queue
      * @param threshold Limit of accepting the voting set by the host
-     * @param id Voting-Id
      * @param votingCallback Communication callback for
      *                       {@link com.tinf19.musicparty.server.HostActivity}
      */
-    public HostVoting(Type type, Track track, double threshold, int id, VotingCallback votingCallback) {
+    public HostVoting(Type type, Track track, double threshold, VotingCallback votingCallback) {
         this.type = type;
         this.threshold = threshold;
-        this.id = id;
+        this.id = counter++;
         this.track = track;
         this.votingCallback = votingCallback;
-        closeTimer = new CountDownTimer(60*1000, 1000) {
-            @Override
-            public void onTick(long millisUntilFinished) {}
+        if(type == Type.QUEUE)
+            closeTimer = new CustomCountDownTimer(votingCallback.getVotingTime()*60*1000,
+                    1000) {
+                @Override
+                public void onTick(long millisUntilFinished) { }
 
-            @Override
-            public void onFinish() {
-                finished = true;
-                if(Math.ceil((accepted.size() + denied.size()) * threshold) <= accepted.size())
-                    votingCallback.addAndClose(id);
-                else
-                    votingCallback.close(id);
-            }
-        }.start();
+                @Override
+                public void onFinish() { evaluateVoting(); }
+            }.start();
     }
 
 
 
-    //Getter
-
     /**
      * Evaluate the voting results regarding the threshold
      */
-    private void makeCallback(Thread thread){
+    public void makeCallback(Thread thread){
         int clientCount = (int) Math.ceil((votingCallback.getClientCount() + 1 - ignoredCount) * threshold);
         switch (type) {
-            case QUE:
+            case QUEUE:
                 if(clientCount <= accepted.size()) {
                     finished = true;
-                    votingCallback.addAndClose(id);
+                    votingCallback.addAndClose(id, thread);
                 } else if(clientCount < denied.size() || clientCount == (denied.size() + ignoredCount + accepted.size())) {
                     finished = true;
-                    votingCallback.close(id);
+                    votingCallback.close(id, thread);
                 } else
                     votingCallback.notifyClients(this, thread);
                 break;
             case SKIP:
                 if(clientCount <= accepted.size()) {
                     finished = true;
-                    votingCallback.skipAndClose(id);
+                    votingCallback.skipAndClose(id, thread);
                 } else
                     votingCallback.notifyClients(this, thread);
                 break;
             default:
-                votingCallback.close(id);
+                votingCallback.close(id, thread);
         }
     }
 
@@ -110,8 +106,8 @@ public class HostVoting implements Voting {
      * @param thread Thread which gets checked to be in the ignored list
      * @return Get true if the given thread is in the ignored list or false if it is not
      */
-    public boolean containsIgnored(Thread thread) {
-        return ignored.contains(thread);
+    public boolean ignoredNotIncluded(Thread thread) {
+        return !ignored.contains(thread);
     }
 
     /**
@@ -124,8 +120,12 @@ public class HostVoting implements Voting {
         ignored.remove(thread);
     }
 
+    /**
+     * After a QUEUE voting was closed the CountDownTimer gets stopped.
+     */
     public void closeVoting() {
-        closeTimer.cancel();
+        if(type == Type.QUEUE)
+            closeTimer.cancel();
     }
 
     /**
@@ -167,6 +167,19 @@ public class HostVoting implements Voting {
                 .put(Constants.NO_VOTE, no)
                 .put(Constants.GREY_VOTE, (votingCallback.getClientCount() + 1) - yes - no);
         return tempObject.toString();
+    }
+
+    /**
+     * Evaluating the voting. If more people voted yes the song will be added to the queue or
+     * skipped. Otherwise the voting will be closed without an action.
+     */
+    public void evaluateVoting() {
+        finished = true;
+        if(Math.ceil((accepted.size() + denied.size()) * threshold) <= accepted.size() &&
+            type.equals(Type.QUEUE))
+            votingCallback.addAndClose(id, new Thread());
+        else
+            votingCallback.close(id, new Thread());
     }
 
     /**

@@ -8,7 +8,7 @@ import com.tinf19.musicparty.util.Constants;
 import java.util.ArrayList;
 
 /**
- * Que object to create a queue which is used like a Spotify playlist.
+ * Queue object to create a queue which is used like a Spotify playlist.
  * The queue is used as a ArrayList filled with tracks.
  * While a track is playing a synchronous timer is running which counts the time that a track is
  * playing. The timer gets controlled synchronous with the track.
@@ -21,7 +21,7 @@ import java.util.ArrayList;
  * @see Playlist
  * @since 1.1
  */
-public class Que {
+public class Queue {
 
     public interface QueCallback {
         void playSong(Track track);
@@ -29,7 +29,7 @@ public class Que {
         void stopPlayback();
     }
 
-    private static final String TAG = Que.class.getName();
+    private static final String TAG = Queue.class.getName();
     private final QueCallback queCallback;
     private ArrayList<Track> queList = new ArrayList<>();
     public CountDownTimer countDownTimer;
@@ -43,7 +43,7 @@ public class Que {
      * Constructor to set the callback
      * @param queCallback Communication callback for {@link com.tinf19.musicparty.server.HostService}
      */
-    public Que(QueCallback queCallback) {
+    public Queue(QueCallback queCallback) {
         this.queCallback = queCallback;
     }
 
@@ -149,7 +149,7 @@ public class Que {
 
 
 
-    //Que-Control
+    //Queue-Control
 
     /**
      * Skip to the next track in the queue

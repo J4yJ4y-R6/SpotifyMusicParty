@@ -107,7 +107,9 @@ public class HostSearchBarFragment extends Fragment {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     if(!searchText.getText().toString().equals("")) {
-                        spotifyHelper.search(s.toString(), "artist,track", "5", hostSearchBarCallback.getToken(), new SpotifyHelper.SpotifyHelperCallback() {
+                        spotifyHelper.search(s.toString(), "artist,track", "5",
+                                hostSearchBarCallback.getToken(),
+                                new SpotifyHelper.SpotifyHelperCallback() {
                             @Override
                             public void onFailure() { }
 

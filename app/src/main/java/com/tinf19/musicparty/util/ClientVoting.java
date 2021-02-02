@@ -7,8 +7,6 @@ import com.tinf19.musicparty.music.Track;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import io.reactivex.CompletableOnSubscribe;
-
 /**
  * Voting class for the client with less information about the voting as the {@link HostVoting}.
  * Every voting has their current results fetched to the local variables after submitting a vote.
@@ -41,7 +39,7 @@ public class ClientVoting implements Voting {
     public ClientVoting(String json, ClientVotingCallback clientVotingCallback) throws JSONException {
         JSONObject tempObject = new JSONObject(json);
         this.track = new Track(tempObject.getString(Constants.TRACK));
-        this.type = tempObject.getString(Constants.TYPE).equals("QUE") ? Type.QUE : Type.SKIP;
+        this.type = tempObject.getString(Constants.TYPE).equals("QUEUE") ? Type.QUEUE : Type.SKIP;
         this.id = tempObject.getInt(Constants.ID);
         this.yes = tempObject.getInt(Constants.YES_VOTE);
         this.no = tempObject.getInt(Constants.NO_VOTE);

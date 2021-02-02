@@ -56,6 +56,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/openVotingButtonLinearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -67,8 +68,8 @@
                     android:layout_width="50dp"
                     android:layout_height="50dp"
                     android:layout_marginBottom="16dp"
-                    android:contentDescription="@string/text_openVotingFragment_ContentD"
                     android:background="@drawable/background_transparent"
+                    android:contentDescription="@string/text_openVotingFragment_ContentD"
                     android:src="@drawable/icon_thumb_up" />
             </LinearLayout>
 

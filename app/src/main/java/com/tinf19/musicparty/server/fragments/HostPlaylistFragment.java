@@ -1,6 +1,7 @@
 package com.tinf19.musicparty.server.fragments;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -18,9 +19,10 @@ import android.widget.TextView;
 
 import com.tinf19.musicparty.R;
 import com.tinf19.musicparty.music.Track;
+import com.tinf19.musicparty.server.adapter.HostPlaylistItemMoveHelper;
+import com.tinf19.musicparty.util.Constants;
 import com.tinf19.musicparty.util.DownloadImageTask;
 import com.tinf19.musicparty.server.adapter.HostPlaylistAdapter;
-import com.tinf19.musicparty.server.adapter.HostPlaylistItemMoveHelper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,13 +39,14 @@ import java.util.List;
 public class HostPlaylistFragment extends Fragment {
 
     private static final String TAG = HostPlaylistFragment.class.getName();
-    private RecyclerView recyclerView;
     private TextView currentSongTitleTextView;
     private TextView currentSongArtistTextView;
     private ImageView currentSongCoverImageView;
     private HostPlaylistAdapter hostPlaylistAdapter;
     private HostPlaylistCallback hostPlaylistCallback;
     private HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback;
+    private HostPlaylistItemMoveHelper hostPlaylistItemMoveHelper;
+    private int displayWidth;
 
     public interface HostPlaylistCallback {
         void showPlaylist();
@@ -57,9 +60,10 @@ public class HostPlaylistFragment extends Fragment {
      * @param hostPlaylistAdapterCallback Communication callback which is given by the
      *                                    {@link HostPlaylistAdapter}
      */
-    public HostPlaylistFragment(HostPlaylistCallback hostPlaylistCallback, HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
+    public HostPlaylistFragment(int displayWidth, HostPlaylistCallback hostPlaylistCallback, HostPlaylistAdapter.HostPlaylistAdapterCallback hostPlaylistAdapterCallback) {
         this.hostPlaylistCallback = hostPlaylistCallback;
         this.hostPlaylistAdapterCallback = hostPlaylistAdapterCallback;
+        this.displayWidth = displayWidth;
     }
 
     /**
@@ -83,7 +87,7 @@ public class HostPlaylistFragment extends Fragment {
             if (currentSongArtistTextView != null)
                 currentSongArtistTextView.setText(currentPlaying.getArtist(0).getName());
             if (currentSongCoverImageView != null) {
-                String coverURL = "https://i.scdn.co/image/" + currentPlaying.getCoverFull();
+                String coverURL = Constants.IMAGE_URI + currentPlaying.getCoverFull();
                 new DownloadImageTask(currentSongCoverImageView).execute(coverURL);
             }
         } else {
@@ -105,11 +109,13 @@ public class HostPlaylistFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view =  inflater.inflate(R.layout.fragment_host_playlist, container, false);
-        recyclerView = view.findViewById(R.id.hostPlaylistRecyclerView);
+        View view = inflater.inflate(R.layout.fragment_host_playlist, container, false);
+        RecyclerView recyclerView = view.findViewById(R.id.hostPlaylistRecyclerView);
         if(recyclerView != null) {
             hostPlaylistAdapter = new HostPlaylistAdapter(new ArrayList<Track>(), hostPlaylistAdapterCallback);
-            ItemTouchHelper touchHelper = new ItemTouchHelper(new HostPlaylistItemMoveHelper(hostPlaylistAdapter));
+            hostPlaylistItemMoveHelper = new HostPlaylistItemMoveHelper(hostPlaylistAdapter,
+                    getContext(), displayWidth);
+            ItemTouchHelper touchHelper = new ItemTouchHelper(hostPlaylistItemMoveHelper);
             touchHelper.attachToRecyclerView(recyclerView);
             recyclerView.setAdapter(hostPlaylistAdapter);
             RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(view.getContext());
