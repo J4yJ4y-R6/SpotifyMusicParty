@@ -81,5 +81,5 @@ We made this Android application to provide a custom version of a MusicParty. Ou
         - Thumb-Up: Vote Yes
         - Thumb-Down: Vote No
         - X-Button: Ignore
-- Exit: Toolbar 5. Button
+- Exit: Toolbar 3. Button
     - Leave the party
