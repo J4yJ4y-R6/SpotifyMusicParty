@@ -309,8 +309,10 @@ public class HostService extends Service implements Parcelable {
                 .putExtra(Constants.FROM_NOTIFICATION, true);
         pendingIntent = PendingIntent.getActivity(this,
                 0, notificationIntent, 0);
-        Intent intentAction = new Intent(this, ActionReceiver.class);
-        pendingIntentButton = PendingIntent.getBroadcast(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intentAction = new Intent(this, HostActivity.class)
+                .putExtra(Constants.FROM_NOTIFICATION, true)
+                .putExtra(Constants.STOP, true);
+        pendingIntentButton = PendingIntent.getActivity(this,1,intentAction,PendingIntent.FLAG_UPDATE_CURRENT);
 
         Notification notification = new NotificationCompat.Builder(this, Constants.CHANNEL_ID)
                 .setContentTitle(getString(R.string.service_serverMsg, partyName))
@@ -1282,7 +1284,7 @@ public class HostService extends Service implements Parcelable {
      */
     private void stopAll() throws IOException {
         for(CommunicationThread client : clientThreads) {
-            client.sendMessage(Commands.QUIT, "Session has been closed");
+            client.sendStop();
             client.close();
         }
     }
@@ -1382,6 +1384,12 @@ public class HostService extends Service implements Parcelable {
                 msg.setData(bundle);
                 sendMessageLooper.mHandler.sendMessage(msg);
             }
+        }
+
+        public void sendStop() throws IOException {
+            Log.d(TAG, "Send QUIT Message to User: " + username + ", MESSAGE: Session has been closed");
+            out.writeBytes(Constants.DELIMITER + Commands.QUIT.toString() + Constants.DELIMITER + "Session has been closed" + "\n\r");
+            out.flush();
         }
 
         /**
@@ -1531,7 +1539,10 @@ public class HostService extends Service implements Parcelable {
                             }
                         }
                     }
-                } catch (IOException | JSONException e) {
+                } catch (IOException e) {
+                    Log.d(TAG,"Client ist not connected anymore");
+                    return;
+                } catch (JSONException e) {
                     Log.e(TAG, e.getMessage(), e);
                     return;
                 }
@@ -1574,7 +1585,7 @@ public class HostService extends Service implements Parcelable {
                         try {
                             CommunicationThread.this.sendMessageLooper(Commands.valueOf(command), (String) message);
                         } catch (IOException e) {
-                            Log.e(TAG, e.getMessage(), e);
+                            Log.d(TAG,"Client ist not connected anymore");
                         }
                     }
                 };

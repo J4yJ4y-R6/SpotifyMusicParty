@@ -1,18 +1,28 @@
 
-# Spotify Music Party
+# _![app_icon](app/src/main/res/mipmap-mdpi/ic_music_party_greenbg_round.png)_ Spotify Music Party ![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/JanielGamer/SpotifyMusicParty?include_prereleases&color=457855) ![GitHub all releases](https://img.shields.io/github/downloads/JanielGamer/SpotifyMusicParty/total) ![GitHub repo size](https://img.shields.io/github/repo-size/JanielGamer/SpotifyMusicParty)
 
 We made this Android application to provide a custom version of a MusicParty. Our idea was to set on simple Server-Client model, where only the Server is able to play the music.
 
 ## Installation
+
+### With Gradle
+
 1. Go to the [Spotify Developer Page](https://developer.spotify.com/dashboard/)  and create a application to get a. `Client ID` and a `Client Secret` (These will be needed if you wand to build the app local).
-**Important:** You have to add your and fingerprint to the application in the developper page.
+
+**Important:** You have to add your [development fingerprint](https://developers.google.com/android/guides/client-auth) to the application in the developper page.
+
 2. Clone the repository.
 3. Rename the `apikey.properties.example` file to `apikey.properties` and add you previously gained `Client ID` and `Client Secret` at the right row inside the quotation marks.
 4. Now you can use the default gradle build and debug commands.
 
+### With the APK
+1. Donwload the APK of the latest stable [release](https://github.com/JanielGamer/SpotifyMusicParty/releases/latest)
+2. Install the obtained APK by opening it
+4. Have fun and use the app
+
 ### Android requirements
-- `Android SDK >= 30`
-- The spotify app has to be installed for hosting a server
+- `Android SDK >= 27`
+- The spotify app has to be installed for hosting a server (Server on AVD is not working)
 
 ## Functionalities
 
@@ -71,5 +81,5 @@ We made this Android application to provide a custom version of a MusicParty. Ou
         - Thumb-Up: Vote Yes
         - Thumb-Down: Vote No
         - X-Button: Ignore
-- Exit: Toolbar 5. Button
+- Exit: Toolbar 3. Button
     - Leave the party
