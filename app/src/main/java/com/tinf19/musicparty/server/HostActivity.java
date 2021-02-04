@@ -154,15 +154,6 @@ public class HostActivity extends AppCompatActivity {
         void afterFailure();
     }
 
-    BroadcastReceiver exitReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "HostActivitiy started: afterNotification called exit");
-            animateFragmentChange(true, hostClosePartyFragment, "ExitConnectionFragment");
-        }
-    };
-
-
     //Android lifecycle methods
 
     @Override
@@ -170,8 +161,6 @@ public class HostActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_host);
-
-        registerReceiver(exitReceiver, new IntentFilter(Constants.STOP));
 
         hostSearchBarFragment = new HostSearchBarFragment(new HostSearchBarFragment.HostSearchBarCallback() {
             @Override
@@ -382,13 +371,6 @@ public class HostActivity extends AppCompatActivity {
 
             @Override
             public void swapPlaylistItems(int from, int to) {
-                /*if (mBoundService != null) {
-                    try {
-                        mBoundService.moveItem(from, to);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }*/
                 if (mBoundService != null) {
                     mBoundService.swapItem(from, to);
                 }
@@ -491,8 +473,13 @@ public class HostActivity extends AppCompatActivity {
             if(!getIntent().getBooleanExtra(Constants.FROM_NOTIFICATION, false) && loadingFragment != null)
                 getSupportFragmentManager().beginTransaction().
                         replace(R.id.showSongHostFragmentFrame, loadingFragment, "LoadingFragment").commitAllowingStateLoss();
-            else
+            else {
                 showDefaultFragments();
+                if (getIntent().getBooleanExtra(Constants.STOP, false)) {
+                    Log.d(TAG, "HostActivity started: afterNotification called exit");
+                    animateFragmentChange(true, hostClosePartyFragment, "ExitConnectionFragment");
+                }
+            }
 
         }
 
@@ -854,8 +841,16 @@ public class HostActivity extends AppCompatActivity {
     public void stopService() {
         Log.d(TAG, "spotify remote control disconnected");
         if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null) {
-            mBoundService.getmSpotifyAppRemote().getPlayerApi().pause();
-            SpotifyAppRemote.disconnect(mBoundService.getmSpotifyAppRemote());
+            SpotifyAppRemote spotifyAppRemote = mBoundService.getmSpotifyAppRemote();
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    Log.e(TAG, e.getMessage(), e);
+                }
+                spotifyAppRemote.getPlayerApi().pause();
+                SpotifyAppRemote.disconnect(spotifyAppRemote);
+            }).start();
         }
         doUnbindService();
         stopService(new Intent(this, HostService.class));
