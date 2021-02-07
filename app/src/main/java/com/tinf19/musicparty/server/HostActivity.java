@@ -843,12 +843,12 @@ public class HostActivity extends AppCompatActivity {
         if(mBoundService != null &&  mBoundService.getmSpotifyAppRemote() != null) {
             SpotifyAppRemote spotifyAppRemote = mBoundService.getmSpotifyAppRemote();
             new Thread(() -> {
+                spotifyAppRemote.getPlayerApi().pause();
                 try {
                     Thread.sleep(1000);
                 } catch (InterruptedException e) {
                     Log.e(TAG, e.getMessage(), e);
                 }
-                spotifyAppRemote.getPlayerApi().pause();
                 SpotifyAppRemote.disconnect(spotifyAppRemote);
             }).start();
         }

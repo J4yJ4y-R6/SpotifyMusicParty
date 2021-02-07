@@ -496,7 +496,7 @@ public class HostService extends Service implements Parcelable {
                         Log.d(TAG, "addEventListener: Different song has been started: " + track.name);
                         isPlayingContext = true;
                         mSpotifyAppRemote.getPlayerApi().pause();
-                        getPlayingContext(8, track.uri);
+                        getPlayingContext(12, track.uri);
                     }
                 });
     }
@@ -983,7 +983,7 @@ public class HostService extends Service implements Parcelable {
                 }else {
                     try {
                         Log.d(TAG, "Request successfully " + uri);
-                        String result = response.body().string();
+                        final String result = response.body().string();
                         JSONObject body = new JSONObject(result);
                         if(!body.isNull("context")
                                 && !body.isNull("item")
@@ -1001,8 +1001,13 @@ public class HostService extends Service implements Parcelable {
                         } else {
                             restartQue();
                         }
-                    } catch (IOException | JSONException e) {
+                    } catch (IOException e) {
                         Log.e(TAG, e.getMessage(), e);
+                    } catch (JSONException e) {
+                        if (time >= 0)
+                            getPlayingContext(time-1, uri);
+                        else
+                            Log.e(TAG, e.getMessage(), e);
                     }
                 }
                 response.close();

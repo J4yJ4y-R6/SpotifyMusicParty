@@ -17,3 +17,4 @@ local.properties
 
 # Project exclude paths
 /spotify-app-remote-release-0.7.1/build/
+app/release
