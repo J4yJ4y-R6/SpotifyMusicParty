@@ -850,10 +850,10 @@ public class HostActivity extends AppCompatActivity {
                     Log.e(TAG, e.getMessage(), e);
                 }
                 SpotifyAppRemote.disconnect(spotifyAppRemote);
+                stopService(new Intent(this, HostService.class));
             }).start();
         }
         doUnbindService();
-        stopService(new Intent(this, HostService.class));
         startActivity((new Intent(this, MainActivity.class)).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP));
     }
 

@@ -7,7 +7,7 @@ We made this Android application to provide a custom version of a MusicParty. Ou
 
 ### With Gradle
 
-1. Go to the [Spotify Developer Page](https://developer.spotify.com/dashboard/)  and create a application to get a. `Client ID` and a `Client Secret` (These will be needed if you wand to build the app local).
+1. Go to the [Spotify Developer Page](https://developer.spotify.com/dashboard/)  and [create a application](https://developer.spotify.com/documentation/android/quick-start/) to get a. `Client ID` and a `Client Secret` (These will be needed if you wand to build the app local).
 
 **Important:** You have to add your [development fingerprint](https://developers.google.com/android/guides/client-auth) to the application in the developper page.
 
@@ -23,6 +23,7 @@ We made this Android application to provide a custom version of a MusicParty. Ou
 ### Android requirements
 - `Android SDK >= 27`
 - The spotify app has to be installed for hosting a server (Server on AVD is not working)
+- Spotify premium account is required on the server to not get advertisings
 
 ## Functionalities
 
@@ -83,3 +84,11 @@ We made this Android application to provide a custom version of a MusicParty. Ou
         - X-Button: Ignore
 - Exit: Toolbar 3. Button
     - Leave the party
+
+## Dependencies
+- https://github.com/square/okhttp
+- https://github.com/spotify/android-sdk
+- https://github.com/spotify/android-auth
+- https://github.com/Ramotion/cardslider-android
+- https://github.com/journeyapps/zxing-android-embedded
+- https://github.com/zetbaitsu/Compressor
