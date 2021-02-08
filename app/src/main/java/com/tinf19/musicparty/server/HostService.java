@@ -28,7 +28,6 @@ import com.tinf19.musicparty.music.Artist;
 import com.tinf19.musicparty.music.PartyPerson;
 import com.tinf19.musicparty.music.Queue;
 import com.tinf19.musicparty.music.Track;
-import com.tinf19.musicparty.receiver.ActionReceiver;
 import com.tinf19.musicparty.receiver.VotedReceiver;
 import com.tinf19.musicparty.util.Commands;
 import com.tinf19.musicparty.util.Constants;
@@ -56,6 +55,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import okhttp3.Response;
@@ -161,8 +161,16 @@ public class HostService extends Service implements Parcelable {
                     }).start();
                     if(hostServiceCallback != null)
                         hostServiceCallback.reloadPlaylistFragment();
-                    if (partyType == PartyType.VoteParty)
+                    if (partyType == PartyType.VoteParty) {
+                        final int[] toRemove = {-1};
+                        hostVotings.forEach( (id, voting) -> {
+                            if(voting.getType().equals(Type.SKIP))
+                                toRemove[0] = id;
+                        });
+                        if(toRemove[0] >= 0)
+                            hostVotings.remove(toRemove[0]);
                         createVoting(track, Type.SKIP);
+                    }
                 }
             }
 
@@ -179,7 +187,8 @@ public class HostService extends Service implements Parcelable {
         votingCallback = new HostVoting.VotingCallback() {
             @Override
             public void skipAndClose(int id, Thread thread) {
-                queue.next();
+                Handler mainHandler = new Handler(Looper.getMainLooper());
+                mainHandler.post(() -> queue.next());
                 close(id, thread);
             }
 
@@ -475,7 +484,7 @@ public class HostService extends Service implements Parcelable {
                     }
 
                     pause = playerState.isPaused;
-                    if(playlist.size() != 0) {
+                    if(playlist.size() > 0) {
                         nowPlaying = track;
                         if(lastSongTitle == null || !nowPlaying.uri.equals(lastSongTitle.uri)) {
                             int position = playlist.size()-1- queue.size();
@@ -1485,7 +1494,8 @@ public class HostService extends Service implements Parcelable {
                                     Log.d(TAG, "Added " + attribute + " to the queue");
                                     if(this.login) {
                                         Track track = new Track(attribute);
-                                        queueItem(track);
+                                        Handler mainHandler = new Handler(Looper.getMainLooper());
+                                        mainHandler.post(() -> queueItem(track));
                                     }
                                     break;
                                 case PLAYING:

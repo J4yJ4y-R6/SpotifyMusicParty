@@ -284,7 +284,7 @@ public class ClientService extends Service {
      * @param id Id of the last voted voting
      */
     public void notificationAfterVote(int id) {
-        if(currentVoting != null)
+        if(currentVoting.size() > 0)
             if(id == currentVoting.get(0).getId())
                 updateVotingNotification();
             else{
@@ -298,6 +298,8 @@ public class ClientService extends Service {
                 if(toRemove > 0)
                     currentVoting.remove(toRemove);
             }
+        else
+            votingManager.cancel(Constants.VOTING_NOTIFY_ID);
     }
 
 
@@ -536,6 +538,7 @@ public class ClientService extends Service {
                                         nowPlaying = new Track(parts[4]);
                                     }
                                     if(clientServiceCallback != null) {
+                                        clientServiceCallback.updateVotingButton(getPartyType());
                                         clientServiceCallback.setPartyName(partyName);
                                     }
                                     updateServiceNotifaction();

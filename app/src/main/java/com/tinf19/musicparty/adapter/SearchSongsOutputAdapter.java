@@ -119,7 +119,7 @@ public class SearchSongsOutputAdapter extends RecyclerView.Adapter<SearchSongsOu
             new DownloadImageTask(songCoverIV).execute(cover);
         holder.itemView.setOnClickListener(v -> {
             new DisplayMessages(context.getString(R.string.text_songsOutputSwipeForQue),
-                    textView.findViewById(R.id.showSongHostFragmentFrame)).makeMessage();
+                    v).makeMessage();
         });
 
     }
